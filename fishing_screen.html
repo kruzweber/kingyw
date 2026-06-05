@@ -1200,7 +1200,6 @@ const canvas = document.getElementById("gameCanvas");
     function currentPortraitEmotion() {
       if (!resultPopup.hidden) return lastPortraitEmotion;
       if (phase === "caught") return lastPortraitEmotion || "happy";
-      if (phase === "missed") return lastPortraitEmotion || "disappointed";
       if (phase === "blocked") return lastPortraitEmotion || "disappointed";
       if (phase === "aimingDistance" || phase === "aimingSide") return "thinking";
       if (phase === "casting") {
@@ -2471,7 +2470,7 @@ const canvas = document.getElementById("gameCanvas");
     }
 
     function bobberAnchorPoint() {
-      const tiedToRod = !castFlight && ["ready", "aimingDistance", "aimingSide", "caught", "missed"].includes(phase);
+      const tiedToRod = !castFlight && ["ready", "aimingDistance", "aimingSide", "caught"].includes(phase);
       return tiedToRod ? rodTip() : bobber;
     }
 
@@ -2643,8 +2642,7 @@ const canvas = document.getElementById("gameCanvas");
         aimingSide: "방향 확정",
         casting: "챔질!",
         reeling: "릴 감기",
-        caught: "다음 낚시",
-        missed: "다시 던지기",
+        caught: "던지기",
         retrieving: "회수 중",
         blocked: "진행 불가"
       }[phase] || "진행";
@@ -2776,7 +2774,7 @@ const canvas = document.getElementById("gameCanvas");
         ]);
         return;
       }
-      if (phase === "ready" || phase === "caught" || phase === "missed") {
+      if (phase === "ready" || phase === "caught") {
         hideResultPopup();
         heldResult = null;
         lastPortraitEmotion = "thinking";
@@ -2902,7 +2900,7 @@ const canvas = document.getElementById("gameCanvas");
       hookProximity = 0;
       hookDisplayProximity = 0;
         lastPortraitEmotion = reason.includes("끊어") ? "crying" : reason.includes("느슨") ? "confused" : "disappointed";
-        setPhase("missed");
+        setPhase("ready");
         resetBobber();
       window.GameAudio?.playSfx("miss");
       window.GameAudio?.playVoice("miss");
@@ -3896,10 +3894,6 @@ const canvas = document.getElementById("gameCanvas");
         const level10Fight = target?.item?.kind === "fish" && Number(target.item.level || 0) >= 10;
         reelPulseUntil = level10Fight ? 0 : performance.now() + 320;
         window.GameAudio?.playSfx("reel");
-        return;
-      }
-      if (phase === "caught") {
-        setPhase("ready");
         return;
       }
       if (phase === "blocked") {
