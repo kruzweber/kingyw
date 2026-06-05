@@ -205,7 +205,7 @@
                   "./assets/junwoo_sprites/junwoo_thief_sprite_sheet.png",
                   "./assets/main_silhouettes/main_hero_youngwoo_yellowtail_silhouette.png",
                   "./assets/main_silhouettes/main_stage_start_apartment_silhouette.png",
-                  "./assets/main_silhouettes/main_stage_valley_boat_silhouette",
+                  "./assets/main_silhouettes/main_stage_valley_boat_silhouette.png",
                   "./assets/main_hero_youngwoo_yellowtail_v5.png",
                   "./assets/main_stage_start_apartment.png",
                   "./assets/main_stage_valley_boat.png",
