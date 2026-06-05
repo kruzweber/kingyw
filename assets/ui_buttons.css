@@ -1,0 +1,86 @@
+/* Shared retro button skin. Keeps each screen's sizing/layout, only unifies the surface. */
+.action-panel button,
+.menu button,
+.button,
+.tab,
+.state-button,
+.event-close,
+.admin-panel button,
+.admin-close,
+.continue-button,
+.skip-button,
+.home-button,
+.action-button,
+.result-close {
+  position: relative;
+  overflow: hidden;
+  border: 5px solid var(--line, #07090e) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 230, 129, .62) 0 7px, transparent 7px),
+    var(--panel, #f3c94c) !important;
+  color: var(--ink, #111522) !important;
+  box-shadow: 6px 6px 0 rgba(0,0,0,.28) !important;
+  text-shadow: 1px 1px 0 rgba(255,235,148,.62);
+  image-rendering: pixelated;
+}
+
+.action-panel button.primary,
+.action-panel button.active,
+.action-panel button:hover,
+.action-panel button:focus-visible,
+.menu button.primary,
+.menu button:hover,
+.menu button:focus-visible,
+.button.primary,
+.button.buy,
+.button.available,
+.button:hover,
+.button:focus-visible,
+.tab.active,
+.tab:hover,
+.tab:focus-visible,
+.state-button.active,
+.state-button:hover,
+.state-button:focus-visible,
+.event-close:hover,
+.event-close:focus-visible,
+.admin-panel button:hover,
+.admin-panel button:focus-visible,
+.continue-button:hover,
+.continue-button:focus-visible,
+.skip-button:hover,
+.skip-button:focus-visible,
+.home-button:hover,
+.home-button:focus-visible,
+.action-button:hover,
+.action-button:focus-visible,
+.result-close:hover,
+.result-close:focus-visible {
+  background:
+    linear-gradient(180deg, rgba(255, 235, 144, .78) 0 7px, transparent 7px),
+    var(--gold, #ffd34d) !important;
+  color: var(--ink, #111522) !important;
+}
+
+.action-panel button:active,
+.menu button:active,
+.button:active,
+.tab:active,
+.state-button:active,
+.event-close:active,
+.admin-panel button:active,
+.admin-close:active,
+.continue-button:active,
+.skip-button:active,
+.home-button:active,
+.action-button:active,
+.action-button.held,
+.result-close:active {
+  box-shadow: 3px 3px 0 rgba(0,0,0,.34) !important;
+}
+
+.disabled,
+.button.disabled {
+  opacity: .55;
+  filter: grayscale(.55);
+}

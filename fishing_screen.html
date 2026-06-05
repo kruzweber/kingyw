@@ -1,0 +1,4041 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>낚시왕 남영우 - 낚시</title>
+  <style>
+    :root {
+      --line: #080b16;
+      --ink: #161927;
+      --gold: #ffd45a;
+      --panel: #f5d987;
+      --deep: #182139;
+      --game-scale: 1;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: #101522;
+      color: var(--ink);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+      image-rendering: pixelated;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .game-frame {
+      position: relative;
+      width: calc(1180px * var(--game-scale));
+      height: calc(664px * var(--game-scale));
+    }
+
+    .screen {
+      position: relative;
+      width: 1180px;
+      height: 664px;
+      border: 8px solid var(--line);
+      box-shadow: 0 0 0 6px #2f3751;
+      overflow: hidden;
+      background: #22304a;
+      transform: scale(var(--game-scale));
+      transform-origin: top left;
+    }
+
+    .screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.08) 50%, transparent 50%) 0 0 / 8px 8px,
+        linear-gradient(rgba(255,255,255,.05) 50%, transparent 50%) 0 0 / 8px 8px;
+      pointer-events: none;
+      mix-blend-mode: soft-light;
+      z-index: 50;
+    }
+
+    .hud {
+      position: absolute;
+      left: 14px;
+      top: 14px;
+      width: 710px;
+      display: grid;
+      grid-template-columns: 118px 270px 120px 120px;
+      gap: 7px;
+      z-index: 10;
+    }
+
+    .card,
+    .dialogue,
+    .action-panel {
+      border: 4px solid var(--line);
+      background: var(--panel);
+      box-shadow: 5px 5px 0 rgba(0,0,0,.26);
+    }
+
+    .card {
+      min-height: 40px;
+      padding: 5px 8px;
+    }
+
+    .label {
+      display: block;
+      color: #665128;
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .value {
+      display: block;
+      margin-top: 3px;
+      font-size: 16px;
+      font-weight: 1000;
+      white-space: nowrap;
+    }
+
+    .field-wrap {
+      position: absolute;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 166px;
+      overflow: hidden;
+      background: #5dbbd0;
+    }
+
+
+    .aim-reticle::before {
+      width: 62px;
+      height: 4px;
+    }
+
+    .aim-reticle::after {
+      width: 4px;
+      height: 62px;
+    }
+
+    .aim-ring {
+      position: absolute;
+      inset: 9px;
+      border: 4px solid #ffd45a;
+      border-radius: 50%;
+      box-shadow: 2px 2px 0 rgba(0,0,0,.34);
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    .bottom {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 166px;
+      display: grid;
+      grid-template-columns: 684px 1fr;
+      gap: 12px;
+      padding: 9px 16px;
+      border-top: 6px solid var(--line);
+      background: #20263a;
+      z-index: 12;
+    }
+
+    .dialogue {
+      position: relative;
+      top: -5px;
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 12px;
+      padding: 0;
+      height: 148px;
+      border: 5px solid var(--line);
+      border-color: #070a14;
+      background: var(--deep);
+      box-shadow: 6px 6px 0 rgba(0,0,0,.28);
+      overflow: visible;
+      min-height: 0;
+    }
+
+    .dialogue.event-mode {
+      background:
+        linear-gradient(180deg, rgba(255, 212, 90, .22), rgba(255, 212, 90, 0)),
+        #402348;
+      border-color: var(--gold);
+      box-shadow:
+        0 0 0 5px #7c2d12,
+        0 0 0 10px rgba(255, 212, 90, .34),
+        5px 5px 0 rgba(98, 43, 141, .44);
+      animation: eventPulse 1.1s steps(2, end) infinite;
+    }
+
+    .dialogue.event-mode::before {
+      content: "EVENT";
+      position: absolute;
+      left: 21px;
+      top: -18px;
+      width: 86px;
+      box-sizing: border-box;
+      z-index: 2;
+      padding: 3px 12px 4px;
+      border: 4px solid var(--line);
+      background: #ff3d3d;
+      color: #fff7d8;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 1000;
+      letter-spacing: 0;
+      text-shadow: 2px 2px 0 #000;
+      box-shadow: 4px 4px 0 rgba(0,0,0,.32);
+    }
+
+    .dialogue.event-mode .portrait {
+      background: #402b51;
+      border-color: #ffd45a;
+    }
+
+    .dialogue.event-mode .copy {
+      color: #fff4bf;
+    }
+
+    .dialogue.event-mode .speaker {
+      color: #ffef85;
+    }
+
+    @keyframes eventPulse {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.16); }
+    }
+
+    .portrait {
+      position: relative;
+      box-sizing: border-box;
+      width: 112px;
+      height: 118px;
+      align-self: center;
+      margin-left: 8px;
+      border: 4px solid var(--line);
+      border-color: #070a14;
+      background: #28324a;
+      overflow: hidden;
+    }
+
+    .portrait canvas {
+      display: block;
+      width: 104px;
+      height: 110px;
+      image-rendering: auto;
+    }
+
+    .portrait img.portrait-single {
+      position: absolute;
+      inset: 0;
+      width: 104px;
+      height: 110px;
+      image-rendering: auto;
+    }
+
+    .portrait img[hidden],
+    .portrait canvas[hidden] {
+      display: none;
+    }
+
+
+    .copy {
+      position: relative;
+      min-width: 0;
+      padding: 12px 132px 12px 12px;
+      color: #fff3d3;
+      font-weight: 900;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    .speaker {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--gold);
+      font-size: 18px;
+    }
+
+    .log-line {
+      display: block;
+      font-size: 15px;
+      line-height: 1.42;
+      white-space: nowrap;
+    }
+
+    .event-progress-button {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      width: 118px;
+      height: 118px;
+      transform: translateY(-50%);
+      border: 4px solid var(--line);
+      background: #ff3d3d;
+      color: #fff7d8;
+      font: inherit;
+      font-size: 18px;
+      font-weight: 1000;
+      border-color: #fff7d8;
+      text-shadow: 2px 2px 0 #000;
+      box-shadow: 5px 5px 0 rgba(0,0,0,.42);
+      cursor: pointer;
+    }
+
+    .event-progress-button:active {
+      transform: translate(2px, calc(-50% + 2px));
+      box-shadow: 1px 1px 0 rgba(0,0,0,.32);
+    }
+
+    .event-progress-button[hidden] {
+      display: none;
+    }
+
+    .action-panel {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      z-index: 30;
+      width: 334px;
+      height: 132px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      transform: translateY(-50%);
+      pointer-events: none;
+      display: grid;
+      grid-template-columns: 186px 132px;
+      grid-template-rows: 42px 1fr;
+      column-gap: 16px;
+      align-items: stretch;
+      overflow: visible;
+      min-height: 0;
+    }
+
+    .action-panel.event-mode {
+      background: var(--panel);
+      border-color: var(--line);
+      box-shadow: 5px 5px 0 rgba(0,0,0,.26);
+    }
+
+    .action-title {
+      grid-column: 1;
+      grid-row: 1;
+      margin: 0;
+      padding: 8px 10px;
+      border: 4px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1;
+      font-weight: 1000;
+      box-shadow: 4px 4px 0 rgba(0,0,0,.24);
+    }
+
+    .help {
+      grid-column: 1;
+      grid-row: 2;
+      display: block;
+      height: auto;
+      margin-top: 8px;
+      padding: 9px 10px;
+      border: 4px solid var(--line);
+      background: var(--panel);
+      color: #665128;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1.25;
+      box-shadow: 4px 4px 0 rgba(0,0,0,.24);
+    }
+
+    .action-button {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      width: 132px;
+      height: 132px;
+      margin: 0;
+      border: 5px solid var(--line);
+      background: var(--gold);
+      color: var(--ink);
+      font: inherit;
+      font-size: 23px;
+      font-weight: 1000;
+      line-height: 1.08;
+      box-shadow: none;
+      cursor: pointer;
+      pointer-events: auto;
+      white-space: normal;
+      word-break: keep-all;
+    }
+
+    .action-button:active,
+    .action-button.held {
+      transform: translate(4px, 4px);
+      box-shadow: none;
+      background: #ffbf3d;
+    }
+
+    .action-button:disabled {
+      opacity: .62;
+      cursor: default;
+      transform: none;
+      box-shadow: none;
+      background: #d7c28b;
+    }
+
+    html.phone-rotate .action-panel,
+    html.phone-landscape .action-panel {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      z-index: 30;
+      width: 334px;
+      height: 132px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      transform: translateY(-50%);
+      pointer-events: none;
+      display: grid;
+      grid-template-columns: 186px 132px;
+      grid-template-rows: 42px 1fr;
+      column-gap: 16px;
+      align-items: stretch;
+    }
+
+    html.phone-rotate .action-title,
+    html.phone-landscape .action-title {
+      grid-column: 1;
+      grid-row: 1;
+      margin: 0;
+      padding: 8px 10px;
+      border: 4px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1;
+      box-shadow: 4px 4px 0 rgba(0,0,0,.24);
+    }
+
+    html.phone-rotate .action-panel .help,
+    html.phone-landscape .action-panel .help {
+      grid-column: 1;
+      grid-row: 2;
+      display: block;
+      height: auto;
+      margin-top: 8px;
+      padding: 9px 10px;
+      border: 4px solid var(--line);
+      background: var(--panel);
+      color: #665128;
+      font-size: 12px;
+      line-height: 1.25;
+      box-shadow: 4px 4px 0 rgba(0,0,0,.24);
+    }
+
+    html.phone-rotate .action-button,
+    html.phone-landscape .action-button {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      width: 132px;
+      height: 132px;
+      margin: 0;
+      border-width: 5px;
+      font-size: 23px;
+      line-height: 1.08;
+      box-shadow: none;
+      pointer-events: auto;
+      white-space: normal;
+      word-break: keep-all;
+    }
+
+    html.phone-rotate .action-button:active,
+    html.phone-rotate .action-button.held,
+    html.phone-landscape .action-button:active,
+    html.phone-landscape .action-button.held {
+      transform: translate(4px, 4px);
+      box-shadow: none;
+    }
+
+    html.phone-rotate .action-button:disabled,
+    html.phone-landscape .action-button:disabled {
+      transform: none;
+      box-shadow: none;
+    }
+
+    @media (pointer: coarse) and (max-height: 760px), (pointer: coarse) and (max-width: 760px) {
+      .action-panel {
+        position: fixed;
+        right: 20px;
+        top: 50%;
+        z-index: 30;
+        width: 334px;
+        height: 132px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+        transform: translateY(-50%);
+        pointer-events: none;
+        display: grid;
+        grid-template-columns: 186px 132px;
+        grid-template-rows: 42px 1fr;
+        column-gap: 16px;
+        align-items: stretch;
+      }
+
+      .action-title {
+        grid-column: 1;
+        grid-row: 1;
+        margin: 0;
+        padding: 8px 10px;
+        border: 4px solid var(--line);
+        background: var(--panel);
+        color: var(--ink);
+        font-size: 18px;
+        line-height: 1;
+        box-shadow: 4px 4px 0 rgba(0,0,0,.24);
+      }
+
+      .action-panel .help {
+        grid-column: 1;
+        grid-row: 2;
+        display: block;
+        height: auto;
+        margin-top: 8px;
+        padding: 9px 10px;
+        border: 4px solid var(--line);
+        background: var(--panel);
+        color: #665128;
+        font-size: 12px;
+        line-height: 1.25;
+        box-shadow: 4px 4px 0 rgba(0,0,0,.24);
+      }
+
+      .action-button {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        width: 132px;
+        height: 132px;
+        margin: 0;
+        border-width: 5px;
+        font-size: 23px;
+        line-height: 1.08;
+        box-shadow: none;
+        pointer-events: auto;
+        white-space: normal;
+        word-break: keep-all;
+      }
+
+      .action-button:active,
+      .action-button.held {
+        transform: translate(4px, 4px);
+        box-shadow: none;
+      }
+    }
+
+    .action-panel.mobile-action-layout {
+      position: fixed !important;
+      right: 20px !important;
+      top: 50% !important;
+      z-index: 30 !important;
+      width: 334px !important;
+      height: 132px !important;
+      padding: 0 !important;
+      border: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      transform: translateY(-50%) !important;
+      pointer-events: none !important;
+      display: grid !important;
+      grid-template-columns: 186px 132px !important;
+      grid-template-rows: 42px 1fr !important;
+      column-gap: 16px !important;
+      align-items: stretch !important;
+    }
+
+    .action-panel.mobile-action-layout .action-title {
+      grid-column: 1 !important;
+      grid-row: 1 !important;
+      margin: 0 !important;
+      padding: 8px 10px !important;
+      border: 4px solid var(--line) !important;
+      background: var(--panel) !important;
+      color: var(--ink) !important;
+      font-size: 18px !important;
+      line-height: 1 !important;
+      box-shadow: 4px 4px 0 rgba(0,0,0,.24) !important;
+    }
+
+    .action-panel.mobile-action-layout .help {
+      grid-column: 1 !important;
+      grid-row: 2 !important;
+      display: block !important;
+      height: auto !important;
+      margin-top: 8px !important;
+      padding: 9px 10px !important;
+      border: 4px solid var(--line) !important;
+      background: var(--panel) !important;
+      color: #665128 !important;
+      font-size: 12px !important;
+      line-height: 1.25 !important;
+      box-shadow: 4px 4px 0 rgba(0,0,0,.24) !important;
+    }
+
+    .action-panel.mobile-action-layout .action-button {
+      grid-column: 2 !important;
+      grid-row: 1 / span 2 !important;
+      width: 132px !important;
+      height: 132px !important;
+      margin: 0 !important;
+      border-width: 5px !important;
+      font-size: 23px !important;
+      line-height: 1.08 !important;
+      box-shadow: none !important;
+      pointer-events: auto !important;
+      white-space: normal !important;
+      word-break: keep-all !important;
+    }
+
+    .action-panel.mobile-action-layout .action-button:active,
+    .action-panel.mobile-action-layout .action-button.held {
+      transform: translate(4px, 4px) !important;
+      box-shadow: none !important;
+    }
+
+    .bottom .action-panel,
+    html.phone-rotate .bottom .action-panel,
+    html.phone-landscape .bottom .action-panel,
+    .bottom .action-panel.mobile-action-layout {
+      position: relative !important;
+      left: auto !important;
+      right: auto !important;
+      top: -5px !important;
+      bottom: auto !important;
+      transform: none !important;
+      width: 452px !important;
+      height: 148px !important;
+      padding: 5px !important;
+      border: 5px solid var(--line) !important;
+      background: var(--panel) !important;
+      box-shadow: 5px 5px 0 rgba(0,0,0,.26) !important;
+      grid-template-columns: 286px 132px !important;
+      grid-template-rows: 42px 1fr !important;
+      column-gap: 14px !important;
+      justify-self: start !important;
+      align-self: start !important;
+    }
+
+    .home-button {
+      position: absolute;
+      right: 16px;
+      top: 14px;
+      z-index: 11;
+      min-width: 92px;
+      height: 40px;
+      border: 4px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(255, 230, 129, .62) 0 7px, transparent 7px),
+        var(--panel);
+      color: var(--ink);
+      font: inherit;
+      font-size: 15px;
+      font-weight: 1000;
+      box-shadow: 6px 6px 0 rgba(0,0,0,.28);
+      text-shadow: 1px 1px 0 rgba(255,235,148,.62);
+      cursor: pointer;
+    }
+
+    .home-button:hover,
+    .home-button:focus-visible {
+      background:
+        linear-gradient(180deg, rgba(255, 235, 144, .78) 0 7px, transparent 7px),
+        var(--gold);
+      outline: none;
+    }
+
+    .result-popup {
+      position: absolute;
+      left: 50%;
+      top: 44%;
+      margin-left: -190px;
+      margin-top: -118px;
+      z-index: 14;
+      width: 380px;
+      border: 5px solid var(--line);
+      background: #fff0ad;
+      box-shadow: 7px 7px 0 rgba(0,0,0,.28);
+      padding: 12px;
+    }
+
+    .result-popup[hidden] { display: none; }
+
+    .result-popup h2 {
+      margin: 0 0 7px;
+      font-size: 24px;
+      line-height: 1.05;
+    }
+
+    .result-visual {
+      height: 112px;
+      margin: 0 0 8px;
+      border: 3px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.32), rgba(255,255,255,0)),
+        #dceef3;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .result-visual img {
+      max-width: 158px;
+      max-height: 98px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(4px 5px 0 rgba(0,0,0,.24));
+    }
+
+    .result-meta {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 1000;
+    }
+
+    .result-meta-row,
+    .result-desc {
+      border: 3px solid var(--line);
+      background: #fff7d8;
+      padding: 5px 7px;
+    }
+
+    .result-meta-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      min-height: 30px;
+      font-size: 16px;
+    }
+
+    .result-meta-label {
+      color: var(--ink);
+    }
+
+    .result-meta-value {
+      color: var(--ink);
+      text-align: right;
+    }
+
+    .result-desc {
+      min-height: 54px;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .result-close {
+      width: 100%;
+      height: 38px;
+      margin-top: 10px;
+      border: 4px solid var(--line);
+      background: var(--gold);
+      font: inherit;
+      font-size: 15px;
+      font-weight: 1000;
+      cursor: pointer;
+    }
+  </style>
+  <script src="./mobile_orientation_boot.js"></script>
+</head>
+<body>
+  <div class="game-frame">
+  <main class="screen">
+    <section class="hud">
+      <div class="card"><span class="label">&#54596;&#46300;</span><span class="value" id="fieldHud">&#48124;&#47932;</span></div>
+      <div class="card"><span class="label">&#51109;&#48708;</span><span class="value" id="gearHud">&#51109;&#45212;&#44048; &#45210;&#49884;&#49464;&#53944;</span></div>
+      <div class="card"><span class="label">&#47749;&#49457;</span><span class="value" id="fameHud">0</span></div>
+      <div class="card"><span class="label">&#48372;&#50976;</span><span class="value" id="goldHud">0G</span></div>
+    </section>
+
+    <button class="home-button" id="homeButton" type="button">&#45208;&#44032;&#44592;</button>
+
+    <section class="field-wrap">
+      <canvas id="gameCanvas" width="1164" height="502" aria-label="&#45210;&#49884; &#54596;&#46300;"></canvas>
+    </section>
+
+    <aside class="result-popup" id="resultPopup" hidden aria-live="polite">
+      <h2 id="resultName">&#54588;&#46972;&#48120;</h2>
+      <div class="result-visual"><img id="resultImage" src="" alt=""></div>
+      <div class="result-meta">
+        <div class="result-meta-row">
+          <span class="result-meta-label" id="resultPrimaryLabel">등급</span>
+          <span class="result-meta-value" id="resultLevel">Lv.1</span>
+        </div>
+        <div class="result-meta-row">
+          <span class="result-meta-label">보상</span>
+          <span class="result-meta-value" id="resultGold">100G</span>
+        </div>
+      </div>
+      <div class="result-desc" id="resultDesc">&#54925;&#46301; &#51221;&#48372;</div>
+      <button class="result-close" id="resultClose" type="button">&#54869;&#51064;</button>
+    </aside>
+
+    <section class="bottom">
+      <aside class="dialogue">
+        <div class="portrait">
+          <img id="portraitImage" class="portrait-single" alt="영우 얼굴" hidden>
+          <canvas id="portraitCanvas" width="104" height="110" aria-label="&#50689;&#50864; &#50620;&#44404;"></canvas>
+        </div>
+        <div class="copy">
+          <strong class="speaker" id="dialogueSpeaker">&#45210;&#49884;&#50773; &#45224;&#50689;&#50864;</strong>
+          <span class="log-line" id="log1">[&#45824;&#44592;] &#48260;&#53948; &#54616;&#45208;&#47196; &#45912;&#51648;&#44256;, &#44152;&#44256;, &#44048;&#45716;&#45796;.</span>
+          <span class="log-line" id="log2">[&#51312;&#51089;] &#45912;&#51648;&#44592;&#45716; &#44144;&#47532;&#50752; &#51340;&#50864;&#47484; &#52264;&#47168;&#47196; &#47582;&#52632;&#45796;.</span>
+          <span class="log-line" id="log3">[&#47785;&#54364;] &#47932;&#49549; &#45824;&#49345; &#44540;&#52376;&#50640; &#52236;&#47484; &#46504;&#50612;&#46888;&#47532;&#51088;.</span>
+          <span class="log-line" id="log4">[&#50689;&#50864;] &#51060;&#48264;&#50644; &#51228;&#45824;&#47196; &#45912;&#51256;&#48372;&#51088;.</span>
+          <button class="event-progress-button" id="eventProgressButton" type="button" hidden>&#54869;&#51064;</button>
+        </div>
+      </aside>
+
+      <aside class="action-panel">
+        <div class="action-title"><span id="actionTitle">&#50529;&#49496;</span></div>
+        <span class="help" id="actionHelp">상황에 맞춰 버튼 하나로 진행한다.</span>
+        <button class="action-button" id="actionButton" type="button">&#45912;&#51648;&#44592;</button>
+      </aside>
+    </section>
+  </main>
+  </div>
+
+  <script src="./game_state.js?v=spoiler-cleanup-20260601b"></script>
+  <script src="./audio_manager.js?v=audio-foundation-20260604"></script>
+  <script src="./fish_sprite_manifest.js?v=quality-silhouette-live-20260604"></script>
+  <script src="./junk_sprite_manifest.js?v=junk-silhouette-20260604"></script>
+  <script src="./youngwoo_sprite_manifest.js?v=reel-tip-20260530"></script>
+  <script>
+const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width;
+    const H = canvas.height;
+    const waterLine = 206;
+
+    const playerImage = new Image();
+    playerImage.src = "./assets/youngwoo_sprites/level_matched_alpha/youngwoo_beginner_toy_rod_idle.png";
+    const portraitEmotionSheets = {
+      beginnerOutfit: new Image(),
+      midOutfit: new Image(),
+      premiumOutfit: new Image()
+    };
+    portraitEmotionSheets.beginnerOutfit.src = "./assets/youngwoo_sprites/emotion_sheets/youngwoo_beginner_sprite_face_hd_sheet_alpha.png?v=sprite-face-outfit-match-20260603";
+    portraitEmotionSheets.midOutfit.src = "./assets/youngwoo_sprites/emotion_sheets/youngwoo_mid_sprite_face_hd_sheet_alpha.png?v=sprite-face-no-first-20260603";
+    portraitEmotionSheets.premiumOutfit.src = "./assets/youngwoo_sprites/emotion_sheets/youngwoo_premium_sprite_face_hd_sheet_alpha.png?v=sprite-face-no-first-20260603";
+    const portraitEmotionColumns = 6;
+    const portraitEmotionRows = 4;
+    const youngwooSpriteBase = "./assets/youngwoo_sprites/level_matched_alpha/";
+    const youngwooSpriteCache = new Map();
+    const youngwooOutfitIds = {
+      beginnerOutfit: "beginner",
+      midOutfit: "mid",
+      premiumOutfit: "premium"
+    };
+    const youngwooRodIds = {
+      toyRod: "toy",
+      aliRod: "ali",
+      japanRod: "japan",
+      firstLeisure: "first_leisure",
+      temuRod: "temu",
+      legendRod: "legend"
+    };
+    const youngwooSpriteAssetVersion = "broken-sprite-preload-20260604";
+    const firstLeisureBrokenSprite = new Image();
+    firstLeisureBrokenSprite.src = "./assets/youngwoo_sprites/level_matched_alpha/youngwoo_beginner_first_leisure_broken.png?v=broken-sprite-preload-20260604";
+    youngwooSpriteCache.set("beginner_first_leisure_broken", firstLeisureBrokenSprite);
+    const youngwooCanonicalSourceHeight = 375;
+    const castingReadyRodTips = {
+      toyRod: { x: 14, y: 9 },
+      aliRod: { x: 14, y: 8 },
+      japanRod: { x: 15, y: 8 },
+      firstLeisure: { x: 14, y: 8 },
+      temuRod: { x: 16, y: 8 },
+      legendRod: { x: 15, y: 8 }
+    };
+    const tackleStyles = {
+      toyRod: { type: "ball", line: "#4f46e5", main: "#f6c21a", accent: "#ef4444", shadow: "#9a5b0a" },
+      aliRod: { type: "squid", line: "#f0b38f", main: "#67d141", accent: "#2563eb", shadow: "#14532d" },
+      japanRod: { type: "sinker", line: "#ffd7f0", main: "#2670d8", accent: "#f8fafc", shadow: "#164c8f" },
+      firstLeisure: { type: "drop", line: "#ffd7f0", main: "#e23a3a", accent: "#f8fafc", shadow: "#7f1d1d" },
+      temuRod: { type: "cube", line: "#eab308", main: "#8b38d6", accent: "#b7f331", shadow: "#4c1d95" },
+      legendRod: { type: "gem", line: "#f3b83a", main: "#f4b41b", accent: "#1fc7ff", shadow: "#9b5e0d" }
+    };
+    const assetSources = {
+      tivoli: "./assets/tivoli_right.png",
+      g70: "./assets/g70_right.png",
+      carnival: "./assets/carnival_right.png",
+      valleyBoat: "./assets/valley_boat_right.png?v=boat-quality-20260604",
+      seaBoat: "./assets/sea_boat_right_v2.png?v=boat-quality-20260604",
+      waterFreshBase: "./assets/water/water_fresh_base.png",
+      waterFreshOverlay: "./assets/water/water_fresh_overlay.png",
+      waterValleyBase: "./assets/water/water_valley_base.png",
+      waterValleyOverlay: "./assets/water/water_valley_overlay.png",
+      waterSeaBase: "./assets/water/water_sea_base.png",
+      waterSeaOverlay: "./assets/water/water_sea_overlay.png",
+      waterOceanBase: "./assets/water/water_ocean_base.png",
+      waterOceanOverlay: "./assets/water/water_ocean_overlay.png",
+      fieldFreshBg: "./assets/field_backgrounds/field_fresh_concept.png",
+      fieldValleyBg: "./assets/field_backgrounds/field_valley_concept.png",
+      fieldSeaBg: "./assets/field_backgrounds/field_sea_concept_v3_parking_pier.png",
+      fieldOceanBg: "./assets/field_backgrounds/field_ocean_concept.png",
+      junwooThief: "./assets/junwoo_sprites/junwoo_thief_sprite_sheet.png",
+      junwooEmojiLaugh: "./assets/junwoo_sprites/junwoo_emoji_laugh.png?v=junwoo-photo-redraw-20260604",
+      wifeConfiscate: "./assets/wife_confiscate.png?v=wife-quality-bottom-20260604",
+      jaemoStanding: "./assets/jaemo_sprites/jaemo_sprite_standing.png",
+      jaemoEmojiSmile: "./assets/jaemo_sprites/jaemo_emoji_kind_smile.png?v=jaemo-256-20260604",
+      jaemoFlipper: "./assets/junk_new/quality_256/junk_16_flipper.png?v=junk-quality-20260604",
+      tackle_toyRod: "./assets/tackle_toyRod_with_star.png?v=star-sinker-20260604",
+      tackle_aliRod: "./assets/tackle_aliRod.png?v=rod-quality-20260604",
+      tackle_japanRod: "./assets/tackle_japanRod.png?v=rod-quality-20260604",
+      tackle_firstLeisure: "./assets/tackle_firstLeisure.png?v=rod-quality-20260604",
+      tackle_temuRod: "./assets/tackle_temuRod.png?v=rod-quality-20260604",
+      tackle_legendRod: "./assets/tackle_legendRod.png?v=rod-quality-20260604"
+    };
+    const assetImages = Object.fromEntries(Object.entries(assetSources).map(([id, src]) => {
+      const image = new Image();
+      image.src = src;
+      return [id, image];
+    }));
+    const fishSpriteImages = new Map();
+
+    const fieldHud = document.getElementById("fieldHud");
+    const gearHud = document.getElementById("gearHud");
+    const fameHud = document.getElementById("fameHud");
+    const goldHud = document.getElementById("goldHud");
+    const dialoguePanel = document.querySelector(".dialogue");
+    const actionPanel = document.querySelector(".action-panel");
+    const logEls = ["log1", "log2", "log3", "log4"].map((id) => document.getElementById(id));
+    const dialogueSpeaker = document.getElementById("dialogueSpeaker");
+    const eventProgressButton = document.getElementById("eventProgressButton");
+    const actionButton = document.getElementById("actionButton");
+    const actionTitle = document.getElementById("actionTitle");
+    const actionHelp = document.getElementById("actionHelp");
+    const homeButton = document.getElementById("homeButton");
+    const resultPopup = document.getElementById("resultPopup");
+    const resultName = document.getElementById("resultName");
+    const resultImage = document.getElementById("resultImage");
+    const resultGold = document.getElementById("resultGold");
+    const resultLevel = document.getElementById("resultLevel");
+    const resultPrimaryLabel = document.getElementById("resultPrimaryLabel");
+    const resultDesc = document.getElementById("resultDesc");
+    const resultClose = document.getElementById("resultClose");
+    const portraitImage = document.getElementById("portraitImage");
+    const portraitCanvas = document.getElementById("portraitCanvas");
+    const portraitCtx = portraitCanvas.getContext("2d");
+    const portraitScratchCanvas = document.createElement("canvas");
+    const portraitScratchCtx = portraitScratchCanvas.getContext("2d", { willReadFrequently: true });
+    const portraitCropCache = new WeakMap();
+    const portraitEmotionCropCache = new Map();
+
+    function isMobileActionLayout() {
+      const params = new URLSearchParams(location.search);
+      if (params.get("mobileAction") === "1") return true;
+      const viewport = window.visualViewport;
+      const width = viewport?.width || window.innerWidth || screen.width;
+      const height = viewport?.height || window.innerHeight || screen.height;
+      const coarse = window.matchMedia?.("(pointer: coarse)")?.matches;
+      const touch = navigator.maxTouchPoints > 0 || "ontouchstart" in window;
+      return (coarse || touch) && Math.min(width, height) <= 820;
+    }
+
+    function refreshMobileActionLayout() {
+      actionPanel?.classList.toggle("mobile-action-layout", isMobileActionLayout());
+    }
+
+    let g70TheftStage = "none";
+    let g70TheftYoungwooLineShown = false;
+    let activeEventDialogue = null;
+    let state = window.GameState.load();
+      syncDialogueSpeaker();
+
+    function currentYoungwooTitle() {
+      return window.GameState.displayYoungwooName(state);
+    }
+
+    function syncDialogueSpeaker() {
+      dialogueSpeaker.textContent = activeEventDialogue?.speaker || (g70TheftStage === "appear" ? "준우" : currentYoungwooTitle());
+    }
+    let field = window.GameState.getActiveField(state);
+    let phase = "ready";
+    let castGauge = 0.16;
+    let castDir = 1;
+    let castDistance = 0.5;
+    let castSide = 0.5;
+    let hookProximity = 0;
+    let hookDisplayProximity = 0;
+    let hookTimer = 0;
+    let biteWait = 0;
+    let tension = 42;
+    let catchProgress = 0;
+    let reelHeld = false;
+    let fightElapsed = 0;
+    let lastTime = 0;
+    let target = null;
+    let fightStartDistance = 1;
+    let bobber = { x: 280, y: waterLine + 78, targetX: 280, targetY: waterLine + 78, t: 0 };
+    let swimmers = [];
+    let suppressReelClick = false;
+    let heldResult = null;
+    let castFlight = null;
+    let castSplashPlayed = false;
+    let reelPulseUntil = 0;
+    let pendingResultEvent = null;
+    let firstLeisureBrokenThisTrip = false;
+    let lastPortraitEmotion = "neutral";
+    let g70TheftExitReady = false;
+    let biteFlashUntil = 0;
+    let fightMessage = "";
+    let fightMessageUntil = 0;
+    let biteState = null;
+    let bitePulse = 0;
+    let fieldAlertMessage = "";
+    let fieldAlertUntil = 0;
+    let lastLevel10AlertAt = 0;
+    let nextFightSurgeAt = 0;
+    let fightSurgeUntil = 0;
+    let fightSurgeStrength = 0;
+    let weakGearNoticeShown = false;
+    let nextJunkDriftAt = 0;
+
+    const portraitEmotionIndexes = {
+      neutral: 0,
+      happy: 1,
+      laugh: 2,
+      nervousSmile: 3,
+      surprised: 4,
+      panic: 5,
+      angry: 6,
+      rage: 7,
+      sad: 8,
+      crying: 9,
+      proud: 10,
+      sparkle: 11,
+      worried: 12,
+      scared: 13,
+      confused: 14,
+      determined: 15,
+      serious: 16,
+      tired: 17,
+      exhausted: 18,
+      disappointed: 19,
+      blush: 20,
+      thinking: 21,
+      victory: 10,
+      talk: 23
+    };
+
+    function portraitEmotionFileName(emotion = "neutral") {
+      return { victory: "proud" }[emotion] || emotion;
+    }
+
+    function portraitOutfitFileName(outfit = state.loadout.outfit) {
+      if (outfit === "premiumOutfit") return "premium";
+      if (outfit === "midOutfit") return "mid";
+      return "beginner";
+    }
+
+    function portraitImageSrc(outfit = state.loadout.outfit, emotion = "neutral") {
+      return `./assets/youngwoo_sprites/portrait_emotions_2x/${portraitOutfitFileName(outfit)}_${portraitEmotionFileName(emotion)}.png?v=youngwoo-left-face-outfit-hats-20260604`;
+    }
+
+    function resizeGame() {
+      const baseW = 1180;
+      const baseH = 664;
+      const padding = 0.96;
+      const viewport = window.visualViewport;
+      const usableWidth = viewport?.width || window.innerWidth;
+      const usableHeight = viewport?.height || window.innerHeight;
+      const scale = Math.min(usableWidth / baseW, usableHeight / baseH) * padding;
+      const desktopLike = window.matchMedia("(pointer: fine) and (min-width: 900px)").matches;
+      const maxScale = desktopLike ? 1.25 : 1;
+      document.documentElement.style.setProperty("--game-scale", String(Math.min(scale, maxScale)));
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function rand(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function setLogs(lines) {
+      syncDialogueSpeaker();
+      lines.forEach((line, index) => {
+        logEls[index].textContent = line || "";
+      });
+    }
+
+    function setEventDialogueMode(active) {
+      dialoguePanel.classList.toggle("event-mode", Boolean(active));
+      actionPanel.classList.toggle("event-mode", Boolean(active));
+      eventProgressButton.hidden = !active;
+      if (!active) homeButton.hidden = false;
+    }
+
+    function clearEventDialogue() {
+      activeEventDialogue = null;
+      setEventDialogueMode(false);
+      syncDialogueSpeaker();
+    }
+
+    function showEventDialogueStep(step, buttonText = "확인") {
+      const isYoungwooDialogue = step.portrait === "youngwoo" || step.speaker === "낚시왕 남영우";
+      activeEventDialogue = {
+        ...step,
+        speaker: isYoungwooDialogue ? currentYoungwooTitle() : step.speaker
+      };
+      setEventDialogueMode(!isYoungwooDialogue);
+      syncDialogueSpeaker();
+      eventProgressButton.textContent = buttonText;
+      eventProgressButton.hidden = isYoungwooDialogue;
+      homeButton.hidden = !isYoungwooDialogue;
+      setLogs(step.lines || []);
+    }
+
+    function advanceG70TheftDialogue() {
+      if (activeEventDialogue?.eventId === "jaemo_flipper_found") {
+        const event = window.GameState.eventDefinitions.jaemo_flipper_found;
+        clearEventDialogue();
+        setPhase("ready");
+        lastPortraitEmotion = "happy";
+        setLogs(event.afterLines || ["[보상] 민물보트가 생겼다.", "[안내] 깊은 민물로 나갈 수 있다.", "[영우] 오리발 하나가 배가 되어 돌아왔다."]);
+        return;
+      }
+
+      if (g70TheftStage === "keyDropped") {
+        g70TheftStage = "none";
+        lastPortraitEmotion = "angry";
+        clearEventDialogue();
+        setPhase("ready");
+        setLogs(["[목표] 바다보트를 상점에서 살 수 있게 되었다.", "[준우] 차키는 바다에 두고 왔어. 자연 친화적이지?", "[영우] 친환경이 아니라 친분노다.", "[상점] 바다보트 구매를 준비하자."]);
+        return;
+      }
+
+      if (g70TheftStage === "appear") {
+        g70TheftStage = "gone";
+        g70TheftYoungwooLineShown = true;
+        lastPortraitEmotion = "crying";
+        activeEventDialogue = null;
+        setEventDialogueMode(false);
+        syncDialogueSpeaker();
+        setLogs(["[사건] G70과 준우가 시야에서 사라졌다.", "[영우] 내 G70...", "[영우] 바다보다 마음이 더 깊게 가라앉았다.", "[나가기] 창고로 돌아가자."]);
+        return;
+      }
+      if (activeEventDialogue) {
+        clearEventDialogue();
+      }
+    }
+
+    function showG70KeyDroppedScene() {
+      if (!state.flags.g70_key_drop_pending || state.flags.g70_key_drop_seen) return false;
+      delete state.flags.g70_key_drop_pending;
+      state.flags.g70_key_drop_seen = true;
+      state.flags.sea_boat_unlocked = true;
+      if (!state.seenEvents.includes("g70_key_dropped")) state.seenEvents.push("g70_key_dropped");
+      state = window.GameState.save(state);
+      g70TheftStage = "keyDropped";
+      g70TheftExitReady = false;
+      g70TheftYoungwooLineShown = false;
+      lastPortraitEmotion = "surprised";
+      setPhase("blocked");
+      showEventDialogueStep({
+        speaker: "준우",
+        portrait: "junwoo",
+        lines: ["[바다 진입] 카니발이 멈추자마자 준우가 손을 흔든다.", "[준우] 미안. G70 차키를 바다에 빠뜨렸어.", "[준우] 차는 저쪽 바다에 세워뒀고, 난 먼저 갈게!", "[영우] 바다보트 살 이유가 생겼네. 아주 폭력적으로."]
+      });
+      return true;
+    }
+
+    function resultEmotion(result) {
+      if (!result) return "neutral";
+      if (result.kind === "event") return "surprised";
+      if (result.kind === "junk") return result.gold > 0 || result.fame > 0 ? "nervousSmile" : "disappointed";
+      if ((result.level || 0) >= 10) return "victory";
+      if ((result.level || 0) >= 8) return "proud";
+      return "happy";
+    }
+
+    function currentPortraitEmotion() {
+      if (!resultPopup.hidden) return lastPortraitEmotion;
+      if (phase === "caught") return lastPortraitEmotion || "happy";
+      if (phase === "missed") return lastPortraitEmotion || "disappointed";
+      if (phase === "blocked") return lastPortraitEmotion || "disappointed";
+      if (phase === "aimingDistance" || phase === "aimingSide") return "thinking";
+      if (phase === "casting") {
+        if (castFlight) return "surprised";
+        if (hookDisplayProximity > 0.62) return "determined";
+        if (hookDisplayProximity > 0.38) return "nervousSmile";
+        return "worried";
+      }
+      if (phase === "reeling") {
+        if (tension > 105 || tension < 4) return "panic";
+        if (tension > 88 || tension < 15) return "worried";
+        if ((target?.item?.level || 0) >= 8 || (target?.item?.difficulty || 0) >= 3.2) return "rage";
+        if (reelHeld || performance.now() < reelPulseUntil) return "determined";
+        return "serious";
+      }
+      return "neutral";
+    }
+
+    function gear() {
+      return window.GameState.gearStats[state.loadout[field.gearType]] || window.GameState.gearStats.toyRod;
+    }
+
+    function hasActiveFishingGear() {
+      const gearId = state.loadout[field.gearType];
+      if (field.gearType === "sea") return Boolean(gearId && gearId !== "noneSea");
+      return Boolean(gearId && gearId !== "noneFreshwater");
+    }
+
+    function outfitImage() {
+      const outfit = window.GameState.outfitStats[state.loadout.outfit] || window.GameState.outfitStats.beginnerOutfit;
+      return outfit.image;
+    }
+
+    function refreshState() {
+      state = window.GameState.load();
+      field = window.GameState.getActiveField(state);
+      const imageSrc = outfitImage();
+      const absoluteImageSrc = new URL(imageSrc, location.href).href;
+      if (playerImage.src !== absoluteImageSrc) playerImage.src = imageSrc;
+      fieldHud.textContent = field.name;
+      gearHud.textContent = gear().name;
+      fameHud.textContent = state.fame.toLocaleString();
+      goldHud.textContent = `${state.gold.toLocaleString()}G`;
+    }
+
+    function candidatePool() {
+      const gearId = state.loadout[field.gearType];
+      const currentGear = window.GameState.gearStats[gearId] || window.GameState.gearStats.toyRod;
+      const outfit = window.GameState.outfitStats[state.loadout.outfit] || window.GameState.outfitStats.beginnerOutfit;
+      const titleBonus = window.GameState.titleBonus(state);
+      const permanentBonus = window.GameState.permanentBonus ? window.GameState.permanentBonus(state) : {};
+      const score = 80 + (currentGear.accuracyBonus || 0);
+      const effectivePower = (currentGear.power + (permanentBonus.powerFlat || 0)) * (1 + (titleBonus.power || 0)) + score * 0.65;
+      const canChallengeBoss = field.id === "ocean" && gearId === "legendRod" && score >= 88;
+      const fish = window.GameState.fishData
+        .filter((item) => item.field === field.fishGroup)
+        .filter((item) => item.resistance <= effectivePower + 14 || item.level <= 2 || (canChallengeBoss && item.level >= 10))
+        .map((item) => {
+          const baseWeight = Math.sqrt(Math.max(1, item.weight || 1));
+          const collectionBias = state.caughtFish?.includes(item.name) ? 0.16 : 2.6;
+          const highLevelBias = item.level >= 7
+            ? 1 + (outfit.highLevelBonus || 0) + (titleBonus.rareFish || 0)
+            : item.level >= 5
+              ? 1 + (outfit.highLevelBonus || 0) * 0.45
+              : 1;
+          const bossBias = item.level >= 10 && canChallengeBoss ? 0.55 + (outfit.highLevelBonus || 0) : highLevelBias;
+          return ({
+        ...item,
+        kind: "fish",
+        color: item.level >= 9 ? "#d6f0ff" : field.gearType === "sea" ? "#9bd4e9" : "#5f8f7f",
+        difficulty: Math.max(0.6, item.resistance / 16),
+            spawnWeight: baseWeight * bossBias * collectionBias * lureAffinityFor(item) * fieldConditionAffinityFor(item)
+          });
+        });
+      const ownedJunk = new Set(state.junk || []);
+      const junk = window.GameState.junkData.filter((item) => {
+        if (item.name === "영우의 초상화" && !state.flags.normal_ending_seen) return false;
+        return (item.field === field.junkGroup || item.field === "all") && !ownedJunk.has(item.name);
+      }).map((item) => ({
+        ...item,
+        kind: "junk",
+        color: field.gearType === "sea" ? "#263342" : "#15191f",
+        difficulty: field.gearType === "sea" ? 1.6 : 0.7,
+        spawnWeight: Math.sqrt(Math.max(1, item.weight || 1))
+          * 1.85
+          * (1 + (outfit.lostItemBonus || 0) + (titleBonus.junkChance || 0))
+      }));
+      return [...fish, ...junk];
+    }
+
+    function weightedSampleWithoutReplacement(items, count) {
+      const pool = [...items];
+      const picked = [];
+      while (pool.length && picked.length < count) {
+        const total = pool.reduce((sum, item) => sum + Math.max(0.01, item.spawnWeight || item.weight || 1), 0);
+        let cursor = Math.random() * total;
+        const index = pool.findIndex((item) => {
+          cursor -= Math.max(0.01, item.spawnWeight || item.weight || 1);
+          return cursor <= 0;
+        });
+        picked.push(...pool.splice(index >= 0 ? index : pool.length - 1, 1));
+      }
+      return picked;
+    }
+
+    function waterPlayBounds() {
+      if (field.id === "fresh") return { minX: 430, maxX: W - 118, minY: waterLine + 108, maxY: H - 66 };
+      if (field.id === "sea") return { minX: 520, maxX: W - 112, minY: waterLine + 104, maxY: H - 62 };
+      if (field.id === "valley") return { minX: 285, maxX: W - 112, minY: 326, maxY: H - 58 };
+      if (field.id === "ocean") return { minX: 275, maxX: W - 108, minY: 318, maxY: H - 56 };
+      return { minX: 335, maxX: W - 118, minY: waterLine + 80, maxY: H - 58 };
+    }
+
+    function castBounds() {
+      return waterPlayBounds();
+    }
+
+    function castPreviewPoint(distance = castDistance, side = castGauge) {
+      const bounds = castBounds();
+      const sideRange = (bounds.maxY - bounds.minY) * 0.78;
+      return {
+        x: bounds.minX + (bounds.maxX - bounds.minX) * distance,
+        y: clamp((bounds.minY + bounds.maxY) / 2 + (side - 0.5) * sideRange, bounds.minY, bounds.maxY)
+      };
+    }
+
+    function fishMovementProfile(item) {
+      if (item.kind === "junk") return { type: "junk", minDepth: 0.18, maxDepth: 0.92, speed: 0.72, drift: 8, wobble: 2.4 };
+      if (item.kind === "event") return { type: "event", minDepth: 0.08, maxDepth: 0.72, speed: 1, drift: 18, wobble: 3 };
+      const migratory = new Set(["멸치", "꽁치", "전갱이", "학꽁치", "고등어", "숭어", "방어", "농어", "부시리", "삼치", "만새기", "황새치", "참다랑어", "백상아리"]);
+      const bottomFlat = new Set(["광어", "도다리", "대구", "모래무지", "마자", "누치"]);
+      const rockfish = new Set(["우럭", "볼락", "노래미", "돌돔", "감성돔", "참돔", "벵에돔", "능성어", "다금바리", "꺾지", "꺽저기", "대물 쏘가리"]);
+      const ambushBottom = new Set(["메기", "대물메기", "동자개", "가물치", "뱀장어", "철갑상어", "돗돔"]);
+      const predator = false;
+      const schooling = false;
+      if (migratory.has(item.name)) return { type: "migratory", minDepth: 0.18, maxDepth: 0.72, speed: 2.45, drift: 18, wobble: 5.6, predator, schooling };
+      if (bottomFlat.has(item.name)) return { type: "bottom", minDepth: 0.82, maxDepth: 0.98, speed: 0.18, drift: 3, wobble: 1.15 };
+      if (rockfish.has(item.name)) return { type: "rockfish", minDepth: 0.76, maxDepth: 0.96, speed: predator ? 0.46 : 0.28, drift: 4, wobble: 1.35, predator };
+      if (ambushBottom.has(item.name)) return { type: "ambush", minDepth: 0.68, maxDepth: 0.96, speed: predator ? 0.62 : 0.42, drift: 6, wobble: 1.7, predator };
+      return { type: "cruiser", minDepth: 0.18, maxDepth: 0.9, speed: 1, drift: 10, wobble: 3 };
+    }
+
+    function swimmerInPlayArea(fish, bounds, padding = 0) {
+      return fish.x >= bounds.minX - padding
+        && fish.x <= bounds.maxX + padding
+        && fish.y >= bounds.minY - padding
+        && fish.y <= bounds.maxY + padding;
+    }
+
+    function nearestPredatorFor(fish, predators) {
+      return predators
+        .map((predator) => ({ predator, d: Math.hypot(predator.x - fish.x, predator.y - fish.y) }))
+        .sort((a, b) => a.d - b.d)[0]?.predator || null;
+    }
+
+    function predatorSafePointFor(fish, predator, bounds) {
+      const profile = fish.profile || fishMovementProfile(fish.item);
+      const depthBounds = swimmerDepthBounds(bounds, profile);
+      const dx = predator ? fish.x - predator.x : (Math.random() < 0.5 ? -1 : 1);
+      const dy = predator ? fish.y - predator.y : rand(-0.8, 0.8);
+      const distance = Math.max(1, Math.hypot(dx, dy));
+      const awayX = dx / distance;
+      const awayY = dy / distance;
+      const side = (fish.scatterSeed || Math.random()) < 0.5 ? -1 : 1;
+      const sideX = -awayY * side;
+      const sideY = awayX * side;
+      const safeX = clamp(
+        fish.x + awayX * rand(62, 128) + sideX * rand(42, 96),
+        bounds.minX + 26,
+        bounds.maxX - 26
+      );
+      const safeY = clamp(
+        fish.y + awayY * rand(22, 64) + sideY * rand(28, 72),
+        depthBounds.minY,
+        depthBounds.maxY
+      );
+      return {
+        x: safeX,
+        y: safeY,
+        holdUntil: performance.now() + rand(850, 1700),
+        driftDir: side
+      };
+    }
+
+    function swimmerSeparationOffset(fish, allFish, minDistance = 82) {
+      let pushX = 0;
+      let pushY = 0;
+      let count = 0;
+      allFish.forEach((other) => {
+        if (
+          other === fish
+          || other.hiddenByPredator
+          || other.item?.kind !== "fish"
+          || fishMovementProfile(other.item).predator
+        ) return;
+        let dx = fish.x - other.x;
+        let dy = fish.y - other.y;
+        let distance = Math.hypot(dx, dy);
+        if (distance >= minDistance) return;
+        if (distance < 1) {
+          const angle = (fish.wobble || 0) + (fish.scatterSeed || 0) * Math.PI * 2;
+          dx = Math.cos(angle);
+          dy = Math.sin(angle);
+          distance = 1;
+        }
+        const force = (minDistance - distance) / minDistance;
+        pushX += (dx / distance) * force;
+        pushY += (dy / distance) * force;
+        count += 1;
+      });
+      return count ? { x: pushX / count, y: pushY / count } : { x: 0, y: 0 };
+    }
+
+    function applySwimmerSeparation(fish, allFish, bounds, dt, strength = 1) {
+      if (fish.item?.kind !== "fish" || fish === target || fish.hiddenByPredator) return;
+      const profile = fish.profile || fishMovementProfile(fish.item);
+      if (profile.predator) return;
+      const minDistance = profile.schooling || fish.item.schoolMate ? 86 : 102;
+      const separation = swimmerSeparationOffset(fish, allFish, minDistance);
+      if (!separation.x && !separation.y) return;
+      fish.x = clamp(fish.x + separation.x * dt * 132 * strength, bounds.minX + 10, bounds.maxX - 10);
+      fish.y = clamp(fish.y + separation.y * dt * 88 * strength, bounds.minY, bounds.maxY);
+      fish.baseY = fish.y;
+    }
+
+    function updatePredatorRoam(fish, profile, bounds, dt) {
+      if (!profile.predator || fish === target) return false;
+      const now = performance.now();
+      const depthBounds = swimmerDepthBounds(bounds, profile);
+      if (fish.predatorOffscreenUntil && now < fish.predatorOffscreenUntil) {
+        fish.wobble += dt * (profile.wobble || 3);
+        return true;
+      }
+      if (fish.predatorOffscreenUntil && now >= fish.predatorOffscreenUntil) {
+        const fromLeft = Math.random() < 0.5;
+        fish.predatorOffscreenUntil = 0;
+        fish.predatorLeaving = false;
+        fish.x = fromLeft ? bounds.minX - rand(90, 180) : bounds.maxX + rand(90, 180);
+        fish.vx = Math.abs(swimmerSpeed(fish.item)) * rand(0.85, 1.3) * (fromLeft ? 1 : -1);
+        fish.baseY = rand(depthBounds.minY, depthBounds.maxY);
+        fish.y = fish.baseY;
+        fish.vy = swimmerVerticalSpeed(fish.item, profile);
+        return false;
+      }
+      if (!fish.predatorLeaving && swimmerInPlayArea(fish, bounds, 0) && Math.random() < dt * 0.026) {
+        fish.predatorLeaving = true;
+        fish.predatorLeaveDir = Math.random() < 0.5 ? -1 : 1;
+      }
+      if (fish.predatorLeaving) {
+        const leaveDir = fish.predatorLeaveDir || Math.sign(fish.vx || 1) || 1;
+        fish.x += leaveDir * dt * rand(95, 155);
+        fish.baseY = clamp((fish.baseY || fish.y) + (fish.vy || 0) * dt, depthBounds.minY, depthBounds.maxY);
+        fish.y = clamp((fish.baseY || fish.y) + fishVerticalBob(fish, profile, 0.7), bounds.minY, bounds.maxY);
+        fish.vx = Math.abs(fish.vx || swimmerSpeed(fish.item)) * leaveDir;
+        if (!swimmerInPlayArea(fish, bounds, 180)) {
+          fish.predatorLeaving = false;
+          fish.predatorOffscreenUntil = now + rand(4200, 11500);
+          fish.x = leaveDir > 0 ? bounds.maxX + rand(210, 360) : bounds.minX - rand(210, 360);
+        }
+        fish.wobble += dt * Math.max(4.8, profile.wobble || 3);
+        return true;
+      }
+      return false;
+    }
+
+    function reappearSwimmerAfterPredator(fish, bounds) {
+      const profile = fish.profile || fishMovementProfile(fish.item);
+      const depth = rand(profile.minDepth, profile.maxDepth);
+      fish.hiddenByPredator = false;
+      fish.predatorReturnDelay = 0;
+      fish.fleeTarget = null;
+      fish.baseY = clamp(fish.baseY || bounds.minY + (bounds.maxY - bounds.minY) * depth, bounds.minY, bounds.maxY);
+      fish.y = clamp(fish.y || fish.baseY, bounds.minY, bounds.maxY);
+      fish.x = clamp(fish.x || bounds.minX + (bounds.maxX - bounds.minX) * Math.random(), bounds.minX + 20, bounds.maxX - 20);
+      fish.vx = Math.abs(swimmerSpeed(fish.item)) * (Math.random() < 0.5 ? 1 : -1);
+      fish.vy = swimmerVerticalSpeed(fish.item, profile);
+      fish.wobble = rand(0, Math.PI * 2);
+    }
+
+    function swimmerDepthBounds(bounds, profile) {
+      return {
+        minY: bounds.minY + (bounds.maxY - bounds.minY) * (profile.minDepth ?? 0.12),
+        maxY: bounds.minY + (bounds.maxY - bounds.minY) * (profile.maxDepth ?? 0.94)
+      };
+    }
+
+    function spawnSwimmers() {
+      const pool = candidatePool();
+      const fishPool = pool.filter((item) => item.kind === "fish");
+      const junkPool = pool.filter((item) => item.kind === "junk");
+      const count = Math.min(12, pool.length);
+      const lostItemBonus = (window.GameState.outfitStats[state.loadout.outfit]?.lostItemBonus || 0)
+        + (window.GameState.titleBonus(state).junkChance || 0);
+      const junkTarget = Math.min(junkPool.length, count >= 10 && Math.random() < lostItemBonus * 1.8 ? 2 : 1);
+      const fishTarget = Math.min(fishPool.length, count - junkTarget);
+      const visiblePool = [
+        ...weightedSampleWithoutReplacement(fishPool, fishTarget),
+        ...weightedSampleWithoutReplacement(junkPool, Math.min(junkTarget, count - fishTarget))
+      ];
+      if (visiblePool.length < count) {
+        const remainingFish = fishPool.filter((item) => !visiblePool.some((visible) => visible.name === item.name));
+        visiblePool.push(...weightedSampleWithoutReplacement(remainingFish, count - visiblePool.length));
+      }
+      const schoolLeader = null;
+      const bounds = castBounds();
+      const placed = [];
+      function randomSwimmerPoint(item) {
+        let best = null;
+        let bestScore = -Infinity;
+        const profile = fishMovementProfile(item);
+        const levelBias = item.kind === "fish" ? clamp((item.level || 2) / 11, 0.12, 0.92) : Math.random();
+        for (let attempt = 0; attempt < 16; attempt += 1) {
+          const naturalDepth = item.kind === "fish"
+            ? clamp(Math.random() * 0.74 + levelBias * 0.26 + rand(-0.14, 0.14), 0.06, 0.96)
+            : Math.random();
+          const depth = profile.minDepth + (profile.maxDepth - profile.minDepth) * naturalDepth;
+          const candidate = {
+            x: rand(bounds.minX, bounds.maxX),
+            y: bounds.minY + (bounds.maxY - bounds.minY) * depth
+          };
+          const nearest = placed.reduce((min, point) => Math.min(min, Math.hypot(candidate.x - point.x, candidate.y - point.y)), 9999);
+          const edge = Math.min(candidate.x - bounds.minX, bounds.maxX - candidate.x, candidate.y - bounds.minY, bounds.maxY - candidate.y);
+          const score = nearest + edge * 0.16 + Math.random() * 18;
+          if (score > bestScore) {
+            bestScore = score;
+            best = candidate;
+          }
+        }
+        placed.push(best);
+        return best;
+      }
+      const schoolAnchors = new Map();
+      swimmers = Array.from({ length: count }, (_, index) => {
+        const item = { ...visiblePool[index % visiblePool.length] };
+        const profile = fishMovementProfile(item);
+        let point = randomSwimmerPoint(item);
+        const fromLeft = Math.random() < 0.5;
+        const speed = swimmerSpeed(item) * (fromLeft ? 1 : -1);
+        let x = profile.type === "migratory"
+          ? (fromLeft ? bounds.minX - rand(50, 180) : bounds.maxX + rand(50, 180))
+          : point.x;
+        if (item.schoolMate) {
+          if (!schoolAnchors.has(item.name)) {
+            schoolAnchors.set(item.name, { x, y: point.y, vx: speed });
+          }
+          const anchor = schoolAnchors.get(item.name);
+          x = anchor.x + rand(-128, 128);
+          point = { x, y: clamp(anchor.y + rand(-66, 66), bounds.minY, bounds.maxY) };
+        }
+        return {
+          id: `fish-${index}-${Date.now()}`,
+          item,
+          profile,
+          x,
+          y: point.y,
+          baseY: point.y,
+          vx: item.schoolMate ? schoolAnchors.get(item.name).vx * rand(0.92, 1.08) : speed,
+          vy: swimmerVerticalSpeed(item, profile),
+          drift: profile.drift * rand(0.72, 1.28),
+          size: item.kind === "junk" ? 26 : clamp(18 + (item.level || 1) * 3.4, 22, 56),
+          hooked: false,
+          wobble: rand(0, Math.PI * 2),
+          scatterSeed: Math.random()
+        };
+      });
+
+      if (field.id === "fresh" && state.flags.g70_stolen && !state.flags.jaemo_flipper_found) {
+        const eventBounds = waterPlayBounds();
+        const eventDepth = rand(0.08, 0.72);
+        swimmers.unshift({
+          id: "jaemo-flipper",
+          item: { kind: "event", name: "재모의 오리발", gold: 0, fame: 0, color: "#f97316", desc: "물 위에 떠 있던 오리발이다." },
+          x: rand(eventBounds.minX + 20, eventBounds.maxX - 32),
+          y: eventBounds.minY + (eventBounds.maxY - eventBounds.minY) * eventDepth,
+          baseY: eventBounds.minY + (eventBounds.maxY - eventBounds.minY) * eventDepth,
+          vx: rand(14, 26) * (Math.random() < 0.5 ? -1 : 1),
+          drift: rand(12, 28),
+          size: 38,
+          hooked: false,
+          wobble: rand(0, Math.PI * 2)
+        });
+      }
+      swimmers.forEach((fish) => {
+        if (
+          Number(fish.item.level || 0) >= 10
+          && swimmerInPlayArea(fish, bounds, 0)
+        ) {
+          notifyLevel10Swimmer(fish, true);
+        }
+      });
+    }
+
+    function spawnDelayedJunkSwimmer() {
+      if (swimmers.some((fish) => fish.item.kind === "junk")) return false;
+      const junkPool = candidatePool().filter((item) => item.kind === "junk");
+      if (!junkPool.length) return false;
+      const [item] = weightedSampleWithoutReplacement(junkPool, 1);
+      if (!item) return false;
+      const bounds = waterPlayBounds();
+      const profile = fishMovementProfile(item);
+      const depth = rand(profile.minDepth, profile.maxDepth);
+      const fromLeft = Math.random() < 0.5;
+      const x = fromLeft ? bounds.minX - rand(70, 150) : bounds.maxX + rand(70, 150);
+      const y = bounds.minY + (bounds.maxY - bounds.minY) * depth;
+      swimmers.push({
+        id: `junk-drift-${Date.now()}`,
+        item: { ...item },
+        profile,
+        x,
+        y,
+        baseY: y,
+        vx: rand(7, 16) * (fromLeft ? 1 : -1),
+        vy: swimmerVerticalSpeed(item, profile),
+        drift: profile.drift * rand(0.68, 1.08),
+        size: 26,
+        hooked: false,
+        wobble: rand(0, Math.PI * 2)
+      });
+      return true;
+    }
+
+    function swimmerSpeed(item) {
+      if (item.kind === "junk" || item.kind === "event") return rand(8, 20);
+      const profile = fishMovementProfile(item);
+      const level = Number(item.level || 1);
+      const resistance = Number(item.resistance || 1);
+      const base = rand(10, 28);
+      const fastChance = clamp(0.06 + level * 0.025 + resistance * 0.0015, 0.08, 0.38);
+      return base * profile.speed * (Math.random() < fastChance ? rand(1.55, 2.15) : rand(0.9, 1.16));
+    }
+
+    function swimmerVerticalSpeed(item, profile = fishMovementProfile(item)) {
+      if (item.kind === "junk" || item.kind === "event") return rand(-2.5, 2.5);
+      const scale = profile.type === "migratory"
+        ? 8
+        : profile.type === "bottom"
+          ? 1.2
+          : profile.type === "rockfish"
+            ? 1.5
+            : profile.type === "ambush"
+              ? 2.4
+              : 5;
+      return rand(-scale, scale);
+    }
+
+    function fishVerticalBob(fish, profile, multiplier = 1) {
+      const drift = Math.min(fish.drift || profile.drift || 6, profile.type === "migratory" ? 4.2 : profile.type === "cruiser" ? 3.2 : 1.8);
+      return Math.sin(bobber.t * 0.28 + fish.wobble) * drift * multiplier;
+    }
+
+    function showFieldAlert(message, duration = 2200) {
+      fieldAlertMessage = message;
+      fieldAlertUntil = performance.now() + duration;
+    }
+
+    function subjectParticle(text = "") {
+      const last = [...String(text)].pop();
+      if (!last) return "이";
+      const code = last.charCodeAt(0);
+      return code >= 0xac00 && code <= 0xd7a3 && (code - 0xac00) % 28 === 0 ? "가" : "이";
+    }
+
+    function notifyLevel10Swimmer(fish, force = false) {
+      if (fish.item.kind !== "fish" || Number(fish.item.level || 0) < 10 || fish.level10Alerted) return;
+      if (fish.hiddenByPredator || !swimmerInPlayArea(fish, waterPlayBounds(), 0)) return;
+      const now = performance.now();
+      if (!force && now - lastLevel10AlertAt < 1800) return;
+      fish.level10Alerted = true;
+      lastLevel10AlertAt = now;
+      window.GameAudio?.playSfx("rare");
+      window.GameAudio?.playVoice("bigFish");
+      showFieldAlert(`[대물 출현] Lv.10 ${fish.item.name}`, 2600);
+      setLogs([`[대물 출현] Lv.10 ${fish.item.name}${subjectParticle(fish.item.name)} 필드에 나타났다!`, "[주의] 움직임과 입질 타이밍을 놓치지 말자.", "[영우] 물색이 갑자기 비싸 보인다.", "[목표] 찌를 가까운 물층에 붙여보자."]);
+    }
+
+    function bitePatternFor(item) {
+      if (item.kind === "junk" || item.kind === "event") {
+        return { type: "snag", commitDelay: 0.18, hookWindow: 2.1, pulse: 0.55, label: "걸림", earlyMiss: "[실패] 아직 제대로 걸리지 않았다." };
+      }
+      const careful = new Set(["감성돔", "참돔", "벵에돔", "돌돔"]);
+      const heavy = new Set(["광어", "도다리", "대구", "돗돔", "철갑상어", "대물메기", "대형 떡붕어"]);
+      const tap = new Set(["피라미", "빙어", "끄리", "갈겨니", "멸치", "꽁치", "전갱이", "학꽁치", "고등어"]);
+      const strike = new Set(["방어", "부시리", "삼치", "만새기", "황새치", "참다랑어", "백상아리", "농어", "배스", "가물치"]);
+      if (careful.has(item.name)) return { type: "careful", commitDelay: rand(0.82, 1.28), hookWindow: 1.15, pulse: 0.45, label: "예민한 입질", earlyMiss: "[실패] 예민한 입질을 너무 빨리 건드렸다." };
+      if (heavy.has(item.name)) return { type: "heavy", commitDelay: rand(1.05, 1.65), hookWindow: 1.65, pulse: 0.9, label: "묵직한 입질", earlyMiss: "[실패] 아직 물고 버티는 중이었다. 조금 더 기다리자." };
+      if (strike.has(item.name) || Number(item.level || 0) >= 9) return { type: "strike", commitDelay: rand(0.24, 0.52), hookWindow: 0.98, pulse: 1.15, label: "강한 입질", earlyMiss: "[실패] 강한 입질 타이밍을 놓쳤다." };
+      if (tap.has(item.name) || Number(item.level || 0) <= 3) return { type: "tap", commitDelay: rand(0.54, 0.98), hookWindow: 1.18, pulse: 0.62, label: "톡톡", earlyMiss: "[실패] 톡 건드림에 성급하게 챔질했다." };
+      return { type: "steady", commitDelay: rand(0.62, 1.14), hookWindow: 1.32, pulse: 0.72, label: "입질", earlyMiss: "[실패] 아직 제대로 물지 않았다." };
+    }
+
+    function fightBehaviorFor(item) {
+      if (item.kind !== "fish") return { type: "snag", reelTension: 0.84, pull: 1.18, escape: 0.72, surge: 0.7, vertical: 0.4 };
+      const runners = new Set(["방어", "부시리", "삼치", "만새기", "황새치", "참다랑어", "백상아리", "숭어", "농어"]);
+      const bottomHolders = new Set(["광어", "도다리", "대구", "돗돔", "모래무지", "누치", "철갑상어"]);
+      const darting = new Set(["배스", "가물치", "대물 쏘가리", "감성돔", "참돔", "벵에돔", "돌돔"]);
+      const heavy = new Set(["대구", "민어", "다금바리", "능성어", "대물메기", "대형 떡붕어", "돗돔"]);
+      if (runners.has(item.name)) return { type: "runner", reelTension: 1.18, pull: 0.78, escape: 1.5, surge: 1.45, vertical: 0.9 };
+      if (bottomHolders.has(item.name)) return { type: "bottomHold", reelTension: 0.92, pull: 0.66, escape: 0.92, surge: 1.08, vertical: 1.35 };
+      if (darting.has(item.name)) return { type: "dart", reelTension: 1.08, pull: 0.88, escape: 1.22, surge: 1.5, vertical: 1.12 };
+      if (heavy.has(item.name) || Number(item.level || 0) >= 9) return { type: "heavy", reelTension: 1.04, pull: 0.72, escape: 1.05, surge: 1.2, vertical: 0.78 };
+      return { type: "steady", reelTension: 1, pull: 1, escape: 1, surge: 1, vertical: 1 };
+    }
+
+    function lureAffinityFor(item) {
+      const gearId = state.loadout[field.gearType];
+      const profile = fishMovementProfile(item);
+      if (item.kind === "junk" || item.kind === "event") return 1;
+      if (profile.type === "bottom" || profile.type === "rockfish" || profile.type === "ambush") {
+        if (["temuRod", "legendRod", "japanRod"].includes(gearId)) return 1.16;
+        if (gearId === "toyRod") return 0.9;
+      }
+      if (profile.type === "migratory") {
+        if (["firstLeisure", "temuRod", "legendRod"].includes(gearId)) return 1.14;
+        if (gearId === "toyRod") return 0.88;
+      }
+      if (Number(item.level || 0) <= 3 && ["toyRod", "aliRod"].includes(gearId)) return 1.08;
+      return 1;
+    }
+
+    function fieldConditionAffinityFor(item) {
+      if (item.kind !== "fish") return 1;
+      const profile = fishMovementProfile(item);
+      if ((field.id === "valley" || field.id === "ocean") && Number(item.level || 0) >= 7) return 1.1;
+      if ((field.id === "sea" || field.id === "ocean") && profile.type === "migratory") return 1.08;
+      if (profile.type === "bottom" || profile.type === "rockfish") return field.gearType === "sea" ? 1.08 : 1.02;
+      return 1;
+    }
+
+    function currentGearPower() {
+      const g = gear();
+      const titleBonus = window.GameState.titleBonus(state);
+      const permanentBonus = window.GameState.permanentBonus ? window.GameState.permanentBonus(state) : {};
+      return (g.power + (permanentBonus.powerFlat || 0)) * (1 + (titleBonus.power || 0));
+    }
+
+    function weakGearNoticeFor(item) {
+      if (!item || item.kind !== "fish") return "";
+      const resistance = Math.max(12, Number(item.resistance || (item.difficulty || 1) * 16));
+      const ratio = currentGearPower() / resistance;
+      if (ratio < 0.58) return "[영우] 이 낚시장비로는 쉽지 않다. 거의 버티는 싸움이다.";
+      if (ratio < 0.78) return "[영우] 이 낚시장비로는 쉽지 않다. 텐션 조절을 빡세게 해야 한다.";
+      return "";
+    }
+
+    function playerBase() {
+      if (field.id === "valley") return { x: 154, y: waterLine + 128 };
+      if (field.id === "ocean") return { x: 154, y: waterLine + 128 };
+      if (field.id === "fresh") return { x: 200, y: waterLine + 64 };
+      if (field.id === "sea") return { x: 342, y: waterLine + 77 };
+      return { x: 142, y: waterLine + 90 };
+    }
+
+    function playerSpriteHeight() {
+      if (field.id === "fresh") return 138;
+      if (field.id === "sea") return 138;
+      if (field.id === "valley" || field.id === "ocean") return 150;
+      return 150;
+    }
+
+    function playerDrawSize(height, image = playerImage) {
+      const fallbackRatio = 122 / 154;
+      const ratio = image.complete && image.naturalHeight > 0
+        ? image.naturalWidth / image.naturalHeight
+        : fallbackRatio;
+      return { width: height * ratio, height };
+    }
+
+    function currentYoungwooSpriteKey() {
+      if (
+        field.gearType === "sea"
+        && phase === "blocked"
+        && firstLeisureBrokenThisTrip
+      ) {
+        return "beginner_first_leisure_broken";
+      }
+      const forceAliSpriteTest = new URLSearchParams(location.search).get("spriteTest") === "ali";
+      const outfitId = forceAliSpriteTest ? "mid" : youngwooOutfitIds[state.loadout.outfit];
+      const rodId = forceAliSpriteTest ? "ali" : youngwooRodIds[state.loadout[field.gearType]];
+      const pose = currentYoungwooPose();
+      return outfitId && rodId ? `${outfitId}_${rodId}_${pose}` : null;
+    }
+
+    function fallbackYoungwooSpriteKey(key) {
+      if (!key || window.YoungwooSpriteManifest?.[key]) return key;
+      const parts = key.split("_");
+      const outfitId = parts[0];
+      const pose = currentYoungwooPose();
+      const fallbackRods = {
+        beginner: ["first_leisure", "toy"],
+        mid: ["ali", "temu"],
+        premium: ["japan", "legend"]
+      }[outfitId] || [];
+      return fallbackRods
+        .map((rodId) => `${outfitId}_${rodId}_${pose}`)
+        .find((candidate) => window.YoungwooSpriteManifest?.[candidate]) || null;
+    }
+
+    function canUseYoungwooActionSprites() {
+      const key = currentYoungwooSpriteKey();
+      return Boolean(key && window.YoungwooSpriteManifest?.[key]);
+    }
+
+    function currentYoungwooPose() {
+      if (phase === "aimingDistance" || phase === "aimingSide") return "casting_ready";
+      if (phase === "casting") {
+        if (castFlight) return castFlight.t < 0.62 ? "forward_cast" : "after_cast";
+        return "bite_detected";
+      }
+      if (phase === "reeling" && target) {
+        const level = target.item.level || 0;
+        const difficulty = target.item.difficulty || 1;
+        if (level >= 8 || difficulty >= 3.2 || tension > 92) return "big_fish_struggle";
+        const reelActive = reelHeld || performance.now() < reelPulseUntil;
+        return reelActive || tension > 68 ? "reel_strong" : "reel_weak";
+      }
+      return "rod_idle";
+    }
+
+    function isFirstLeisureBrokenScene() {
+      return field.gearType === "sea"
+        && phase === "blocked"
+        && firstLeisureBrokenThisTrip;
+    }
+
+    function currentYoungwooSpriteInfo() {
+      const key = fallbackYoungwooSpriteKey(currentYoungwooSpriteKey());
+      const manifest = key ? window.YoungwooSpriteManifest?.[key] : null;
+      if (!manifest) return null;
+      if (!youngwooSpriteCache.has(key)) {
+        const image = new Image();
+        image.src = `${manifest.src}?v=${youngwooSpriteAssetVersion}`;
+        youngwooSpriteCache.set(key, image);
+      }
+      const image = youngwooSpriteCache.get(key);
+      const ready = Boolean(image?.complete && image.naturalWidth > 0);
+      return { image, manifest, ready };
+    }
+
+    function currentYoungwooSprite() {
+      const info = currentYoungwooSpriteInfo();
+      return info?.ready ? info.image : null;
+    }
+
+    function drawAssetImage(image, x, y, width, height, fallback) {
+      if (image?.complete && image.naturalWidth > 0) {
+        ctx.drawImage(image, x, y, width, height);
+        return true;
+      }
+      if (fallback) fallback();
+      return false;
+    }
+
+    function drawAssetImageContain(image, x, y, width, height, fallback) {
+      if (image?.complete && image.naturalWidth > 0) {
+        const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight);
+        const drawWidth = image.naturalWidth * scale;
+        const drawHeight = image.naturalHeight * scale;
+        ctx.drawImage(
+          image,
+          x + (width - drawWidth) / 2,
+          y + (height - drawHeight) / 2,
+          drawWidth,
+          drawHeight
+        );
+        return true;
+      }
+      if (fallback) fallback();
+      return false;
+    }
+
+    function isFaceSkinPixel(r, g, b, a) {
+      return a > 170
+        && r > 132 && r < 255
+        && g > 72 && g < 205
+        && b > 38 && b < 170
+        && r > g + 18
+        && g > b - 8;
+    }
+
+    function portraitCropFor(image) {
+      if (portraitCropCache.has(image)) return portraitCropCache.get(image);
+      const width = image.naturalWidth;
+      const height = image.naturalHeight;
+      const fallbackSize = Math.min(width * 0.42, height * 0.36);
+      const fallback = {
+        x: clamp(width * 0.36 - fallbackSize * 0.5, 0, width - fallbackSize),
+        y: clamp(height * 0.22 - fallbackSize * 0.5, 0, height - fallbackSize),
+        size: fallbackSize
+      };
+
+      try {
+        portraitScratchCanvas.width = width;
+        portraitScratchCanvas.height = height;
+        portraitScratchCtx.clearRect(0, 0, width, height);
+        portraitScratchCtx.drawImage(image, 0, 0);
+        const pixels = portraitScratchCtx.getImageData(0, 0, width, height).data;
+        const yLimit = Math.floor(height * 0.46);
+        let count = 0;
+        let sumX = 0;
+        let sumY = 0;
+        let minX = width;
+        let minY = height;
+        let maxX = 0;
+        let maxY = 0;
+
+        for (let y = 0; y < yLimit; y += 1) {
+          for (let x = 0; x < width; x += 1) {
+            const index = (y * width + x) * 4;
+            const r = pixels[index];
+            const g = pixels[index + 1];
+            const b = pixels[index + 2];
+            const a = pixels[index + 3];
+            if (!isFaceSkinPixel(r, g, b, a)) continue;
+            count += 1;
+            sumX += x;
+            sumY += y;
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+          }
+        }
+
+        if (count < 24) {
+          portraitCropCache.set(image, fallback);
+          return fallback;
+        }
+
+        const centerX = sumX / count;
+        const centerY = sumY / count;
+        const faceSpan = Math.max(maxX - minX, maxY - minY);
+        const cropSize = clamp(faceSpan * 2.75, height * 0.21, height * 0.32);
+        const crop = {
+          x: clamp(centerX - cropSize * 0.5, 0, width - cropSize),
+          y: clamp(centerY - cropSize * 0.56, 0, height - cropSize),
+          size: cropSize
+        };
+        portraitCropCache.set(image, crop);
+        return crop;
+      } catch (error) {
+        portraitCropCache.set(image, fallback);
+        return fallback;
+      }
+    }
+
+    function portraitEmotionCropFor(sheet, cellX, cellY, cellW, cellH) {
+      const cacheKey = `${sheet.src}:${cellX}:${cellY}`;
+      if (portraitEmotionCropCache.has(cacheKey)) return portraitEmotionCropCache.get(cacheKey);
+      const sourceW = Math.round(cellW);
+      const sourceH = Math.round(cellH);
+      const fallback = { x: cellX, y: cellY, width: cellW, height: cellH };
+
+      try {
+        portraitScratchCanvas.width = sourceW;
+        portraitScratchCanvas.height = sourceH;
+        portraitScratchCtx.clearRect(0, 0, sourceW, sourceH);
+        portraitScratchCtx.drawImage(sheet, cellX, cellY, cellW, cellH, 0, 0, sourceW, sourceH);
+        const pixels = portraitScratchCtx.getImageData(0, 0, sourceW, sourceH).data;
+        const skin = new Uint8Array(sourceW * sourceH);
+        const visited = new Uint8Array(sourceW * sourceH);
+        const yLimit = Math.floor(sourceH * 0.68);
+
+        for (let y = 0; y < yLimit; y += 1) {
+          for (let x = 0; x < sourceW; x += 1) {
+            const index = (y * sourceW + x) * 4;
+            if (isFaceSkinPixel(pixels[index], pixels[index + 1], pixels[index + 2], pixels[index + 3])) {
+              skin[y * sourceW + x] = 1;
+            }
+          }
+        }
+
+        let best = null;
+        const queue = [];
+        for (let y = 0; y < yLimit; y += 1) {
+          for (let x = 0; x < sourceW; x += 1) {
+            const start = y * sourceW + x;
+            if (!skin[start] || visited[start]) continue;
+            visited[start] = 1;
+            queue.length = 0;
+            queue.push(start);
+            let head = 0;
+            let count = 0;
+            let minX = x;
+            let minY = y;
+            let maxX = x;
+            let maxY = y;
+
+            while (head < queue.length) {
+              const current = queue[head];
+              head += 1;
+              const cx = current % sourceW;
+              const cy = Math.floor(current / sourceW);
+              count += 1;
+              minX = Math.min(minX, cx);
+              minY = Math.min(minY, cy);
+              maxX = Math.max(maxX, cx);
+              maxY = Math.max(maxY, cy);
+
+              const neighbors = [current - 1, current + 1, current - sourceW, current + sourceW];
+              for (const next of neighbors) {
+                if (next < 0 || next >= skin.length || visited[next] || !skin[next]) continue;
+                const nx = next % sourceW;
+                const ny = Math.floor(next / sourceW);
+                if (Math.abs(nx - cx) + Math.abs(ny - cy) !== 1) continue;
+                visited[next] = 1;
+                queue.push(next);
+              }
+            }
+
+            if (count < 20) continue;
+            const centerX = (minX + maxX + 1) * 0.5;
+            const centerY = (minY + maxY + 1) * 0.5;
+            const score = count - Math.abs(centerX - sourceW * 0.5) * 0.12 - centerY * 0.04;
+            if (!best || score > best.score) best = { minX, minY, maxX, maxY, centerX, centerY, score };
+          }
+        }
+
+        if (!best) {
+          portraitEmotionCropCache.set(cacheKey, fallback);
+          return fallback;
+        }
+
+        const faceW = best.maxX - best.minX + 1;
+        const faceH = best.maxY - best.minY + 1;
+        const canvasAspect = portraitCanvas.width / portraitCanvas.height;
+        let cropH = clamp(Math.max(faceW, faceH) * 3.45, sourceH * 0.68, sourceH * 0.88);
+        let cropW = cropH * canvasAspect;
+        if (cropW > sourceW) {
+          cropW = sourceW;
+          cropH = cropW / canvasAspect;
+        }
+        const crop = {
+          x: cellX + clamp(best.centerX - cropW * 0.5, 0, sourceW - cropW),
+          y: cellY + clamp(best.centerY - cropH * 0.38, 0, sourceH - cropH),
+          width: cropW,
+          height: cropH
+        };
+        portraitEmotionCropCache.set(cacheKey, crop);
+        return crop;
+      } catch (error) {
+        portraitEmotionCropCache.set(cacheKey, fallback);
+        return fallback;
+      }
+    }
+
+    function updatePortrait() {
+      portraitCtx.clearRect(0, 0, portraitCanvas.width, portraitCanvas.height);
+      portraitCtx.imageSmoothingEnabled = true;
+      portraitCtx.imageSmoothingQuality = "high";
+      portraitCtx.fillStyle = "#28324a";
+      portraitCtx.fillRect(0, 0, portraitCanvas.width, portraitCanvas.height);
+
+      if (activeEventDialogue?.portrait === "junwoo") {
+        if (portraitImage) portraitImage.hidden = true;
+        portraitCanvas.hidden = false;
+        const junwoo = assetImages.junwooEmojiLaugh;
+        if (junwoo?.complete && junwoo.naturalWidth > 0) {
+          portraitCtx.drawImage(junwoo, 0, 0, portraitCanvas.width, portraitCanvas.height);
+        }
+        portraitCtx.fillStyle = "#28324a";
+        portraitCtx.fillRect(0, 0, portraitCanvas.width, 2);
+        portraitCtx.fillRect(0, portraitCanvas.height - 2, portraitCanvas.width, 2);
+        portraitCtx.fillRect(0, 0, 2, portraitCanvas.height);
+        portraitCtx.fillRect(portraitCanvas.width - 2, 0, 2, portraitCanvas.height);
+        return;
+      }
+
+      if (activeEventDialogue?.portrait === "wife") {
+        if (portraitImage) portraitImage.hidden = true;
+        portraitCanvas.hidden = false;
+        const wife = assetImages.wifeConfiscate;
+        if (wife?.complete && wife.naturalWidth > 0) {
+          portraitCtx.drawImage(wife, 0, 0, portraitCanvas.width, portraitCanvas.height);
+        }
+        portraitCtx.fillStyle = "#28324a";
+        portraitCtx.fillRect(0, 0, portraitCanvas.width, 2);
+        portraitCtx.fillRect(0, portraitCanvas.height - 2, portraitCanvas.width, 2);
+        portraitCtx.fillRect(0, 0, 2, portraitCanvas.height);
+        portraitCtx.fillRect(portraitCanvas.width - 2, 0, 2, portraitCanvas.height);
+        return;
+      }
+
+      if (activeEventDialogue?.portrait === "jaemo") {
+        if (portraitImage) portraitImage.hidden = true;
+        portraitCanvas.hidden = false;
+        const jaemo = assetImages.jaemoEmojiSmile;
+        if (jaemo?.complete && jaemo.naturalWidth > 0) {
+          portraitCtx.drawImage(jaemo, 0, 0, portraitCanvas.width, portraitCanvas.height);
+        }
+        portraitCtx.fillStyle = "#28324a";
+        portraitCtx.fillRect(0, 0, portraitCanvas.width, 2);
+        portraitCtx.fillRect(0, portraitCanvas.height - 2, portraitCanvas.width, 2);
+        portraitCtx.fillRect(0, 0, 2, portraitCanvas.height);
+        portraitCtx.fillRect(portraitCanvas.width - 2, 0, 2, portraitCanvas.height);
+        return;
+      }
+
+      if (portraitImage) {
+        portraitCanvas.hidden = true;
+        portraitImage.hidden = false;
+        portraitImage.src = portraitImageSrc(state.loadout.outfit, currentPortraitEmotion());
+        return;
+      }
+
+      const sheet = portraitEmotionSheets[state.loadout.outfit] || portraitEmotionSheets.beginnerOutfit;
+      if (sheet.complete && sheet.naturalWidth > 0) {
+        const cellW = sheet.naturalWidth / portraitEmotionColumns;
+        const cellH = sheet.naturalHeight / portraitEmotionRows;
+        const emotionIndex = portraitEmotionIndexes[currentPortraitEmotion()] ?? portraitEmotionIndexes.neutral;
+        if (portraitImage) {
+          portraitCanvas.hidden = true;
+          portraitImage.hidden = false;
+          portraitImage.src = portraitImageSrc(state.loadout.outfit, currentPortraitEmotion());
+        } else {
+          const cellX = (emotionIndex % portraitEmotionColumns) * cellW;
+          const cellY = Math.floor(emotionIndex / portraitEmotionColumns) * cellH;
+          const drawW = cellW * (612 / sheet.naturalWidth);
+          const drawH = cellH * (408 / sheet.naturalHeight);
+          portraitCtx.drawImage(
+            sheet,
+            cellX,
+            cellY,
+            cellW,
+            cellH,
+            (portraitCanvas.width - drawW) / 2,
+            portraitCanvas.height - drawH,
+            drawW,
+            drawH
+          );
+        }
+        return;
+      }
+
+      const image = playerImage;
+      if (!image?.complete || image.naturalWidth <= 0) return;
+      if (portraitImage) portraitImage.hidden = true;
+      portraitCanvas.hidden = false;
+      const crop = portraitCropFor(image);
+      portraitCtx.drawImage(
+        image,
+        crop.x,
+        crop.y,
+        crop.size,
+        crop.size,
+        0,
+        0,
+        portraitCanvas.width,
+        portraitCanvas.height
+      );
+    }
+
+    function fieldBackgroundKey() {
+      if (field.id === "valley") return "fieldValleyBg";
+      if (field.id === "ocean") return "fieldOceanBg";
+      if (field.id === "sea") return "fieldSeaBg";
+      return "fieldFreshBg";
+    }
+
+    function drawFieldBackground() {
+      const image = assetImages[fieldBackgroundKey()];
+      if (drawAssetImage(image, 0, 0, W, H)) return;
+      const sea = field.gearType === "sea";
+      ctx.fillStyle = sea ? "#79c8ed" : "#91dcf1";
+      ctx.fillRect(0, 0, W, waterLine);
+      ctx.fillStyle = sea ? "#dfc36d" : "#a9df72";
+      ctx.fillRect(0, 92, W, 78);
+      ctx.fillStyle = sea ? "#b37b42" : "#d59648";
+      ctx.fillRect(0, waterLine - 26, W, 26);
+      drawWaterFallback(sea);
+    }
+
+    function waterAssetKey(layer) {
+      const fieldKey = field.id === "valley" ? "Valley" : field.id === "ocean" ? "Ocean" : field.id === "sea" ? "Sea" : "Fresh";
+      return `water${fieldKey}${layer}`;
+    }
+
+    function waterMotion() {
+      if (field.id === "valley") return { baseX: -4.4, baseY: 1.8, overlayX: -7.2, overlayY: 3.2, alpha: 0.38 };
+      if (field.id === "ocean") return { baseX: -2.2, baseY: 0.8, overlayX: -3.4, overlayY: 1.0, alpha: 0.3 };
+      if (field.id === "sea") return { baseX: -2.8, baseY: 0.9, overlayX: -4.8, overlayY: 1.4, alpha: 0.34 };
+      return { baseX: -1.8, baseY: 0.5, overlayX: -3.2, overlayY: 0.8, alpha: 0.32 };
+    }
+
+    function waterVisualArea() {
+      const bounds = waterPlayBounds();
+      if (field.id === "fresh") {
+        return { x: 0, y: 350, width: W, height: H - 350 };
+      }
+      if (field.id === "valley") {
+        return { x: 0, y: 312, width: W, height: H - 312 };
+      }
+      if (field.id === "ocean") {
+        return { x: 0, y: 306, width: W, height: H - 306 };
+      }
+      const topPadding = field.id === "fresh" ? 30 : field.id === "sea" ? 26 : 34;
+      const y = clamp(bounds.minY - topPadding, waterLine, H);
+      if (field.id === "sea") {
+        return { x: 0, y: waterLine, width: W, height: H - waterLine };
+      }
+      return { x: 0, y, width: W, height: H - y };
+    }
+
+    function clipWaterArea(waterArea) {
+      ctx.beginPath();
+      if (field.id === "fresh") {
+        ctx.moveTo(0, 476);
+        ctx.lineTo(84, 454);
+        ctx.lineTo(178, 426);
+        ctx.lineTo(286, 394);
+        ctx.lineTo(402, 366);
+        ctx.lineTo(560, 354);
+        ctx.lineTo(760, 350);
+        ctx.lineTo(W, 350);
+        ctx.lineTo(W, H);
+        ctx.lineTo(0, H);
+        ctx.closePath();
+        ctx.clip();
+        return;
+      }
+      if (field.id === "valley") {
+        ctx.moveTo(0, 312);
+        ctx.lineTo(70, 312);
+        ctx.lineTo(96, 322);
+        ctx.lineTo(176, 316);
+        ctx.lineTo(340, 318);
+        ctx.lineTo(520, 320);
+        ctx.lineTo(680, 318);
+        ctx.lineTo(820, 314);
+        ctx.lineTo(990, 310);
+        ctx.lineTo(1115, 316);
+        ctx.lineTo(W, 314);
+        ctx.lineTo(W, H);
+        ctx.lineTo(0, H);
+        ctx.closePath();
+        ctx.clip();
+        return;
+      }
+      if (field.id === "ocean") {
+        ctx.moveTo(0, 306);
+        ctx.lineTo(210, 308);
+        ctx.lineTo(420, 306);
+        ctx.lineTo(620, 308);
+        ctx.lineTo(820, 306);
+        ctx.lineTo(W, 308);
+        ctx.lineTo(W, H);
+        ctx.lineTo(0, H);
+        ctx.closePath();
+        ctx.clip();
+        return;
+      }
+      if (field.id === "sea") {
+        ctx.moveTo(0, 344);
+        ctx.lineTo(70, 350);
+        ctx.lineTo(255, 350);
+        ctx.lineTo(398, 344);
+        ctx.lineTo(430, 332);
+        ctx.lineTo(444, 306);
+        ctx.lineTo(456, 286);
+        ctx.lineTo(520, 286);
+        ctx.lineTo(650, 288);
+        ctx.lineTo(830, 286);
+        ctx.lineTo(W, 286);
+        ctx.lineTo(W, H);
+        ctx.lineTo(0, H);
+        ctx.closePath();
+        ctx.clip();
+        return;
+      }
+      ctx.rect(waterArea.x, waterArea.y, waterArea.width, waterArea.height);
+      ctx.clip();
+    }
+
+    function boatMotion() {
+      if (field.id === "ocean") {
+        const swell = Math.sin(bobber.t * 0.92);
+        const chop = Math.sin(bobber.t * 2.2 + 0.7);
+        return {
+          y: swell * 7.5 + chop * 2.4,
+          rotate: Math.sin(bobber.t * 0.92 + 0.45) * 0.068 + Math.sin(bobber.t * 1.65) * 0.018
+        };
+      }
+      if (field.id === "valley") {
+        return {
+          y: Math.sin(bobber.t * 1.25) * 2.4,
+          rotate: Math.sin(bobber.t * 1.05) * 0.022
+        };
+      }
+      return { y: 0, rotate: 0 };
+    }
+
+    function drawTiledAsset(image, x, y, width, height, offsetX = 0, offsetY = 0, alpha = 1, clipper = null) {
+      if (!image?.complete || image.naturalWidth <= 0) return false;
+      const tileW = image.naturalWidth;
+      const tileH = image.naturalHeight;
+      const ox = ((offsetX % tileW) + tileW) % tileW;
+      const oy = ((offsetY % tileH) + tileH) % tileH;
+      ctx.save();
+      ctx.globalAlpha *= alpha;
+      if (clipper) clipper();
+      else {
+        ctx.beginPath();
+        ctx.rect(x, y, width, height);
+        ctx.clip();
+      }
+      for (let px = x - ox - tileW; px < x + width + tileW; px += tileW) {
+        for (let py = y - oy - tileH; py < y + height + tileH; py += tileH) {
+          ctx.drawImage(image, px, py);
+        }
+      }
+      ctx.restore();
+      return true;
+    }
+
+    function drawWaterFallback(sea) {
+      const waterArea = waterVisualArea();
+      const water = ctx.createLinearGradient(0, waterLine, 0, H);
+      water.addColorStop(0, sea ? "#2787ad" : "#3aa6b7");
+      water.addColorStop(1, sea ? "#0b334c" : "#0f4c66");
+      ctx.save();
+      clipWaterArea(waterArea);
+      ctx.fillStyle = water;
+      ctx.fillRect(waterArea.x, waterArea.y, waterArea.width, waterArea.height);
+      ctx.restore();
+    }
+
+    function drawWaterBase() {
+      const sea = field.gearType === "sea";
+      const motion = waterMotion();
+      const t = bobber.t;
+      const waterArea = waterVisualArea();
+      drawTiledAsset(assetImages[waterAssetKey("Base")], waterArea.x, waterArea.y, waterArea.width, waterArea.height, t * motion.baseX * 4, t * motion.baseY * 4, 0.16, () => clipWaterArea(waterArea));
+      const depth = ctx.createLinearGradient(0, waterArea.y, 0, H);
+      depth.addColorStop(0, "rgba(255,255,255,.04)");
+      depth.addColorStop(0.36, "rgba(4,34,55,.03)");
+      depth.addColorStop(1, sea ? "rgba(3,20,42,.20)" : "rgba(5,38,50,.16)");
+      ctx.save();
+      clipWaterArea(waterArea);
+      ctx.fillStyle = depth;
+      ctx.fillRect(waterArea.x, waterArea.y, waterArea.width, waterArea.height);
+      ctx.restore();
+    }
+
+    function drawWaterOverlay() {
+      const motion = waterMotion();
+      const t = bobber.t;
+      const waterArea = waterVisualArea();
+      drawTiledAsset(assetImages[waterAssetKey("Overlay")], waterArea.x, waterArea.y, waterArea.width, waterArea.height, t * motion.overlayX * 4, t * motion.overlayY * 4, motion.alpha, () => clipWaterArea(waterArea));
+      ctx.save();
+      clipWaterArea(waterArea);
+      ctx.strokeStyle = "rgba(255,255,255,.2)";
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 5; i += 1) {
+        const y = waterArea.y + 16 + i * 38;
+        ctx.beginPath();
+        for (let x = -40; x < W + 40; x += 28) {
+          const wave = Math.sin(x * 0.028 + bobber.t * 0.55 + i) * (field.id === "valley" ? 6 : 4);
+          if (x === -40) ctx.moveTo(x, y + wave);
+          else ctx.lineTo(x, y + wave);
+        }
+        ctx.stroke();
+      }
+      if (field.id === "ocean") {
+        ctx.strokeStyle = "rgba(116, 190, 230, .34)";
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 4; i += 1) {
+          const y = waterArea.y + 36 + i * 72;
+          ctx.beginPath();
+          for (let x = -70; x < W + 80; x += 36) {
+            const wave = Math.sin(x * 0.018 + bobber.t * 0.92 + i * 1.7) * (14 + i * 2);
+            const swell = Math.sin(x * 0.006 - bobber.t * 0.34 + i) * 11;
+            if (x === -70) ctx.moveTo(x, y + wave + swell);
+            else ctx.lineTo(x, y + wave + swell);
+          }
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+
+    function fishSpriteImage(name, locked = false) {
+      const src = window.FishSprites?.src(name, locked);
+      if (!src) return null;
+      if (!fishSpriteImages.has(src)) {
+        const image = new Image();
+        image.src = src;
+        fishSpriteImages.set(src, image);
+      }
+      const image = fishSpriteImages.get(src);
+      return image.complete && image.naturalWidth > 0 ? image : null;
+    }
+
+    function junkWaterSpriteImage(name) {
+      const src = window.JunkSprites?.waterSrc(name);
+      if (!src) return null;
+      if (!fishSpriteImages.has(src)) {
+        const image = new Image();
+        image.src = src;
+        fishSpriteImages.set(src, image);
+      }
+      const image = fishSpriteImages.get(src);
+      return image.complete && image.naturalWidth > 0 ? image : null;
+    }
+
+    function actionSpritePlacement(spriteInfo) {
+      const base = playerBase();
+      const visualOffsetX = field.id === "valley" ? 25 : 0;
+      const sourceWidth = spriteInfo.image?.naturalWidth || spriteInfo.manifest?.size?.w || 288;
+      const sourceHeight = spriteInfo.image?.naturalHeight || spriteInfo.manifest?.size?.h || 375;
+      const scale = playerSpriteHeight() / youngwooCanonicalSourceHeight;
+      const width = sourceWidth * scale;
+      const height = sourceHeight * scale;
+      return {
+        x: base.x - width * 0.24 + visualOffsetX,
+        y: base.y - height + 26,
+        width,
+        height,
+        scaleX: scale,
+        scaleY: scale
+      };
+    }
+
+    function rodTip() {
+      const spriteInfo = currentYoungwooSpriteInfo();
+      const motion = (field.id === "valley" || field.id === "ocean") ? boatMotion() : { y: 0, rotate: 0 };
+      const applyMotion = (point) => {
+        if (!motion.y && !motion.rotate) return point;
+        const base = playerBase();
+        const dx = point.x - base.x;
+        const dy = point.y - base.y;
+        const cos = Math.cos(motion.rotate);
+        const sin = Math.sin(motion.rotate);
+        return {
+          x: base.x + dx * cos - dy * sin,
+          y: base.y + motion.y + dx * sin + dy * cos
+        };
+      };
+      if (spriteInfo?.manifest?.tip) {
+        const placement = actionSpritePlacement(spriteInfo);
+        if (currentYoungwooPose() === "casting_ready") {
+          const readyTip = castingReadyRodTips[state.loadout[field.gearType]];
+          if (readyTip) {
+            return applyMotion({
+              x: placement.x + readyTip.x * placement.scaleX,
+              y: placement.y + readyTip.y * placement.scaleY
+            });
+          }
+        }
+        const tip = {
+          x: placement.x + spriteInfo.manifest.tip.x * placement.scaleX,
+          y: placement.y + spriteInfo.manifest.tip.y * placement.scaleY
+        };
+        return applyMotion(tip);
+      }
+      const p = playerBase();
+      const visualOffsetX = field.id === "valley" ? 25 : 0;
+      return applyMotion({ x: p.x + 155 + visualOffsetX, y: p.y - 95 });
+    }
+
+    function landingPoint() {
+      const p = playerBase();
+      return { x: p.x + 58, y: p.y - 6 };
+    }
+
+    function resetBobber() {
+      const tip = rodTip();
+      bobber = { x: tip.x, y: tip.y, targetX: tip.x, targetY: tip.y, t: 0 };
+      castFlight = null;
+    }
+
+    function bobberAnchorPoint() {
+      const tiedToRod = !castFlight && ["ready", "aimingDistance", "aimingSide", "caught", "missed"].includes(phase);
+      return tiedToRod ? rodTip() : bobber;
+    }
+
+    function nearestSwimmer(x, y) {
+      return swimmers
+        .filter((fish) => !fish.hiddenByPredator)
+        .map((fish) => ({
+          fish,
+          d: Math.hypot(fish.x - x, fish.y - y)
+            + Math.abs(fish.y - y) * 0.32
+            - (fish.item.kind === "event" ? 120 : 0)
+        }))
+        .sort((a, b) => a.d - b.d)[0]?.fish;
+    }
+
+    function pickBiteTarget() {
+      if (target || castFlight || biteWait > 0) return target;
+      const candidates = swimmers
+        .filter((fish) => !fish.hooked && !fish.hiddenByPredator)
+        .map((fish) => {
+          const d = Math.hypot(fish.x - bobber.x, fish.y - bobber.y) + Math.abs(fish.y - bobber.y) * 0.28;
+          const eventBoost = fish.item.kind === "event" ? 2.4 : 1;
+          const biteRange = fish.item.kind === "junk" ? 132 : 118;
+          return { fish, d, weight: Math.max(0, 1 - d / biteRange) ** 2 * eventBoost };
+        })
+        .filter((entry) => entry.weight > 0);
+      if (!candidates.length) return null;
+      const total = candidates.reduce((sum, entry) => sum + entry.weight, 0);
+      let cursor = Math.random() * total;
+      const picked = candidates.find((entry) => {
+        cursor -= entry.weight;
+        return cursor <= 0;
+      }) || candidates[candidates.length - 1];
+      target = picked.fish;
+      biteState = createBiteState(target.item);
+      swimmers.forEach((fish) => fish.hooked = fish === target);
+      return target;
+    }
+
+    function createBiteState(item) {
+      const pattern = bitePatternFor(item);
+      const maxTaps = pattern.type === "snag" ? 1
+        : pattern.type === "strike" ? 3
+          : pattern.type === "heavy" ? 4
+            : pattern.type === "careful" ? 5
+              : 6;
+      const tapDuration = pattern.type === "strike" ? 0.82
+        : pattern.type === "careful" ? 1.25
+          : pattern.type === "heavy" ? 1.45
+            : pattern.type === "snag" ? 1.55
+              : 1.28;
+      return {
+        pattern,
+        elapsed: 0,
+        committed: false,
+        loggedCommit: false,
+        nextTapAt: pattern.type === "heavy" ? rand(0.86, 1.18) : pattern.type === "strike" ? rand(0.48, 0.72) : rand(0.72, 1.08),
+        activeTapUntil: 0,
+        lastTapAt: -99,
+        tapCount: 0,
+        maxTaps,
+        tapDuration,
+        escapeAt: Infinity,
+        hookWindow: pattern.hookWindow,
+        startedAt: performance.now()
+      };
+    }
+
+    function requiredHookProximity() {
+      const type = biteState?.pattern?.type;
+      if (type === "strike") return 0.5;
+      if (type === "careful") return 0.56;
+      if (type === "heavy") return 0.52;
+      if (type === "snag") return 0.46;
+      return 0.52;
+    }
+
+    function biteTapInterval(pattern) {
+      if (pattern.type === "tap") return rand(0.58, 0.88);
+      if (pattern.type === "careful") return rand(0.66, 0.98);
+      if (pattern.type === "heavy") return rand(0.72, 1.08);
+      if (pattern.type === "strike") return rand(0.52, 0.82);
+      if (pattern.type === "snag") return 99;
+      return rand(0.58, 0.92);
+    }
+
+    function biteContactStrength() {
+      if (!biteState) return 0;
+      const remaining = biteState.activeTapUntil - biteState.elapsed;
+      if (remaining <= 0) return 0;
+      const duration = Math.max(0.08, biteState.tapDuration || 0.28);
+      const age = clamp(1 - remaining / duration, 0, 1);
+      const fadeIn = clamp(age / 0.18, 0, 1);
+      const fadeOut = clamp(remaining / (duration * 0.42), 0, 1);
+      const shaped = Math.min(fadeIn, fadeOut);
+      return shaped * shaped * (3 - 2 * shaped);
+    }
+
+    function biteSuccessRate() {
+      if (!target || !biteState) return 0;
+      const distance = Math.hypot(target.x - bobber.x, target.y - bobber.y) + Math.abs(target.y - bobber.y) * 0.22;
+      const distanceScore = clamp(1 - distance / 145, 0, 1);
+      const contact = biteContactStrength();
+      const pattern = biteState.pattern;
+      const contactBoost = pattern.type === "careful" ? 0.76
+        : pattern.type === "heavy" ? 0.84
+          : pattern.type === "strike" ? 0.9
+            : pattern.type === "snag" ? 0.68
+              : 0.8;
+      const idleFloor = biteState.tapCount > 0 ? 0.2 : 0;
+      const fatigue = clamp((biteState.tapCount - 1) * 0.015, 0, 0.08);
+      return clamp(idleFloor + distanceScore * 0.32 + contact * contactBoost - fatigue, 0, 1);
+    }
+
+    function triggerBiteTap(pattern) {
+      biteState.tapCount += 1;
+      biteState.committed = true;
+      biteState.lastTapAt = biteState.elapsed;
+      biteState.activeTapUntil = biteState.elapsed + biteState.tapDuration;
+      bitePulse = Math.max(bitePulse, pattern.pulse * (pattern.type === "heavy" || pattern.type === "strike" ? 1.2 : 0.9));
+      biteFlashUntil = performance.now() + Math.round(biteState.tapDuration * 720);
+      target.nibbleUntil = performance.now() + Math.round(biteState.tapDuration * 1000);
+      target.nibbleOffsetX = rand(-10, 10);
+      target.nibbleOffsetY = rand(-7, 7);
+      window.GameAudio?.playSfx(pattern.type === "strike" || pattern.type === "heavy" ? "biteStrong" : "biteTap");
+      if (biteState.tapCount === 1) {
+        window.GameAudio?.playVoice(pattern.type === "strike" || Number(target.item.level || 0) >= 9 ? "bigFish" : "bite");
+      }
+      if (biteState.tapCount >= biteState.maxTaps) {
+        biteState.escapeAt = biteState.activeTapUntil + biteTapInterval(pattern) * 0.82;
+      }
+      if (!biteState.loggedCommit) {
+        biteState.loggedCommit = true;
+        const line = pattern.type === "tap"
+          ? "[입질] 톡... 톡... 건드릴 때 챔질하자!"
+          : pattern.type === "careful"
+            ? "[입질] 예민하게 툭 건드린다. 높은 순간만 노리자."
+            : pattern.type === "heavy"
+              ? "[입질] 묵직하게 툭 잠긴다. 올라올 때 눌러야 한다."
+              : pattern.type === "strike"
+                ? "[입질] 빠르게 치고 빠진다! 성공률이 튈 때 챔질!"
+                : "[입질] 뭔가 걸렸다.";
+        setLogs([line, "[챔질] 성공률이 올라간 순간에 누르면 걸린다.", `[대상] ${target.item.name}`, "[영우] 이건 리듬게임 아니고 낚시다. 아마도."]);
+      }
+      fightMessage = pattern.label;
+      fightMessageUntil = performance.now() + 620;
+    }
+
+    function updateBiteState(dt) {
+      if (!target || !biteState) return;
+      const pattern = biteState.pattern;
+      biteState.elapsed += dt;
+      if (biteState.elapsed >= biteState.nextTapAt && biteState.tapCount < biteState.maxTaps) {
+        triggerBiteTap(pattern);
+        biteState.nextTapAt = biteState.elapsed + biteTapInterval(pattern);
+      }
+      hookProximity = biteSuccessRate();
+      if (biteState.tapCount >= biteState.maxTaps && biteState.elapsed > biteState.escapeAt) {
+        miss(pattern.type === "careful" ? "[실패] 예민한 입질이 몇 번 건드리다 빠져버렸다." : "[실패] 물고기가 툭툭 건드리다 미끼를 뱉고 달아났다.");
+      }
+    }
+
+    function setPhase(next) {
+      phase = next;
+      actionTitle.textContent = phase === "reeling" ? "힘겨루기" : phase === "casting" ? "챔질" : "액션";
+      actionButton.textContent = {
+        ready: "던지기",
+        aimingDistance: "거리 확정",
+        aimingSide: "방향 확정",
+        casting: "챔질!",
+        reeling: "릴 감기",
+        caught: "다음 낚시",
+        missed: "다시 던지기",
+        retrieving: "회수 중",
+        blocked: "진행 불가"
+      }[phase] || "진행";
+      actionButton.disabled = phase === "blocked";
+      actionHelp.textContent = phase === "blocked"
+        ? "현재 상황에서는 나가기만 가능하다."
+        : phase === "reeling" ? "누르고 있으면 감고, 놓으면 텐션을 낮춘다." : "버튼 하나로 던지기, 챔질, 힘겨루기를 진행한다.";
+    }
+
+    function hideResultPopup() {
+      resultPopup.hidden = true;
+    }
+
+    function queuePendingEvent(eventId) {
+      if (!eventId) return;
+      if (!state.pendingEvents.includes(eventId) && !state.seenEvents.includes(eventId)) {
+        state.pendingEvents.push(eventId);
+      }
+      state = window.GameState.save(state);
+    }
+
+    function showJaemoFlipperFieldEvent() {
+      const event = window.GameState.eventDefinitions.jaemo_flipper_found;
+      if (!event) return;
+      if (!state.seenEvents.includes("jaemo_flipper_found")) state.seenEvents.push("jaemo_flipper_found");
+      state = window.GameState.save(state);
+      lastPortraitEmotion = "happy";
+      setPhase("blocked");
+      showEventDialogueStep({
+        eventId: "jaemo_flipper_found",
+        speaker: event.speaker || "재모",
+        portrait: "jaemo",
+        lines: [
+          `[${event.cutin || "오리발!"}] ${event.lines?.[0] || "내 오리발을 찾아줬구나!"}`,
+          `[재모] ${event.lines?.[1] || "고맙다. 보트는 있는데 오리발이 없으면 마음이 허전하거든."}`,
+          "[보상] 재모의 민물보트를 획득했다.",
+          "[안내] 이제 민물 보트 필드로 나갈 수 있다."
+        ]
+      });
+    }
+
+    function confirmResultPopup() {
+      hideResultPopup();
+      if (pendingResultEvent) {
+        const eventId = pendingResultEvent;
+        pendingResultEvent = null;
+        if (eventId === "jaemo_flipper_found") {
+          showJaemoFlipperFieldEvent();
+          return;
+        }
+        if (eventId === "g70_key_found") {
+          const keyResult = {
+            kind: "event",
+            name: "준우가 훔친 G70 열쇠",
+            rewardLabel: "G70",
+            desc: "백상아리 배 속에서 찾았다."
+          };
+          pendingResultEvent = "g70_key_found_after";
+          lastPortraitEmotion = "surprised";
+          setLogs(["[영우] 백상아리 뱃속에 뭔가 있다...", "[확인] 조심해서 꺼내보자.", "", ""]);
+          showResultPopup(keyResult);
+          return;
+        }
+        if (eventId === "g70_key_found_after") {
+          lastPortraitEmotion = "revenge";
+          setPhase("ready");
+          setLogs(["[보조키!] 백상아리 배 속에서 G70 차키를 찾았다.", "[영우] G70 키를 찾았다.", "[영우] 복수의 불길이 다시 살아났다.", "[보상] G70이 창고로 돌아왔다."]);
+          return;
+        }
+        queuePendingEvent(eventId);
+        location.href = "game_home.html";
+      }
+    }
+
+    function resultImageSrc(result) {
+      if (result.kind === "fish") return window.FishSprites?.src(result.name, false) || "";
+      if (result.kind === "junk" || result.kind === "event") return window.JunkSprites?.src(result.name, false) || "";
+      return "";
+    }
+
+    function rewardTextForResult(result, emptyText = "보상 없음") {
+      if (result.rewardLabel) return result.rewardLabel;
+      if (result.kind === "event" || result.kind === "junk") {
+        const junkEntry = window.GameState.junkData?.find((item) => item.name === result.name);
+        if (junkEntry?.rewardLabel) return junkEntry.rewardLabel;
+        const permanentEntry = junkEntry?.permanentLabel || junkEntry?.permanentEffect || junkEntry?.statBonusLabel || junkEntry?.abilityLabel;
+        if (permanentEntry) return `보유 효과(${permanentEntry})`;
+        if (junkEntry) {
+          const parts = [];
+          if (junkEntry.gold) parts.push(`${Number(junkEntry.gold).toLocaleString()}G`);
+          if (junkEntry.fame) parts.push(`명성 ${Number(junkEntry.fame).toLocaleString()}`);
+          if (parts.length) return parts.join(" / ");
+        }
+      }
+      const rewardParts = [];
+      if (result.gold > 0) rewardParts.push(`${Number(result.gold).toLocaleString()}G`);
+      if (result.fame > 0) rewardParts.push(`명성 ${Number(result.fame).toLocaleString()}`);
+      const permanent = result.permanentLabel || result.permanentEffect || result.statBonusLabel || result.abilityLabel;
+      if (permanent) rewardParts.push(`보유 효과(${permanent})`);
+      return rewardParts.join(" / ") || emptyText;
+    }
+
+    function showResultPopup(result) {
+      const primaryLabel = result.kind === "fish" ? "등급" : "분류";
+      const hasOwnedEffect = Boolean(result.permanentLabel || result.permanentEffect || result.statBonusLabel || result.abilityLabel);
+      const primaryValue = result.kind === "fish" ? `Lv.${result.level || "?"}` : result.kind === "event" ? "이벤트" : hasOwnedEffect ? "고급 유실물" : "유실물";
+      const rewardValue = rewardTextForResult(result);
+      resultName.textContent = result.name;
+      resultImage.src = resultImageSrc(result);
+      resultImage.alt = result.name;
+      resultPrimaryLabel.textContent = primaryLabel;
+      resultLevel.textContent = primaryValue;
+      resultGold.textContent = rewardValue;
+      resultDesc.textContent = result.desc || "영우가 약속으로 버텨냈다.";
+      resultPopup.hidden = false;
+    }
+
+    function actionPress() {
+      if (phase === "blocked") {
+        return;
+      }
+      if (!hasActiveFishingGear()) {
+        setPhase("blocked");
+        setLogs([
+          `[장비] ${gear().name}`,
+          field.gearType === "sea" ? "[상점] 바다 장비를 먼저 준비해야 한다." : "[창고] 민물 장비를 먼저 장착해야 한다.",
+          "[안내] 낚시를 진행할 수 없다.",
+          "[영우] 맨손 낚시는 다큐에서나 하는 거다."
+        ]);
+        return;
+      }
+      if (phase === "ready" || phase === "caught" || phase === "missed") {
+        hideResultPopup();
+        heldResult = null;
+        lastPortraitEmotion = "thinking";
+        castGauge = 0.16;
+        castDir = 1;
+        setPhase("aimingDistance");
+        resetBobber();
+        setLogs(["[던지기 1단계] 가까움/멀리 거리 조절.", "[조작] 원하는 거리에서 버튼을 누르자.", "[감각] 초록 구간이면 찌가 안정적으로 날아간다.", "[영우] 이번엔 물이 아니라 물고기를 맞히자."]);
+        return;
+      }
+
+      if (phase === "aimingDistance") {
+        castDistance = castGauge;
+        castGauge = 0.5;
+        castDir = 1;
+        setPhase("aimingSide");
+        setLogs([`[확정] 거리 ${Math.round(castDistance * 100)}%.`, "[던지기 2단계] 좌우 방향 조절.", "[조작] 중앙에 가까울수록 목표 근처에 떨어진다.", "[영우] 손목아, 오늘만 배신하지 말자."]);
+        return;
+      }
+
+      if (phase === "aimingSide") {
+        castSide = castGauge;
+
+        if ((field.id === "sea" || field.id === "ocean") && state.loadout.sea === "firstLeisure" && !state.flags.first_leisure_broken) {
+          const event = window.GameState.triggerFirstLeisureBreak(state);
+          state = event.state;
+          firstLeisureBrokenThisTrip = Boolean(event.triggered);
+          refreshState();
+          lastPortraitEmotion = "panic";
+          setPhase("blocked");
+          showEventDialogueStep({
+            speaker: "낚시왕 남영우",
+            portrait: "youngwoo",
+            lines: ["[파손] 장비가 첫 던지기에 버티지 못했다.", "[상황] 더는 낚시를 진행할 수 없다.", "[나가기] 지금은 나가기만 가능하다.", "[영우] 일단 돌아가서 상황을 정리하자."]
+          });
+          return;
+        }
+
+        const preview = castPreviewPoint(castDistance, castSide);
+        const bounds = castBounds();
+        bobber.targetX = clamp(preview.x + rand(-10, 10), bounds.minX, bounds.maxX);
+        bobber.targetY = clamp(preview.y + rand(-8, 8), bounds.minY, bounds.maxY);
+        target = null;
+        biteState = null;
+        bitePulse = 0;
+        weakGearNoticeShown = false;
+        swimmers.forEach((fish) => fish.hooked = false);
+        hookTimer = 8.5 - castDistance * 2.4;
+        hookProximity = 0;
+        biteWait = rand(0.75, 1.65) + castDistance * 0.55;
+        hookDisplayProximity = 0;
+        const tip = rodTip();
+        castFlight = {
+          fromX: tip.x,
+          fromY: tip.y,
+          toX: bobber.targetX,
+          toY: bobber.targetY,
+          t: 0,
+          duration: 0.82 + castDistance * 0.42,
+          arc: 78 + castDistance * 92
+        };
+        castSplashPlayed = false;
+        bobber.x = castFlight.fromX;
+        bobber.y = castFlight.fromY;
+        setPhase("casting");
+        window.GameAudio?.playSfx("cast");
+        window.GameAudio?.playVoice("cast");
+        setLogs([`[던지기] 거리 ${Math.round(castDistance * 100)}%, 방향 ${Math.round(castSide * 100)}%.`, "[비행] 찌가 포물선을 그리며 날아간다.", "[대기] 착수 후 입질이 올 때까지 기다리자.", "[영우] 물살보다 심장이 더 출렁인다."]);
+        return;
+      }
+
+      if (phase === "casting") {
+        if (castFlight) {
+          setLogs(["[비행] 찌가 아직 날아가는 중이다.", "[챔질] 수면에 닿고 목표가 붙을 때까지 기다리자.", "[주의] 너무 빨리 누르면 허공 챔질이다.", "[영우] 기다리는 것도 기술이라니, 억울하다."]);
+          return;
+        }
+        if (biteWait > 0 || !target) {
+          miss("[실패] 너무 빨리 챔질했다. 아직 입질이 오지 않았다.");
+          return;
+        }
+        if (biteState && !biteState.committed) {
+          miss("[실패] 아직 물고기가 건드리지 않았다. 찌가 툭 움직일 때까지 기다리자.");
+          return;
+        }
+        if (hookProximity < requiredHookProximity()) {
+          miss("[실패] 툭 건드린 순간이 아니었다. 성공률이 올라갈 때 눌러야 한다.");
+          return;
+        }
+        setPhase("reeling");
+        reelHeld = false;
+        const level10Fight = target.item.kind === "fish" && Number(target.item.level || 0) >= 10;
+        fightStartDistance = Math.max(level10Fight ? 76 : 70, Math.hypot(bobber.x - landingPoint().x, bobber.y - landingPoint().y));
+        const startDifficulty = target.item.difficulty || 1;
+        const startTensionMax = level10Fight ? 62 : 76;
+        tension = clamp(30 + startDifficulty * (level10Fight ? 2.1 : 3.6) + rand(-4, 8), 24, startTensionMax);
+        catchProgress = 0;
+        fightElapsed = 0;
+        const now = performance.now();
+        nextFightSurgeAt = now + rand(650, 1500);
+        fightSurgeUntil = 0;
+        fightSurgeStrength = 0;
+        biteFlashUntil = performance.now() + 620;
+        fightMessage = "";
+        fightMessageUntil = 0;
+        const weakGearNotice = weakGearNoticeFor(target.item);
+        weakGearNoticeShown = Boolean(weakGearNotice);
+        setLogs([
+          "[입질] 뭔가 걸렸다!",
+          "[힘겨루기] 버튼을 누르면 감고, 놓으면 텐션을 낮춘다.",
+          "[주의] 텐션이 너무 높거나 낮으면 놓친다.",
+          weakGearNotice || "[영우] 손끝이 먼저 알고 허리가 나중에 후회한다."
+        ]);
+        return;
+      }
+    }
+
+    function miss(reason) {
+      reelHeld = false;
+      swimmers.forEach((fish) => fish.hooked = false);
+      target = null;
+      biteState = null;
+      bitePulse = 0;
+      hookProximity = 0;
+      hookDisplayProximity = 0;
+        lastPortraitEmotion = reason.includes("끊어") ? "crying" : reason.includes("느슨") ? "confused" : "disappointed";
+        setPhase("missed");
+        resetBobber();
+      window.GameAudio?.playSfx("miss");
+      window.GameAudio?.playVoice("miss");
+        setLogs([reason, "[보상] 없음", "[도감] 기록하지 못했다.", "[영우] 물만 쳐다봤다. 물도 부담스러워한다."]);
+    }
+
+    function completeCatch() {
+      const item = target.item;
+      const result = item.kind === "event" ? item : {
+        ...item,
+        fieldName: field.name,
+        gearName: gear().name,
+        fame: item.kind === "fish" ? item.level * 50 + item.resistance * 5 + (item.level >= 10 ? 250 : 0) : item.fame || 0
+      };
+      const shouldRevealG70Key = result.kind === "fish"
+        && result.name === "백상아리"
+        && state.flags.g70_stolen
+        && !state.flags.g70_key_found;
+      state = window.GameState.applyCatchResult(state, result);
+      heldResult = null;
+      lastPortraitEmotion = resultEmotion(result);
+      pendingResultEvent = shouldRevealG70Key
+        ? "g70_key_found"
+        : result.kind === "event" && result.name === "재모의 오리발"
+          ? "jaemo_flipper_found"
+          : null;
+      refreshState();
+      swimmers = swimmers.filter((fish) => fish !== target);
+      target = null;
+      biteState = null;
+      bitePulse = 0;
+      hookProximity = 0;
+      hookDisplayProximity = 0;
+      reelHeld = false;
+      setPhase("caught");
+      resetBobber();
+      if (result.kind === "junk") {
+        nextJunkDriftAt = performance.now() + rand(8500, 22000);
+      } else if (result.kind === "fish") {
+        spawnSwimmers();
+      }
+      window.GameAudio?.playSfx(result.kind === "fish" ? "catchSuccess" : "junk");
+      window.GameAudio?.playVoice("success");
+
+      const verb = result.kind === "junk" ? "수집" : result.kind === "event" ? "획득" : "포획";
+      const rewardText = rewardTextForResult(result, "없음");
+      const recordText = result.kind === "event" ? "[이벤트] 새로운 길이 열렸다." : "[도감] 기록을 갱신했다.";
+      setLogs([`[결과] ${result.name} ${verb}!`, `[보상] ${rewardText}`, recordText, `[영우] ${result.desc || "이번엔 진짜 손맛이 있었다."}`]);
+      showResultPopup(result);
+    }
+
+    function returnGarageIfNeeded() {
+      if (g70TheftExitReady) {
+        if (g70TheftStage === "appear") return true;
+        state.activeField = "fresh";
+        state = window.GameState.save(state);
+        location.href = "game_home.html";
+        return true;
+      }
+      if (field.gearType !== "sea") return false;
+      const pendingG70Theft = firstLeisureBrokenThisTrip
+        || (state.flags.first_leisure_broken && state.flags.g70_purchased && !state.flags.g70_stolen);
+      if (!pendingG70Theft) return false;
+      const event = window.GameState.triggerGarageReturnEvents(window.GameState.load(), { queue: false });
+      if (event.triggered === "g70_stolen") {
+        state = event.state;
+        firstLeisureBrokenThisTrip = true;
+        g70TheftExitReady = true;
+        g70TheftStage = "appear";
+        g70TheftYoungwooLineShown = false;
+        setPhase("blocked");
+        showEventDialogueStep({
+          speaker: "준우",
+          portrait: "junwoo",
+          lines: ["[나가기] 창고로 돌아가려는 순간.", "[준우] 이 차, 완전 내 스타일이잖아.", "[준우] 잠깐만 쓰고 올게.", "[준우] 도로에서 더 잘 어울리는 사람은 나같은데?"]
+        });
+        return true;
+      }
+      return false;
+    }
+
+    function update(dt) {
+      if (phase === "aimingDistance" || phase === "aimingSide") {
+        castGauge += castDir * dt * 0.8;
+        if (castGauge >= 1) { castGauge = 1; castDir = -1; }
+        if (castGauge <= 0) { castGauge = 0; castDir = 1; }
+      }
+
+      if (phase === "casting") {
+        if (castFlight) {
+          castFlight.t = Math.min(1, castFlight.t + dt / castFlight.duration);
+          const t = castFlight.t;
+          const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+          bobber.x = castFlight.fromX + (castFlight.toX - castFlight.fromX) * eased;
+          bobber.y = castFlight.fromY + (castFlight.toY - castFlight.fromY) * eased - Math.sin(Math.PI * t) * castFlight.arc;
+          if (castFlight.t >= 1) {
+            castFlight = null;
+            if (!castSplashPlayed) {
+              castSplashPlayed = true;
+              window.GameAudio?.playSfx("splash");
+            }
+          }
+        } else {
+          bobber.x += (bobber.targetX - bobber.x) * Math.min(1, dt * 4);
+          bobber.y += (bobber.targetY - bobber.y) * Math.min(1, dt * 4);
+          biteWait = Math.max(0, biteWait - dt);
+          hookTimer -= dt;
+        }
+        if (!castFlight && biteWait <= 0) pickBiteTarget();
+        if (!castFlight && target) updateBiteState(dt);
+        hookProximity = castFlight || biteWait > 0 || !target || !biteState ? 0 : biteSuccessRate();
+        hookDisplayProximity += (hookProximity - hookDisplayProximity) * Math.min(1, dt * 5.5);
+        if (!castFlight && hookTimer <= 0) miss("[실패] 목표가 미끼를 피해 달아났다.");
+      }
+
+      bitePulse = Math.max(0, bitePulse - dt * 2.6);
+
+      if (phase === "reeling" && target) {
+        fightElapsed += dt;
+        const g = gear();
+        const titleBonus = window.GameState.titleBonus(state);
+        const permanentBonus = window.GameState.permanentBonus ? window.GameState.permanentBonus(state) : {};
+        const gearPower = (g.power + (permanentBonus.powerFlat || 0)) * (1 + (titleBonus.power || 0));
+        const gearStability = g.stability * (1 + (titleBonus.stability || 0));
+        const level10Fight = target.item.kind === "fish" && Number(target.item.level || 0) >= 10;
+        const maxTension = 118 + (titleBonus.maxTension || 0) + (permanentBonus.maxTension || 0) + (level10Fight ? 34 : 0);
+        const difficulty = Math.max(0.45, (target.item.difficulty || 1) * (level10Fight ? 0.62 : 1));
+        const baseFight = fightBehaviorFor(target.item);
+        const fight = level10Fight
+          ? {
+            ...baseFight,
+            reelTension: baseFight.reelTension * 0.62,
+            pull: baseFight.pull * 1.58,
+            escape: baseFight.escape * 0.42,
+            surge: baseFight.surge * 0.44,
+            vertical: baseFight.vertical * 0.58
+          }
+          : baseFight;
+        const landing = landingPoint();
+        const reelActive = reelHeld || (!level10Fight && performance.now() < reelPulseUntil);
+        const now = performance.now();
+        if (now >= nextFightSurgeAt) {
+          fightSurgeUntil = now + rand(240, 680);
+          fightSurgeStrength = rand(0.32, 1.08) * clamp(difficulty / 3.2, 0.45, 2.4) * fight.surge;
+          nextFightSurgeAt = now + rand(720, 1900) / clamp((difficulty * fight.surge) / 2.6, 0.7, 1.7);
+        }
+        const surgeActive = now < fightSurgeUntil;
+        actionButton.classList.toggle("held", reelActive);
+        if (reelActive) {
+          tension += dt * (22 + difficulty * 4.4) * (118 / (gearStability * 4 + 92)) * fight.reelTension * (surgeActive ? 1 + fightSurgeStrength * 0.28 : 1);
+          const pullDifficulty = Math.min(difficulty, 10);
+          const powerRatio = clamp((gearPower * (level10Fight ? 1.36 : 1)) / Math.max(12, target.item.resistance || pullDifficulty * 16), 0.18, 1.55);
+          const strainPenalty = powerRatio < 0.72 ? 0.38 + powerRatio * 0.58 : 0.8 + powerRatio * 0.16;
+          const surgeDrag = surgeActive ? clamp(1 - fightSurgeStrength * 0.18, 0.62, 1) : 1;
+          const pull = dt * Math.max(0.08, gearPower * (0.16 / pullDifficulty) * strainPenalty * surgeDrag * fight.pull);
+          const pullCap = clamp(0.006 + powerRatio * (level10Fight ? 0.022 : 0.016), 0.009, level10Fight ? 0.038 : 0.026);
+          bobber.x += (landing.x - bobber.x) * Math.min(pullCap, pull);
+          bobber.y += (landing.y - bobber.y) * Math.min(pullCap, pull);
+          if (fight.type === "bottomHold") bobber.y += dt * (12 + difficulty * 2.2) * fight.vertical;
+        } else {
+          const releaseTensionCeiling = level10Fight ? tension : null;
+          const reliefWave = 0.82 + Math.sin(bobber.t * 2.7 + fightElapsed * 1.4) * 0.18;
+          const reliefLuck = Math.random() < dt * 1.8 ? rand(0.62, 1.45) : 1;
+          const surgeResistance = level10Fight ? 1 : surgeActive ? clamp(1 - fightSurgeStrength * 0.42, 0.2, 1) : 1;
+          const releaseRelief = level10Fight ? 1.42 : 1.18;
+          tension -= dt * (12 + difficulty * 2.4) * releaseRelief * reliefWave * reliefLuck * surgeResistance;
+          if (surgeActive && !level10Fight) tension += dt * (difficulty * 7.5) * fightSurgeStrength;
+          if (!level10Fight) {
+            const escapeDx = bobber.x - landing.x;
+            const escapeDy = bobber.y - landing.y;
+            const escapeDistance = Math.max(1, Math.hypot(escapeDx, escapeDy));
+            const escapePull = dt * (18 + difficulty * 7) * fight.escape * (surgeActive ? 1 + fightSurgeStrength * 0.7 : 1);
+            bobber.x += (escapeDx / escapeDistance) * escapePull;
+            bobber.y += (escapeDy / escapeDistance) * escapePull;
+            bobber.x += Math.sin(bobber.t * (fight.type === "dart" ? 3.2 : 1.7)) * dt * (5 + difficulty) * fight.surge;
+            bobber.y += Math.cos(bobber.t * 1.3) * dt * (4 + difficulty) * fight.vertical;
+            if (fight.type === "runner") bobber.x += Math.sign(escapeDx || 1) * dt * (20 + difficulty * 4);
+            if (fight.type === "bottomHold") bobber.y += dt * (18 + difficulty * 3);
+          }
+          if (releaseTensionCeiling !== null) tension = Math.min(tension, releaseTensionCeiling);
+        }
+        const tensionWobble = Math.sin(performance.now() / 150) * 0.22;
+        tension += tensionWobble;
+        if (level10Fight && !reelActive && tensionWobble > 0) tension -= tensionWobble;
+        if ((reelActive && tension > maxTension * 0.82) || tension < 20) window.GameAudio?.playSfx("tensionDanger");
+        const distance = Math.hypot(bobber.x - landing.x, bobber.y - landing.y);
+        const catchFinishDistance = 38;
+        const nextCatchProgress = clamp(
+          100 * (1 - (distance - catchFinishDistance) / Math.max(1, fightStartDistance - catchFinishDistance)),
+          0,
+          100
+        );
+        catchProgress = level10Fight && !reelActive ? Math.max(catchProgress, nextCatchProgress) : nextCatchProgress;
+        if (tension < -10) miss("[실패] 줄이 너무 느슨해져 빠져나갔다.");
+        if (tension > maxTension) miss("[실패] 줄이 버티지 못하고 끊어졌다.");
+        if (phase === "reeling" && fightElapsed > 1.1 && catchProgress <= 0) miss("[실패] 물고기가 멀리 달아났다. 물만 싱글벙글하다.");
+        if (phase === "reeling" && (catchProgress >= 96 || distance < catchFinishDistance)) completeCatch();
+      }
+
+      if (nextJunkDriftAt > 0 && performance.now() >= nextJunkDriftAt) {
+        if (Math.random() < dt * 0.38) {
+          nextJunkDriftAt = spawnDelayedJunkSwimmer()
+            ? 0
+            : performance.now() + rand(7000, 15000);
+        }
+      }
+
+      const predatorBounds = waterPlayBounds();
+      const activePredators = swimmers.filter((fish) => {
+        const profile = fish.profile || fishMovementProfile(fish.item);
+        return fish.item.kind === "fish"
+          && profile.predator
+          && !fish.hiddenByPredator
+          && swimmerInPlayArea(fish, predatorBounds, 48);
+      });
+
+      swimmers.forEach((fish) => {
+        const profile = fish.profile || fishMovementProfile(fish.item);
+        notifyLevel10Swimmer(fish);
+        if (fish.hiddenByPredator) {
+          if (!activePredators.length) {
+            fish.predatorReturnDelay = Math.max(0, (fish.predatorReturnDelay || 0) - dt);
+            if (fish.predatorReturnDelay <= 0) reappearSwimmerAfterPredator(fish, predatorBounds);
+          }
+          fish.wobble += dt * (profile.wobble || 3);
+          return;
+        }
+        if (!activePredators.length && fish.fleeTarget) {
+          fish.fleeTarget = null;
+        }
+        if (fish.item.kind === "fish" && updatePredatorRoam(fish, profile, predatorBounds, dt)) {
+          return;
+        }
+
+        if (
+          activePredators.length
+          && fish.item.kind === "fish"
+          && !profile.predator
+          && fish !== target
+        ) {
+          const predator = nearestPredatorFor(fish, activePredators);
+          if (!fish.fleeTarget) {
+            fish.fleeTarget = predatorSafePointFor(fish, predator, predatorBounds);
+            fish.predatorReturnDelay = rand(0.65, 1.45);
+          }
+          const dx = fish.fleeTarget.x - fish.x;
+          const dy = fish.fleeTarget.y - fish.y;
+          const distance = Math.max(1, Math.hypot(dx, dy));
+          const fleeSpeed = rand(28, 48);
+          const separation = swimmerSeparationOffset(fish, swimmers, 112);
+          fish.x += (dx / distance) * fleeSpeed * dt;
+          fish.y += (dy / distance) * fleeSpeed * dt + Math.sin(bobber.t * 0.42 + fish.wobble) * dt * 2.2;
+          fish.x += separation.x * dt * 185;
+          fish.y += separation.y * dt * 118;
+          if (predator) {
+            const pdx = fish.x - predator.x;
+            const pdy = fish.y - predator.y;
+            const predatorDistance = Math.max(1, Math.hypot(pdx, pdy));
+            const keepDistance = 118;
+            if (predatorDistance < keepDistance) {
+              const push = (keepDistance - predatorDistance) / keepDistance;
+              fish.x += (pdx / predatorDistance) * push * dt * 170;
+              fish.y += (pdy / predatorDistance) * push * dt * 110;
+            }
+          }
+          fish.vx = Math.abs(fish.vx || swimmerSpeed(fish.item)) * Math.sign(dx || 1);
+          fish.x = clamp(fish.x, predatorBounds.minX + 10, predatorBounds.maxX - 10);
+          fish.y = clamp(fish.y, predatorBounds.minY, predatorBounds.maxY);
+          fish.baseY = fish.y;
+          if (distance < 18) {
+            fish.hooked = false;
+            const holdSeparation = swimmerSeparationOffset(fish, swimmers, 128);
+            fish.x = clamp(fish.x + Math.sin(fish.wobble * 1.7) * dt * 12 + holdSeparation.x * dt * 220, predatorBounds.minX + 10, predatorBounds.maxX - 10);
+            fish.y = clamp(fish.y + Math.cos(fish.wobble * 1.3) * dt * 8 + holdSeparation.y * dt * 140, predatorBounds.minY, predatorBounds.maxY);
+            fish.baseY = fish.y;
+            fish.vx = (fish.fleeTarget.driftDir || Math.sign(fish.vx || 1) || 1) * Math.max(4, Math.abs(fish.vx || swimmerSpeed(fish.item)) * 0.28);
+            if (performance.now() > (fish.fleeTarget.holdUntil || 0)) {
+              fish.fleeTarget = predatorSafePointFor(fish, predator, predatorBounds);
+            }
+          }
+          fish.wobble += dt * Math.max(2.6, profile.wobble || 3);
+          return;
+        }
+
+        if (fish === target && ((phase === "casting" && !castFlight && biteWait <= 0) || phase === "reeling")) {
+          if (phase === "casting" && biteWait > 0) {
+            const bounds = waterPlayBounds();
+            fish.x += fish.vx * dt;
+            fish.y = clamp(fish.y + Math.sin(bobber.t * 0.34 + fish.wobble) * dt * 1.4, bounds.minY, bounds.maxY);
+          } else {
+            const contact = phase === "casting" ? biteContactStrength() : 1;
+            const nudgeX = phase === "casting" ? (target.nibbleOffsetX || 0) * (1 - contact) : 0;
+            const nudgeY = phase === "casting" ? (target.nibbleOffsetY || 0) * (1 - contact) : 8;
+            const pullRate = phase === "reeling" ? 3.5 : 1.15 + contact * 5.8;
+            const idleBackoff = phase === "casting" && contact <= 0.03 ? 22 : 0;
+            fish.x += (bobber.x + nudgeX - fish.x) * Math.min(1, dt * pullRate);
+            fish.y += (bobber.y + nudgeY - idleBackoff - fish.y) * Math.min(1, dt * pullRate);
+            if (phase === "casting" && contact > 0.04) {
+              const bitePull = biteState?.pattern?.pulse || 0.6;
+              bobber.x += Math.sin(bobber.t * 5.4 + fish.wobble) * dt * 7 * contact;
+              bobber.y += dt * (18 + bitePull * 8) * contact;
+            }
+          }
+        } else {
+          const bounds = waterPlayBounds();
+          if (fish.item.kind === "event" && fish.item.name === "재모의 오리발") {
+            fish.x += fish.vx * dt;
+            if (fish.x < bounds.minX + 8) {
+              fish.x = bounds.minX + 8;
+              fish.vx = Math.abs(fish.vx) * rand(0.82, 1.18);
+            }
+            if (fish.x > bounds.maxX - 12) {
+              fish.x = bounds.maxX - 12;
+              fish.vx = -Math.abs(fish.vx) * rand(0.82, 1.18);
+            }
+            const baseY = fish.baseY || fish.y;
+            const drift = fish.drift || 18;
+            fish.y = clamp(baseY + Math.sin(bobber.t * 0.22 + fish.wobble) * Math.min(drift, 4), bounds.minY + 2, bounds.maxY - 8);
+          } else {
+            const profile = fish.profile || fishMovementProfile(fish.item);
+            const drift = fish.drift || profile.drift || 8;
+            if (profile.type === "migratory") {
+              fish.x += fish.vx * dt;
+              const depthBounds = swimmerDepthBounds(bounds, profile);
+              fish.baseY = (fish.baseY || fish.y) + (fish.vy || 0) * dt;
+              if (fish.baseY < depthBounds.minY) {
+                fish.baseY = depthBounds.minY;
+                fish.vy = Math.abs(fish.vy || swimmerVerticalSpeed(fish.item, profile));
+              }
+              if (fish.baseY > depthBounds.maxY) {
+                fish.baseY = depthBounds.maxY;
+                fish.vy = -Math.abs(fish.vy || swimmerVerticalSpeed(fish.item, profile));
+              }
+              fish.y = clamp((fish.baseY || fish.y) + fishVerticalBob(fish, profile), bounds.minY, bounds.maxY);
+              if (fish.x < bounds.minX - 210 || fish.x > bounds.maxX + 210) {
+                const fromLeft = Math.random() < 0.5;
+                fish.x = fromLeft ? bounds.minX - rand(90, 220) : bounds.maxX + rand(90, 220);
+                fish.vx = Math.abs(swimmerSpeed(fish.item)) * (fromLeft ? 1 : -1);
+                const depth = rand(profile.minDepth, profile.maxDepth);
+                fish.baseY = bounds.minY + (bounds.maxY - bounds.minY) * depth;
+                fish.y = fish.baseY;
+                fish.vy = swimmerVerticalSpeed(fish.item, profile);
+              }
+            } else if (profile.type === "bottom" || profile.type === "rockfish" || profile.type === "ambush") {
+              const crawl = profile.type === "bottom" ? 0.42 : profile.type === "rockfish" ? 0.58 : 0.74;
+              fish.x += fish.vx * dt * crawl + Math.sin(bobber.t * 0.35 + fish.wobble) * dt * 2.2;
+              if (fish.x < bounds.minX + 8) {
+                fish.x = bounds.minX + 8;
+                fish.vx = Math.abs(fish.vx) * rand(0.72, 1.04);
+              }
+              if (fish.x > bounds.maxX - 8) {
+                fish.x = bounds.maxX - 8;
+                fish.vx = -Math.abs(fish.vx) * rand(0.72, 1.04);
+              }
+              const bottomFloor = profile.type === "bottom" ? bounds.maxY - 6 : bounds.maxY - 18;
+              const depthBounds = swimmerDepthBounds(bounds, profile);
+              fish.baseY = (fish.baseY || fish.y) + (fish.vy || 0) * dt;
+              if (fish.baseY < depthBounds.minY) {
+                fish.baseY = depthBounds.minY;
+                fish.vy = Math.abs(fish.vy || swimmerVerticalSpeed(fish.item, profile));
+              }
+              if (fish.baseY > bottomFloor) {
+                fish.baseY = bottomFloor;
+                fish.vy = -Math.abs(fish.vy || swimmerVerticalSpeed(fish.item, profile));
+              }
+              fish.y = clamp(fish.baseY + fishVerticalBob(fish, profile), bounds.minY, bottomFloor);
+            } else {
+              fish.x += fish.vx * dt;
+              if (fish.x < bounds.minX - 90) fish.x = bounds.maxX + 70;
+              if (fish.x > bounds.maxX + 90) fish.x = bounds.minX - 70;
+              const depthBounds = swimmerDepthBounds(bounds, profile);
+              fish.baseY = (fish.baseY || fish.y) + (fish.vy || 0) * dt;
+              if (fish.baseY < depthBounds.minY) {
+                fish.baseY = depthBounds.minY;
+                fish.vy = Math.abs(fish.vy || swimmerVerticalSpeed(fish.item, profile));
+              }
+              if (fish.baseY > depthBounds.maxY) {
+                fish.baseY = depthBounds.maxY;
+                fish.vy = -Math.abs(fish.vy || swimmerVerticalSpeed(fish.item, profile));
+              }
+              fish.y = clamp((fish.baseY || fish.y) + fishVerticalBob(fish, profile), bounds.minY, bounds.maxY);
+            }
+          }
+        }
+        if (fish === target && ((phase === "casting" && biteWait <= 0) || phase === "reeling")) {
+          const bounds = waterPlayBounds();
+          fish.x = clamp(fish.x, bounds.minX - 20, bounds.maxX + 20);
+          fish.y = clamp(fish.y, bounds.minY, bounds.maxY);
+        }
+        fish.wobble += dt * (fish === target && phase === "reeling" ? 12 : (fish.profile?.wobble || 3));
+      });
+
+      bobber.t += dt * 4;
+    }
+
+    function drawJunwooTheftEvent() {
+      const sheet = assetImages.junwooThief;
+      if (sheet.complete && sheet.naturalWidth > 0) {
+        const frameW = sheet.naturalWidth / 4;
+        const frameH = sheet.naturalHeight;
+        const frame = 3;
+        ctx.save();
+        ctx.drawImage(
+          sheet,
+          frame * frameW,
+          0,
+          frameW,
+          frameH,
+          86,
+          175,
+          112,
+          124
+        );
+        ctx.restore();
+      }
+
+    }
+
+    function drawJaemoFlipperEvent() {
+      const image = assetImages.jaemoStanding;
+      ctx.save();
+      ctx.globalAlpha = 0.96;
+      if (image?.complete && image.naturalWidth > 0) {
+        const sx = 108;
+        const sy = 10;
+        const sw = 296;
+        const sh = 748;
+        const height = 148;
+        const width = height * (sw / sh);
+        const x = 116;
+        const y = 184;
+        ctx.drawImage(image, sx, sy, sw, sh, x, y, width, height);
+      } else {
+        const x = 92;
+        const y = 182;
+        ctx.fillStyle = "#273449";
+        ctx.fillRect(x + 28, y + 24, 58, 96);
+        ctx.fillStyle = "#f6c18b";
+        ctx.beginPath();
+        ctx.arc(x + 58, y + 28, 24, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawDistantStolenG70() {
+      if ((!state.flags.g70_stolen && !state.flags.g70_key_drop_seen) || state.flags.g70_key_found) return;
+      if (field.id !== "sea") return;
+      const image = assetImages.g70;
+      const vehicle = { x: 648, y: 213, width: 54, height: 20, alpha: 1 };
+      ctx.save();
+      ctx.globalAlpha = vehicle.alpha;
+      if (image?.complete && image.naturalWidth > 0) {
+        drawAssetImageContain(image, vehicle.x, vehicle.y, vehicle.width, vehicle.height);
+      }
+      ctx.restore();
+    }
+
+    function drawBackground() {
+      drawFieldBackground();
+      drawDistantStolenG70();
+      drawWaterBase();
+
+      const showVehicle = field.id === "fresh" || field.id === "sea";
+      const vehicleId = g70TheftStage === "appear" ? "g70" : state.loadout.vehicle;
+      const vehicleImage = assetImages[vehicleId];
+      if (showVehicle && vehicleId && vehicleId !== "noneVehicle" && g70TheftStage !== "gone") {
+        const vehicle = field.id === "sea"
+          ? { x: -116, y: 194, width: 290, height: 108 }
+          : { x: W - 292, y: 222, width: 116, height: 56 };
+        drawAssetImageContain(vehicleImage, vehicle.x, vehicle.y, vehicle.width, vehicle.height);
+      }
+      if (g70TheftStage === "appear" || g70TheftStage === "keyDropped") drawJunwooTheftEvent();
+      if (activeEventDialogue?.eventId === "jaemo_flipper_found") drawJaemoFlipperEvent();
+    }
+
+    function drawDock() {
+      return;
+    }
+
+    function drawFreshGroundContact() {
+      if (field.id !== "fresh" && field.id !== "sea") return;
+      const base = playerBase();
+      ctx.save();
+      ctx.globalAlpha = field.id === "sea" ? 0.26 : 0.42;
+      ctx.fillStyle = field.id === "sea" ? "#1d2530" : "#274c2f";
+      ctx.beginPath();
+      ctx.ellipse(base.x + 12, base.y + 21, field.id === "sea" ? 50 : 58, field.id === "sea" ? 9 : 12, -0.03, 0, Math.PI * 2);
+      ctx.fill();
+      if (field.id === "sea") {
+        ctx.restore();
+        return;
+      }
+      ctx.globalAlpha = 0.55;
+      ctx.strokeStyle = "#6faa46";
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 9; i += 1) {
+        const x = base.x - 42 + i * 11;
+        ctx.beginPath();
+        ctx.moveTo(x, base.y + 17);
+        ctx.quadraticCurveTo(x + 4, base.y + 8, x + 9, base.y + 16);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function fishShadowType(item) {
+      if (item.kind === "junk" || item.kind === "event") return "Junk";
+      if ((item.level || 0) >= 10) return "Giant";
+      if (["풍천 뱀장어", "메기", "대형 떡붕어", "멸치", "꽁치"].includes(item.name)) return "Long";
+      if (["愿묒뼱"].includes(item.name)) return "Flat";
+      if (["블루길", "무지개송어", "서해 거리의 락스타", "망둥어", "근해 참돔"].includes(item.name)) return "Round";
+      if ((item.level || 0) >= 8 || ["배스", "가물치", "쏘가리", "부시리", "백상아리"].includes(item.name)) return "Predator";
+      if ((item.level || 0) >= 4) return "Round";
+      return "Small";
+    }
+
+    function fishShadowImage(item) {
+      return assetImages[`shadow${fishShadowType(item)}`];
+    }
+
+    function swimmerPerspectiveScale(fish) {
+      const bounds = waterPlayBounds();
+      const depth = clamp((fish.y - bounds.minY) / Math.max(1, bounds.maxY - bounds.minY), 0, 1);
+      return 0.55 + depth * 0.65;
+    }
+
+    function drawEventSwimmer(fish) {
+      if (fish.item.name !== "재모의 오리발") return false;
+      const image = assetImages.jaemoFlipper;
+      const bob = Math.sin(fish.wobble) * 3;
+      const perspective = swimmerPerspectiveScale(fish);
+      ctx.save();
+      ctx.translate(fish.x, fish.y + bob);
+      ctx.globalAlpha = 0.9;
+      ctx.shadowColor = "rgba(3, 15, 26, .34)";
+      ctx.shadowBlur = 6;
+      ctx.fillStyle = "rgba(7, 20, 31, .22)";
+      ctx.beginPath();
+      ctx.ellipse(0, 10, 34, 9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      if (image?.complete && image.naturalWidth > 0) {
+        const width = 58 * perspective;
+        const height = width * (image.naturalHeight / image.naturalWidth);
+        ctx.drawImage(image, -width / 2, -height / 2, width, height);
+      } else {
+        ctx.fillStyle = "#f97316";
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 28, 12, -0.18, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+      return true;
+    }
+
+    function drawSwimmer(fish) {
+      if (fish.hiddenByPredator) return;
+      const item = fish.item;
+      if (item.kind === "event" && drawEventSwimmer(fish)) return;
+      ctx.save();
+      if (field.id === "sea") clipWaterArea(waterVisualArea());
+      const hookedFight = fish === target && phase === "reeling";
+      const fightWave = hookedFight ? Math.sin(fish.wobble * 1.45) : 0;
+      const fightKick = hookedFight ? Math.cos(fish.wobble * 2.1) : 0;
+      ctx.translate(
+        fish.x + fightWave * 9,
+        fish.y + Math.sin(fish.wobble) * 3 + fightKick * 5
+      );
+      if (hookedFight) ctx.rotate(fightWave * 0.22);
+      if (hookedFight || fish.vx < 0) ctx.scale(-1, 1);
+      const visibleCatch = fish === target && (phase === "casting" || phase === "reeling");
+      const shadow = item.kind === "fish"
+        ? fishSpriteImage(item.name, true)
+        : item.kind === "junk"
+          ? junkWaterSpriteImage(item.name)
+          : fishShadowImage(item);
+      const shadowType = fishShadowType(item);
+      const levelScale = shadowType === "Giant" ? 4.25 : shadowType === "Predator" ? 3.35 : shadowType === "Flat" ? 3.1 : shadowType === "Long" ? 3.25 : shadowType === "Junk" ? 2.7 : 2.55;
+      const perspective = swimmerPerspectiveScale(fish);
+      const width = fish.size * perspective * (visibleCatch ? levelScale * 1.08 : levelScale);
+      const height = shadow?.complete && shadow.naturalWidth > 0
+        ? width * (shadow.naturalHeight / shadow.naturalWidth)
+        : width * (shadowType === "Giant" ? 0.42 : shadowType === "Flat" ? 0.48 : shadowType === "Long" ? 0.34 : 0.5);
+      ctx.globalAlpha = item.kind === "event" ? 0.58 : visibleCatch ? 0.56 : 0.34;
+      ctx.shadowColor = "rgba(3, 15, 26, .36)";
+      ctx.shadowBlur = visibleCatch ? 12 : 7;
+      if (shadow?.complete && shadow.naturalWidth > 0) {
+        ctx.drawImage(shadow, -width / 2, -height / 2, width, height);
+      } else {
+        ctx.fillStyle = "#061827";
+        ctx.beginPath();
+        ctx.ellipse(0, 0, width * .36, height * .42, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawHeldResult() {
+      if (!heldResult || phase !== "caught") return;
+      const base = playerBase();
+      const x = base.x + 52;
+      const y = base.y - 96 + Math.sin(bobber.t * 5) * 2;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(Math.sin(bobber.t * 4) * 0.08);
+      const heldSprite = heldResult.kind === "fish"
+        ? fishSpriteImage(heldResult.name)
+        : heldResult.kind === "event" && heldResult.name === "재모의 오리발"
+          ? assetImages.jaemoFlipper
+          : null;
+      if (heldSprite?.complete && heldSprite.naturalWidth > 0) {
+        const width = heldResult.kind === "event" ? 96 : clamp(46 + (heldResult.level || 1) * 8, 70, 132);
+        const height = width * (heldSprite.naturalHeight / heldSprite.naturalWidth);
+        ctx.drawImage(heldSprite, -width / 2, -height / 2, width, height);
+        ctx.restore();
+        return;
+      }
+      ctx.fillStyle = heldResult.kind === "junk" ? "#1f2937" : heldResult.kind === "event" ? "#f97316" : "#dbeafe";
+      if (heldResult.kind === "junk") {
+        ctx.beginPath();
+        ctx.arc(0, 0, 22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#020817";
+        ctx.beginPath();
+        ctx.arc(0, 0, 9, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        const size = heldResult.kind === "event" ? 28 : clamp(22 + (heldResult.level || 1) * 3.5, 28, 58);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, size, size * .42, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(-size, 0);
+        ctx.lineTo(-size - 13, -10);
+        ctx.lineTo(-size - 13, 10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#071827";
+        ctx.beginPath();
+        ctx.arc(size * .52, -3, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawBoatOverlay(base) {
+      const boatId = field.id === "ocean" ? "seaBoat" : "valleyBoat";
+      const boatImage = assetImages[boatId];
+      const boatWidth = field.id === "ocean" ? 780 : 568;
+      const boatHeight = field.id === "ocean" ? 271 : 200;
+      const boatX = field.id === "ocean" ? base.x - 348 : base.x - 263;
+      const boatY = field.id === "ocean" ? base.y - 149 : base.y - 112;
+      drawAssetImageContain(boatImage, boatX, boatY, boatWidth, boatHeight);
+    }
+
+    function drawYoungwooBody(base, actionSpriteInfo, actionSprite) {
+      if (actionSprite) {
+        const placement = actionSpritePlacement(actionSpriteInfo);
+        ctx.drawImage(actionSprite, placement.x, placement.y, placement.width, placement.height);
+      } else if (playerImage.complete && playerImage.naturalWidth > 0) {
+        const height = playerSpriteHeight() * 0.76;
+        const size = playerDrawSize(height);
+        const visualOffsetX = field.id === "valley" ? 25 : 0;
+        ctx.drawImage(playerImage, base.x - size.width * 0.42 + visualOffsetX, base.y - height + 10, size.width, size.height);
+      }
+    }
+
+    function drawPlayer() {
+      const base = playerBase();
+      const actionSpriteInfo = currentYoungwooSpriteInfo();
+      const actionSprite = actionSpriteInfo?.ready ? actionSpriteInfo.image : null;
+      const onBoat = field.id === "valley" || field.id === "ocean";
+
+      if (onBoat) {
+        const motion = boatMotion();
+        ctx.save();
+        ctx.translate(base.x, base.y + motion.y);
+        ctx.rotate(motion.rotate);
+        ctx.translate(-base.x, -base.y);
+        ctx.beginPath();
+        ctx.rect(0, 0, W, base.y - 8);
+        ctx.clip();
+        drawYoungwooBody(base, actionSpriteInfo, actionSprite);
+        ctx.restore();
+        ctx.save();
+        ctx.translate(base.x, base.y + motion.y);
+        ctx.rotate(motion.rotate);
+        ctx.translate(-base.x, -base.y);
+        drawBoatOverlay(base);
+        ctx.restore();
+      } else {
+        drawYoungwooBody(base, actionSpriteInfo, actionSprite);
+      }
+
+      const tip = rodTip();
+
+      if (isFirstLeisureBrokenScene()) return;
+      if (!actionSprite) return;
+
+      ctx.strokeStyle = "rgba(255,255,255,.85)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(tip.x, tip.y);
+      if (castFlight) {
+        const midX = (tip.x + bobber.x) / 2;
+        const midY = Math.min(tip.y, bobber.y) - 76;
+        ctx.quadraticCurveTo(midX, midY, bobber.x, bobber.y);
+      } else {
+        const anchor = bobberAnchorPoint();
+        ctx.lineTo(anchor.x, anchor.y);
+      }
+      ctx.stroke();
+    }
+
+    function drawBobber() {
+      if (isFirstLeisureBrokenScene()) return;
+      const gearId = state.loadout[field.gearType];
+      const style = tackleStyles[gearId] || tackleStyles.toyRod;
+      const nibbleDrop = bitePulse * (biteState?.committed ? 13 : 7);
+      const wave = Math.sin(bobber.t) * 3 + Math.sin(bobber.t * 8.5) * bitePulse * 3 + nibbleDrop;
+      const sway = Math.sin(bobber.t * 1.4) * 3 + Math.cos(bobber.t * 7) * bitePulse * 4;
+      const anchor = bobberAnchorPoint();
+      const anchorX = anchor.x;
+      const anchorY = anchor.y + wave;
+      const lureX = anchorX + sway;
+      const lureY = anchorY + 8;
+
+      ctx.save();
+      if ((phase === "reeling" || performance.now() < biteFlashUntil) && target) {
+        const pulse = 8 + Math.sin(bobber.t * 5) * 4;
+        ctx.globalAlpha = 0.5;
+        ctx.strokeStyle = phase === "reeling" ? "#fef3c7" : "#bfdbfe";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(lureX, lureY + 8, pulse + 10, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(lureX, lureY + 8, pulse + 22, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      const tackleImage = assetImages[`tackle_${gearId}`];
+      if (tackleImage?.complete && tackleImage.naturalWidth > 0) {
+        const drawHeight = style.type === "gem" || style.type === "cube" ? 34 : 30;
+        const drawWidth = drawHeight * (tackleImage.naturalWidth / tackleImage.naturalHeight);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(tackleImage, lureX - drawWidth / 2, lureY - drawHeight / 2, drawWidth, drawHeight);
+        ctx.restore();
+        return;
+      }
+      ctx.restore();
+    }
+
+    function drawCastPreview() {
+      if (phase !== "aimingDistance" && phase !== "aimingSide") return;
+      const distance = phase === "aimingDistance" ? castGauge : castDistance;
+      const side = phase === "aimingDistance" ? 0.5 : castGauge;
+      const point = castPreviewPoint(distance, side);
+      const tip = rodTip();
+
+      ctx.save();
+      ctx.globalAlpha = 0.8;
+      ctx.strokeStyle = "#fff7d8";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([10, 8]);
+      ctx.beginPath();
+      ctx.moveTo(tip.x, tip.y);
+      const midX = (tip.x + point.x) / 2;
+      const midY = Math.min(tip.y, point.y) - 105;
+      ctx.quadraticCurveTo(midX, midY, point.x, point.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.strokeStyle = "#ffd45a";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 22, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(point.x - 31, point.y);
+      ctx.lineTo(point.x - 10, point.y);
+      ctx.moveTo(point.x + 10, point.y);
+      ctx.lineTo(point.x + 31, point.y);
+      ctx.moveTo(point.x, point.y - 31);
+      ctx.lineTo(point.x, point.y - 10);
+      ctx.moveTo(point.x, point.y + 10);
+      ctx.lineTo(point.x, point.y + 31);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawMeterBox() {
+      if (!["aimingDistance", "aimingSide", "casting", "reeling"].includes(phase)) return;
+      const boxW = 410;
+      const boxH = phase === "reeling" ? 142 : 118;
+      const boxX = Math.round((W - boxW) / 2);
+      const boxY = 84;
+      const contentX = boxX + 20;
+      const meterW = 330;
+      const meterRightX = contentX + meterW;
+      const rightTextX = contentX + 220;
+      ctx.fillStyle = "rgba(5, 16, 25, .78)";
+      ctx.fillRect(boxX, boxY, boxW, boxH);
+      ctx.fillStyle = "#e5e7eb";
+      ctx.font = "900 18px Malgun Gothic, sans-serif";
+      ctx.fillText(phase === "aimingDistance" ? "1단계 거리" : phase === "aimingSide" ? "2단계 좌우" : phase === "casting" ? "챔질 타이밍" : "힘겨루기", contentX, 116);
+
+      if (phase === "aimingDistance" || phase === "aimingSide") {
+        ctx.fillStyle = "#1f2937";
+        ctx.fillRect(contentX, 140, meterW, 16);
+        if (phase === "aimingDistance") {
+          ctx.fillStyle = "#22c55e";
+          ctx.fillRect(contentX, 140, 112, 16);
+          ctx.fillStyle = "#f59e0b";
+          ctx.fillRect(contentX + 112, 140, 106, 16);
+          ctx.fillStyle = "#ef4444";
+          ctx.fillRect(contentX + 218, 140, 112, 16);
+        } else {
+          const directionGradient = ctx.createLinearGradient(contentX, 0, meterRightX, 0);
+          directionGradient.addColorStop(0, "#60a5fa");
+          directionGradient.addColorStop(0.5, "#dbeafe");
+          directionGradient.addColorStop(1, "#60a5fa");
+          ctx.fillStyle = directionGradient;
+          ctx.fillRect(contentX, 140, meterW, 16);
+          ctx.fillStyle = "rgba(15, 23, 42, .48)";
+          ctx.fillRect(contentX + Math.round(meterW / 2) - 2, 136, 4, 24);
+        }
+        ctx.fillStyle = "#fff7d8";
+        ctx.fillRect(contentX + castGauge * (meterW - 6), 134, 8, 28);
+        ctx.fillStyle = "#e5e7eb";
+        ctx.font = "800 14px Malgun Gothic, sans-serif";
+        ctx.fillText(phase === "aimingDistance" ? "가까움" : "좌측", contentX, 182);
+        ctx.fillText(phase === "aimingDistance" ? "멀리" : "우측", contentX + 285, 182);
+        return;
+      }
+
+      if (phase === "casting") {
+        ctx.fillStyle = "#1f2937";
+        ctx.fillRect(contentX, 140, meterW, 16);
+        const shownHookProximity = castFlight ? 0 : hookDisplayProximity;
+        ctx.fillStyle = castFlight ? "#64748b" : shownHookProximity > .62 ? "#22c55e" : shownHookProximity > .38 ? "#f59e0b" : "#ef4444";
+        ctx.fillRect(contentX, 140, shownHookProximity * meterW, 16);
+        ctx.fillStyle = "#e5e7eb";
+        ctx.font = "800 14px Malgun Gothic, sans-serif";
+        ctx.fillText(castFlight ? "찌 비행 중" : biteWait > 0 ? `입질 대기 ${biteWait.toFixed(1)}초` : `챔질 성공률 ${Math.round(shownHookProximity * 100)}%`, contentX, 182);
+        ctx.fillText(castFlight ? "착수 후 대기" : `남은 시간 ${Math.max(0, Math.ceil(hookTimer))}초`, rightTextX, 182);
+        const now = performance.now();
+        if (fightMessage && now < fightMessageUntil) {
+          ctx.fillStyle = "rgba(255, 211, 77, .95)";
+          ctx.font = "900 20px Malgun Gothic, sans-serif";
+          ctx.fillText(fightMessage, rightTextX + 25, 146);
+        }
+        return;
+      }
+
+      ctx.fillStyle = "#1f2937";
+      ctx.fillRect(contentX, 134, meterW, 15);
+      const titleBonus = window.GameState.titleBonus(state);
+      const permanentBonus = window.GameState.permanentBonus ? window.GameState.permanentBonus(state) : {};
+      const level10Fight = target?.item?.kind === "fish" && Number(target.item.level || 0) >= 10;
+      const tensionLimit = 118 + (titleBonus.maxTension || 0) + (permanentBonus.maxTension || 0) + (level10Fight ? 34 : 0);
+      const reelActive = reelHeld || (!level10Fight && performance.now() < reelPulseUntil);
+      const highTensionWarning = reelActive && tension > tensionLimit * 0.76;
+      ctx.fillStyle = highTensionWarning || tension < 18 ? "#ef4444" : "#ffd45a";
+      ctx.fillRect(contentX, 134, clamp(tension / tensionLimit, 0, 1) * meterW, 15);
+      ctx.fillStyle = "#e5e7eb";
+      ctx.font = "800 14px Malgun Gothic, sans-serif";
+      ctx.fillText(`텐션 ${Math.round(tension)} / ${tensionLimit}`, contentX, 165);
+      ctx.fillStyle = "#1f2937";
+      ctx.fillRect(contentX, 178, meterW, 12);
+      ctx.fillStyle = "#2dd4bf";
+      ctx.fillRect(contentX, 178, catchProgress * (meterW / 100), 12);
+      ctx.fillStyle = "#e5e7eb";
+      ctx.font = "800 14px Malgun Gothic, sans-serif";
+      ctx.fillText(`포획 ${Math.round(catchProgress)}%`, contentX, 210);
+      const taste = !reelActive && tension > tensionLimit * 0.72
+        ? "텐션 푸는 중"
+        : tension > tensionLimit * 0.82
+        ? "줄이 비명을 지른다"
+        : tension < 20
+          ? "놓으면 빠진다"
+          : catchProgress > 72
+            ? "거의 다 왔다"
+            : reelActive
+              ? "손맛 올라온다"
+              : "숨 고르는 중";
+      ctx.fillStyle = (reelActive && tension > tensionLimit * 0.82) || tension < 20 ? "#fecaca" : "#bbf7d0";
+      ctx.font = "900 13px Malgun Gothic, sans-serif";
+      ctx.fillText(taste, rightTextX + 25, 210);
+    }
+
+    function drawFieldAlert() {
+      const now = performance.now();
+      if (!fieldAlertMessage || now >= fieldAlertUntil) return;
+      const alpha = clamp((fieldAlertUntil - now) / 360, 0, 1);
+      const boxW = 440;
+      const boxH = 54;
+      const boxX = Math.round((W - boxW) / 2);
+      const boxY = 236;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = "rgba(20, 12, 8, .88)";
+      ctx.fillRect(boxX, boxY, boxW, boxH);
+      ctx.strokeStyle = "#ffd34d";
+      ctx.lineWidth = 5;
+      ctx.strokeRect(boxX + 2, boxY + 2, boxW - 4, boxH - 4);
+      ctx.fillStyle = "#fff7d8";
+      ctx.font = "1000 24px Malgun Gothic, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(fieldAlertMessage, W / 2, boxY + boxH / 2 + 1);
+      ctx.restore();
+    }
+
+    function showDebugJunwooTheftScene() {
+      field = window.GameState.fieldData.sea;
+      state.activeField = "sea";
+      state.flags.g70_purchased = true;
+      state.flags.g70_stolen = true;
+      state.flags.first_leisure_broken = true;
+      state.loadout.vehicle = "g70";
+      state.loadout.sea = "noneSea";
+      fieldHud.textContent = field.name;
+      gearHud.textContent = gear().name;
+      fameHud.textContent = state.fame.toLocaleString();
+      goldHud.textContent = `${state.gold.toLocaleString()}G`;
+      g70TheftExitReady = true;
+      g70TheftStage = "appear";
+      g70TheftYoungwooLineShown = false;
+      firstLeisureBrokenThisTrip = true;
+      setPhase("blocked");
+      showEventDialogueStep({
+        speaker: "준우",
+        portrait: "junwoo",
+        lines: ["[나가기] 창고로 돌아가려는 순간.", "[준우] 이 차, 완전 내 스타일이잖아.", "[준우] 잠깐만 쓰고 올게.", "[준우] 도로에서 더 잘 어울리는 사람은 나같은데?"]
+      });
+    }
+
+    function showDebugFirstLeisureBrokenScene() {
+      field = window.GameState.fieldData.sea;
+      state.activeField = "sea";
+      state.loadout.vehicle = "g70";
+      state.loadout.sea = "firstLeisure";
+      state.flags.first_leisure_broken = true;
+      fieldHud.textContent = field.name;
+      gearHud.textContent = gear().name;
+      fameHud.textContent = state.fame.toLocaleString();
+      goldHud.textContent = `${state.gold.toLocaleString()}G`;
+      g70TheftExitReady = false;
+      g70TheftStage = "none";
+      g70TheftYoungwooLineShown = false;
+      firstLeisureBrokenThisTrip = true;
+      lastPortraitEmotion = "panic";
+      setPhase("blocked");
+      showEventDialogueStep({
+        speaker: "낚시왕 남영우",
+        portrait: "youngwoo",
+        lines: ["[파손] 장비가 첫 던지기에 버티지 못했다.", "[상황] 더는 낚시를 진행할 수 없다.", "[나가기] 지금은 나가기만 가능하다.", "[영우] 일단 돌아가서 상황을 정리하자."]
+      });
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      drawBackground();
+      swimmers.forEach(drawSwimmer);
+      drawWaterOverlay();
+      drawCastPreview();
+      drawDock();
+      drawFreshGroundContact();
+      drawPlayer();
+      drawBobber();
+      updatePortrait();
+      drawMeterBox();
+      drawFieldAlert();
+    }
+
+    function frame(time) {
+      const dt = Math.min(0.033, (time - lastTime) / 1000 || 0);
+      lastTime = time;
+      update(dt);
+      draw();
+      requestAnimationFrame(frame);
+    }
+
+    actionButton.addEventListener("click", () => {
+      if (suppressReelClick) {
+        suppressReelClick = false;
+        return;
+      }
+      if (phase === "reeling") {
+        const level10Fight = target?.item?.kind === "fish" && Number(target.item.level || 0) >= 10;
+        reelPulseUntil = level10Fight ? 0 : performance.now() + 320;
+        window.GameAudio?.playSfx("reel");
+        return;
+      }
+      if (phase === "caught") {
+        setPhase("ready");
+        return;
+      }
+      if (phase === "blocked") {
+        return;
+      }
+      actionPress();
+    });
+
+    eventProgressButton.addEventListener("click", advanceG70TheftDialogue);
+
+    homeButton.addEventListener("click", () => {
+      state = window.GameState.save(state);
+      if (returnGarageIfNeeded()) return;
+      location.href = "game_home.html";
+    });
+
+    resultClose.addEventListener("click", confirmResultPopup);
+
+    ["contextmenu", "selectstart", "dragstart"].forEach((eventName) => {
+      actionButton.addEventListener(eventName, (event) => event.preventDefault(), { capture: true });
+    });
+
+    actionButton.addEventListener("touchmove", (event) => event.preventDefault(), { passive: false });
+
+    actionButton.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      if (phase !== "reeling") return;
+      reelHeld = true;
+      reelPulseUntil = performance.now() + 320;
+      suppressReelClick = true;
+      window.GameAudio?.playSfx("reel");
+      actionButton.classList.add("held");
+    });
+
+    ["pointerup", "pointercancel", "pointerleave"].forEach((eventName) => {
+      actionButton.addEventListener(eventName, () => {
+        reelHeld = false;
+        reelPulseUntil = 0;
+        actionButton.classList.remove("held");
+      });
+    });
+    window.addEventListener("pointerup", () => {
+      reelHeld = false;
+      reelPulseUntil = 0;
+      actionButton.classList.remove("held");
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.code !== "Space") return;
+      event.preventDefault();
+      if (phase === "reeling") {
+        reelHeld = true;
+        window.GameAudio?.playSfx("reel");
+        actionButton.classList.add("held");
+      } else {
+        actionButton.click();
+      }
+    });
+
+    window.addEventListener("keyup", (event) => {
+      if (event.code !== "Space") return;
+      reelHeld = false;
+      reelPulseUntil = 0;
+      actionButton.classList.remove("held");
+    });
+
+    window.addEventListener("resize", () => {
+      resizeGame();
+      refreshMobileActionLayout();
+    });
+    window.addEventListener("orientationchange", () => {
+      resizeGame();
+      setTimeout(refreshMobileActionLayout, 30);
+    });
+    window.visualViewport?.addEventListener("resize", () => {
+      resizeGame();
+      refreshMobileActionLayout();
+    });
+    refreshMobileActionLayout();
+    resizeGame();
+    refreshState();
+    window.GameAudio?.installGlobalUiSounds();
+    window.GameAudio?.setScene("fishing", field.id);
+    resetBobber();
+    spawnSwimmers();
+    const debugParams = new URLSearchParams(location.search);
+    const devMode = debugParams.get("dev") === "1";
+    if (devMode && debugParams.get("debugJunwooTheft") === "1") {
+      showDebugJunwooTheftScene();
+    } else if (devMode && debugParams.get("debugFirstLeisureBroken") === "1") {
+      showDebugFirstLeisureBrokenScene();
+    } else if (devMode && debugParams.get("debugTivoliConfiscated") === "1") {
+      state.loadout.vehicle = "tivoli";
+      state.loadout.sea = "firstLeisure";
+      state.activeField = "sea";
+      state = window.GameState.save(state);
+      refreshState();
+      setPhase("blocked");
+      showEventDialogueStep({
+        eventId: "tivoli_confiscated",
+        speaker: "와이프",
+        portrait: "wife",
+        lines: ["[압수!] 마트 가야 하니까 차 키 줘.", "[와이프] 티볼리는 내가 가져간다.", "[영우] 바다보다 먼저 현실에 걸렸다.", "[안내] 홈으로 돌아가자."]
+      });
+    } else if (devMode && debugParams.get("debugJaemoFlipper") === "1") {
+      state.flags.g70_stolen = true;
+      delete state.flags.jaemo_flipper_found;
+      state.activeField = "fresh";
+      state = window.GameState.save(state);
+      refreshState();
+      showJaemoFlipperFieldEvent();
+    } else if (devMode && debugParams.get("debugG70KeyFound") === "1") {
+      state.flags.g70_key_found = true;
+      window.GameState.addItem(state, "vehicle", "g70");
+      state = window.GameState.save(state);
+      refreshState();
+      setPhase("blocked");
+      showEventDialogueStep({
+        eventId: "g70_key_found",
+        speaker: "낚시왕 남영우",
+        portrait: "youngwoo",
+        lines: ["[보조키!] 백상아리 배 속에서 G70 차키를 찾았다.", "[영우] G70 키를 찾았다.", "[영우] 복수의 불길이 다시 살아났다.", "[보상] G70이 창고로 돌아왔다."]
+      });
+    } else if (devMode && debugParams.get("debugG70KeyDropped") === "1") {
+      state.flags.g70_stolen = true;
+      state.flags.carnival_owned = true;
+      state.flags.first_leisure_broken = true;
+      state.flags.first_leisure_exchanged = true;
+      state.flags.g70_key_drop_pending = true;
+      delete state.flags.g70_key_drop_seen;
+      delete state.flags.sea_boat_unlocked;
+      state.activeField = "sea";
+      state.loadout.vehicle = "carnival";
+      state.loadout.sea = "firstLeisure";
+      state.loadout.freshwater = "noneFreshwater";
+      state.loadout.outfit = "beginnerOutfit";
+      window.GameState.addItem(state, "vehicle", "carnival");
+      window.GameState.addItem(state, "sea", "firstLeisure");
+      state = window.GameState.save(state);
+      refreshState();
+      showG70KeyDroppedScene();
+    } else if (showG70KeyDroppedScene()) {
+      // Event scene takes over the action button until the player confirms it.
+    } else if (!hasActiveFishingGear()) {
+      setPhase("blocked");
+      setLogs([
+        `[장비] ${gear().name}`,
+        field.gearType === "sea" ? "[상점] 바다 장비를 먼저 준비해야 한다." : "[창고] 민물 장비를 먼저 장착해야 한다.",
+        "[안내] 낚시를 진행할 수 없다.",
+        "[영우] 장비부터 챙기자. 패기는 미끼가 아니다."
+      ]);
+    } else {
+      setPhase("ready");
+    }
+    requestAnimationFrame(frame);
+  
+  </script>
+  <script src="./mobile_orientation.js"></script>
+</body>
+</html>

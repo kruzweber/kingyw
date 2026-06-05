@@ -1,0 +1,202 @@
+[
+  {
+    "name": "???",
+    "sprite": "assets/fish_sprites/alpha/fish_01_pirami.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_01_pirami.png"
+  },
+  {
+    "name": "???",
+    "sprite": "assets/fish_sprites/alpha/fish_02_bluegill.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_02_bluegill.png"
+  },
+  {
+    "name": "??",
+    "sprite": "assets/fish_sprites/alpha/fish_03_bungeo.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_03_bungeo.png"
+  },
+  {
+    "name": "??",
+    "sprite": "assets/fish_sprites/alpha/fish_04_kkeuri.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_04_kkeuri.png"
+  },
+  {
+    "name": "??",
+    "sprite": "assets/fish_sprites/alpha/fish_05_kkeokji.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_05_kkeokji.png"
+  },
+  {
+    "name": "??",
+    "sprite": "assets/fish_sprites/alpha/fish_06_nuchi.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_06_nuchi.png"
+  },
+  {
+    "name": "??",
+    "sprite": "assets/fish_sprites/alpha/fish_07_catfish.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_07_catfish.png"
+  },
+  {
+    "name": "??",
+    "sprite": "assets/fish_sprites/alpha/fish_08_bass.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_08_bass.png"
+  },
+  {
+    "name": "??",
+    "sprite": "assets/fish_sprites/alpha/fish_09_carp.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_09_carp.png"
+  },
+  {
+    "name": "???",
+    "sprite": "assets/fish_sprites/alpha/fish_10_snakehead.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_10_snakehead.png"
+  },
+  {
+    "name": "??",
+    "sprite": "assets/fish_sprites/alpha/fish_11_ayu.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_11_ayu.png"
+  },
+  {
+    "name": "???",
+    "sprite": "assets/fish_sprites/alpha/fish_12_masu_salmon.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_12_masu_salmon.png"
+  },
+  {
+    "name": "?????",
+    "sprite": "assets/fish_sprites/alpha/fish_13_rainbow_trout.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_13_rainbow_trout.png"
+  },
+  {
+    "name": "???",
+    "sprite": "assets/fish_sprites/alpha/fish_14_mandarin_fish.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_14_mandarin_fish.png"
+  },
+  {
+    "name": "????",
+    "sprite": "assets/fish_sprites/alpha/fish_15_koi.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_15_koi.png"
+  },
+  {
+    "name": "?? ???",
+    "sprite": "assets/fish_sprites/alpha/fish_16_large_crucian.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_16_large_crucian.png"
+  },
+  {
+    "name": "????",
+    "sprite": "assets/fish_sprites/alpha/fish_17_giant_catfish.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_17_giant_catfish.png"
+  },
+  {
+    "name": "?? ???",
+    "sprite": "assets/fish_sprites/alpha/fish_18_eel.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_18_eel.png"
+  },
+  {
+    "name": "????",
+    "sprite": "assets/fish_sprites/alpha/fish_19_sturgeon.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_19_sturgeon.png"
+  },
+  {
+    "name": "??? ??? ?????",
+    "sprite": "assets/fish_sprites/alpha/fish_20_lake_monster.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_20_lake_monster.png"
+  },
+  {
+    "name": "??",
+    "sprite": "assets/fish_sprites/alpha/fish_21_anchovy.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_21_anchovy.png"
+  },
+  {
+    "name": "??",
+    "sprite": "assets/fish_sprites/alpha/fish_22_saury.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_22_saury.png"
+  },
+  {
+    "name": "???",
+    "sprite": "assets/fish_sprites/alpha/fish_23_horse_mackerel.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_23_horse_mackerel.png"
+  },
+  {
+    "name": "???",
+    "sprite": "assets/fish_sprites/alpha/fish_24_mackerel.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_24_mackerel.png"
+  },
+  {
+    "name": "??",
+    "sprite": "assets/fish_sprites/alpha/fish_25_rockfish.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_25_rockfish.png"
+  },
+  {
+    "name": "??",
+    "sprite": "assets/fish_sprites/alpha/fish_26_flounder.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_26_flounder.png"
+  },
+  {
+    "name": "?? ???",
+    "sprite": "assets/fish_sprites/alpha/fish_27_squid.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_27_squid.png"
+  },
+  {
+    "name": "???",
+    "sprite": "assets/fish_sprites/alpha/fish_28_cutlassfish.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_28_cutlassfish.png"
+  },
+  {
+    "name": "???",
+    "sprite": "assets/fish_sprites/alpha/fish_29_octopus.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_29_octopus.png"
+  },
+  {
+    "name": "??",
+    "sprite": "assets/fish_sprites/alpha/fish_30_red_sea_bream.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_30_red_sea_bream.png"
+  },
+  {
+    "name": "?? ??",
+    "sprite": "assets/fish_sprites/alpha/fish_31_sea_bass.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_31_sea_bass.png"
+  },
+  {
+    "name": "?? ????",
+    "sprite": "assets/fish_sprites/alpha/fish_32_giant_octopus.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_32_giant_octopus.png"
+  },
+  {
+    "name": "???",
+    "sprite": "assets/fish_sprites/alpha/fish_33_yellowtail.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_33_yellowtail.png"
+  },
+  {
+    "name": "?? ?? ???",
+    "sprite": "assets/fish_sprites/alpha/fish_34_giant_lobster.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_34_giant_lobster.png"
+  },
+  {
+    "name": "???",
+    "sprite": "assets/fish_sprites/alpha/fish_35_king_crab.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_35_king_crab.png"
+  },
+  {
+    "name": "?? ??",
+    "sprite": "assets/fish_sprites/alpha/fish_36_deepsea_grouper.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_36_deepsea_grouper.png"
+  },
+  {
+    "name": "?? ???",
+    "sprite": "assets/fish_sprites/alpha/fish_37_swordfish.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_37_swordfish.png"
+  },
+  {
+    "name": "?? ????",
+    "sprite": "assets/fish_sprites/alpha/fish_38_bluefin_tuna.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_38_bluefin_tuna.png"
+  },
+  {
+    "name": "????",
+    "sprite": "assets/fish_sprites/alpha/fish_39_great_white_shark.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_39_great_white_shark.png"
+  },
+  {
+    "name": "??? ??? ???",
+    "sprite": "assets/fish_sprites/alpha/fish_40_kraken.png",
+    "silhouette": "assets/fish_sprites/silhouette/fish_40_kraken.png"
+  }
+]

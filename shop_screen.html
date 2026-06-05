@@ -1,0 +1,1682 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>낚시왕 남영우 - 상점</title>
+  <style>
+    :root {
+      --ink: #111522;
+      --line: #070a14;
+      --gold: #ffd34d;
+      --red: #e94c3d;
+      --panel: #f5d987;
+      --deep: #172035;
+      --wood: #6f4e3d;
+      --green: #68b95f;
+      --muted: #8d7a5f;
+      --icon-bg: rgba(38, 43, 54, .58);
+      --icon-selected-bg: #3e4f65;
+      --game-scale: 1;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #101522;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+      color: var(--ink);
+      image-rendering: pixelated;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    .game-frame {
+      position: relative;
+      width: calc(1180px * var(--game-scale));
+      height: calc(664px * var(--game-scale));
+    }
+
+    .screen {
+      position: relative;
+      width: 1180px;
+      height: 664px;
+      overflow: hidden;
+      border: 8px solid var(--line);
+      background:
+        linear-gradient(rgba(16, 18, 24, .05), rgba(16, 12, 8, .12)),
+        url("./assets/shop_modern_tackle_background.png") center / cover no-repeat;
+      box-shadow: 0 0 0 6px #2f3751;
+      transform: scale(var(--game-scale));
+      transform-origin: top left;
+    }
+
+    .screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.08) 50%, transparent 50%) 0 0 / 8px 8px,
+        linear-gradient(rgba(255,255,255,.05) 50%, transparent 50%) 0 0 / 8px 8px;
+      pointer-events: none;
+      mix-blend-mode: soft-light;
+      z-index: 20;
+    }
+
+    .screen::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 166px;
+      border-top: 6px solid var(--line);
+      background: #20263a;
+      z-index: 7;
+    }
+
+    .gold-panel {
+      position: absolute;
+      left: 34px;
+      bottom: 34px;
+      width: 214px;
+      height: 82px;
+      z-index: 7;
+    }
+
+    .card,
+    .panel,
+    .dialogue,
+    .tab,
+    .item,
+    .button {
+      border: 5px solid var(--line);
+      background: var(--panel);
+      box-shadow: 6px 6px 0 rgba(0,0,0,.28);
+    }
+
+    .card {
+      padding: 8px 12px;
+    }
+
+    .label {
+      display: block;
+      color: #665128;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .value {
+      display: block;
+      margin-top: 6px;
+      font-size: 24px;
+      font-weight: 1000;
+      line-height: 1.05;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: keep-all;
+    }
+
+    .shopkeeper {
+      position: absolute;
+      left: 128px;
+      top: 118px;
+      width: 164px;
+      height: 264px;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      z-index: 4;
+    }
+
+    .shop-poster {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: auto;
+      filter: drop-shadow(7px 9px 0 rgba(0,0,0,.2));
+    }
+
+    .shop-poster.after {
+      display: none;
+    }
+
+    .shopkeeper.owner-return {
+      cursor: pointer;
+    }
+
+    .shopkeeper.owner-return .shop-poster.after {
+      filter:
+        drop-shadow(7px 9px 0 rgba(0,0,0,.2))
+        brightness(.86);
+    }
+
+    .counter {
+      position: absolute;
+      display: none;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      height: 74px;
+      border: 5px solid var(--line);
+      background: repeating-linear-gradient(90deg, #a96938 0 30px, #7a4528 30px 37px);
+    }
+
+    .seller {
+      position: absolute;
+      display: none;
+      left: 84px;
+      bottom: -10px;
+      width: 112px;
+      height: 126px;
+      border: 5px solid var(--line);
+      background: #1d2a33;
+      box-shadow: 5px 7px 0 rgba(0,0,0,.28);
+      padding: 0;
+      font: inherit;
+      cursor: pointer;
+      z-index: 6;
+      overflow: hidden;
+    }
+
+    .seller img {
+      position: absolute;
+      left: -15px;
+      top: -18px;
+      width: 142px;
+      height: 142px;
+      object-fit: contain;
+      image-rendering: auto;
+      pointer-events: none;
+    }
+
+    .notice-paper {
+      position: absolute;
+      left: 70px;
+      bottom: 34px;
+      width: 124px;
+      height: 54px;
+      border: 4px solid var(--line);
+      background: #fff1b8;
+      display: none;
+      place-items: center;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 1000;
+      line-height: 1.15;
+      transform: rotate(-4deg);
+      z-index: 3;
+    }
+
+    .shopkeeper.after-break .seller {
+      display: none;
+    }
+
+    .shopkeeper.after-break .notice-paper {
+      display: none;
+    }
+
+    .shopkeeper.after-break .shop-poster.before {
+      display: none;
+    }
+
+    .shopkeeper.after-break .shop-poster.after {
+      display: block;
+    }
+
+    .shopkeeper.exchange-complete .shop-poster.before {
+      display: none;
+    }
+
+    .shopkeeper.exchange-complete .shop-poster.after {
+      display: block;
+      filter:
+        drop-shadow(7px 9px 0 rgba(0,0,0,.2))
+        brightness(.92);
+    }
+
+    .shopkeeper.owner-return .seller,
+    .shopkeeper.exchange-complete .seller {
+      display: block;
+      animation: seller-peek .9s ease-out both;
+    }
+
+    .shopkeeper.exchange-complete .seller {
+      display: none;
+    }
+
+    .shop-owner-cover {
+      position: absolute;
+      display: none;
+      left: -28px;
+      bottom: -101px;
+      width: 220px;
+      height: 220px;
+      object-fit: contain;
+      image-rendering: auto;
+      filter: drop-shadow(5px 7px 0 rgba(0,0,0,.24));
+      pointer-events: none;
+      z-index: 6;
+    }
+
+    .shopkeeper.owner-speaking .shop-owner-cover,
+    .shopkeeper.exchange-complete .shop-owner-cover {
+      display: block;
+      animation: seller-peek .72s ease-out both;
+    }
+
+    .shopkeeper.owner-return .speech {
+      display: block;
+      left: -28px;
+      right: -34px;
+      top: -70px;
+      min-height: 48px;
+      font-size: 13px;
+      text-align: center;
+      z-index: 7;
+    }
+
+    .shopkeeper.exchange-complete .speech {
+      display: none;
+      left: -28px;
+      right: -34px;
+      top: -70px;
+      min-height: 48px;
+      font-size: 13px;
+      text-align: center;
+      z-index: 7;
+    }
+
+    .speech {
+      position: absolute;
+      left: 26px;
+      right: 26px;
+      top: 22px;
+      min-height: 54px;
+      border: 4px solid var(--line);
+      background: #fff3c4;
+      padding: 7px 9px;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.25;
+      display: none;
+    }
+
+    @keyframes seller-peek {
+      from { transform: translateY(22px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .tabs {
+      position: absolute;
+      left: 338px;
+      top: 46px;
+      right: 126px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      z-index: 6;
+    }
+
+    .tab {
+      height: 52px;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 1000;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: var(--gold);
+      transform: translateY(-4px);
+    }
+
+    .items {
+      position: absolute;
+      left: 338px;
+      top: 116px;
+      width: 424px;
+      bottom: 248px;
+      display: grid;
+      align-content: start;
+      gap: 6px;
+      z-index: 6;
+    }
+
+    .item {
+      height: 50px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 100px;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      text-align: left;
+      font: inherit;
+      cursor: pointer;
+      position: relative;
+      background: var(--panel);
+    }
+
+    .item > span:first-child {
+      min-width: 0;
+    }
+
+    .item.selected {
+      transform: translateX(-8px);
+      outline: 5px solid var(--gold);
+      outline-offset: -10px;
+      box-shadow: 6px 6px 0 rgba(0,0,0,.28), inset 0 0 0 5px rgba(255, 240, 173, .72);
+    }
+
+    .item.locked {
+      background: #bda977;
+      color: #62513a;
+      filter: grayscale(.4);
+    }
+
+    .item.owned {
+      background: #d8c58f;
+    }
+
+    .item.available {
+      background: var(--panel);
+      color: var(--ink);
+      filter: none;
+    }
+
+    .item-name {
+      display: block;
+      font-size: 18px;
+      font-weight: 1000;
+      line-height: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .item-meta {
+      display: none;
+      margin-top: 0;
+      color: #665128;
+      font-size: 12px;
+      font-weight: 900;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .price {
+      text-align: right;
+      font-size: 18px;
+      font-weight: 1000;
+      white-space: nowrap;
+    }
+
+    .detail {
+      position: absolute;
+      right: 34px;
+      top: 116px;
+      width: 330px;
+      bottom: 184px;
+      padding: 10px 14px;
+      z-index: 6;
+      overflow: hidden;
+    }
+
+    .detail-title {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 22px;
+      font-weight: 1000;
+      line-height: 1.1;
+    }
+
+    .detail-visual {
+      height: 112px;
+      margin: 0 0 6px;
+      border: 4px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,0) 44%),
+        rgba(38, 43, 54, .66);
+      box-shadow:
+        inset 0 -12px 0 rgba(0,0,0,.16),
+        4px 5px 0 rgba(0,0,0,.16);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .detail-visual img {
+      max-width: 226px;
+      max-height: 74px;
+      object-fit: contain;
+      image-rendering: auto;
+      filter: drop-shadow(4px 5px 0 rgba(0,0,0,.28));
+    }
+
+    .detail-visual img.detail-image-freshwater,
+    .detail-visual img.detail-image-sea {
+      transform: scale(1.72);
+    }
+
+    .detail-visual img.detail-image-boat {
+      transform: scale(1.94);
+    }
+
+    .detail-visual img.detail-image-vehicle {
+      transform: scale(1.56);
+    }
+
+    .detail-visual img.detail-image-outfit {
+      transform: scale(1.18);
+    }
+
+    .detail-visual img[src=""] {
+      display: none;
+    }
+
+    #detailDesc {
+      margin: 5px 0 0;
+      min-height: 42px;
+      max-height: 50px;
+      overflow: hidden;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.25;
+    }
+
+    .specs {
+      display: grid;
+      gap: 4px;
+      margin: 6px 0 0;
+    }
+
+    .spec {
+      display: flex;
+      justify-content: space-between;
+      border: 3px solid var(--line);
+      background: #fff4c8;
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .spec.hidden {
+      display: none;
+    }
+
+    .buy-row {
+      position: absolute;
+      left: auto;
+      right: 16px;
+      bottom: 9px;
+      width: 436px;
+      height: 148px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      z-index: 8;
+    }
+
+    .wallet {
+      grid-column: 1 / 3;
+      padding: 8px 12px;
+      min-height: 0;
+    }
+
+    .buy-row .value {
+      font-size: 19px;
+      line-height: 1.08;
+    }
+
+    .buy-row .button {
+      height: 100%;
+      font-size: 20px;
+    }
+
+    .buy-row .button.buy {
+      grid-column: 1 / 3;
+    }
+
+    .buy-row.event-dialogue {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .buy-row.event-dialogue .button.buy {
+      background: #ff3d3d;
+      color: #fff7d8;
+      border-color: #fff7d8;
+      text-shadow: 2px 2px 0 #000;
+      box-shadow: 5px 5px 0 rgba(0,0,0,.42);
+      opacity: 1;
+      filter: none;
+    }
+
+    .button {
+      font: inherit;
+      font-size: 22px;
+      font-weight: 1000;
+      cursor: pointer;
+    }
+
+    .button.buy {
+      background: var(--gold);
+    }
+
+    .button.back {
+      background: #fff0ad;
+    }
+
+    .home-button {
+      position: absolute !important;
+      right: 16px;
+      top: 14px;
+      z-index: 11;
+      min-width: 92px;
+      height: 40px;
+      border: 4px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(255, 230, 129, .62) 0 7px, transparent 7px),
+        var(--panel);
+      color: var(--ink);
+      font: inherit;
+      font-size: 16px;
+      font-weight: 1000;
+      box-shadow: 4px 4px 0 rgba(0,0,0,.28);
+      cursor: pointer;
+    }
+
+    .home-button:hover,
+    .home-button:focus-visible {
+      background:
+        linear-gradient(180deg, rgba(255, 235, 144, .78) 0 7px, transparent 7px),
+        var(--gold);
+      outline: none;
+    }
+
+    .disabled {
+      opacity: .55;
+      filter: grayscale(.55);
+    }
+
+    .button.available {
+      opacity: 1;
+      filter: none;
+    }
+
+    .dialogue {
+      position: absolute;
+      left: 16px;
+      right: 464px;
+      bottom: 9px;
+      height: 148px;
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 12px;
+      padding: 0;
+      background: var(--deep);
+      overflow: visible;
+      z-index: 8;
+    }
+
+    .dialogue.actor-shop {
+      background:
+        linear-gradient(180deg, rgba(255, 211, 77, .12), rgba(255, 211, 77, 0)),
+        #2c2635;
+    }
+
+    .dialogue.event-dialogue {
+      background:
+        linear-gradient(180deg, rgba(255, 212, 90, .18), rgba(255, 212, 90, 0)),
+        #402348;
+      border-color: var(--gold);
+      box-shadow:
+        0 0 0 5px #7c2d12,
+        0 0 0 10px rgba(255, 212, 90, .34),
+        5px 5px 0 rgba(98, 43, 141, .44);
+      animation: eventPulse 1.1s steps(2, end) infinite;
+    }
+
+    .dialogue.event-dialogue::before {
+      content: "EVENT";
+      position: absolute;
+      left: 21px;
+      top: -18px;
+      width: 86px;
+      box-sizing: border-box;
+      z-index: 2;
+      padding: 3px 12px 4px;
+      border: 4px solid var(--line);
+      background: #ff3d3d;
+      color: #fff7d8;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 1000;
+      letter-spacing: 0;
+      text-shadow: 2px 2px 0 #000;
+      box-shadow: 4px 4px 0 rgba(0,0,0,.32);
+    }
+
+    .dialogue.event-dialogue .portrait {
+      background: #402b51;
+      border-color: var(--gold);
+    }
+
+    .dialogue.event-dialogue .dialogue-copy {
+      color: #fff4bf;
+    }
+
+    .dialogue.event-dialogue .dialogue-speaker {
+      color: #ffef85;
+    }
+
+    @keyframes eventPulse {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.16); }
+    }
+
+    .portrait {
+      position: relative;
+      height: 118px;
+      align-self: center;
+      margin-left: 8px;
+      border: 4px solid var(--line);
+      background: #28324a;
+      overflow: hidden;
+    }
+
+    .portrait img {
+      position: absolute;
+      inset: 0;
+      width: 104px;
+      height: 110px;
+      image-rendering: auto;
+    }
+
+    .dialogue-copy {
+      min-width: 0;
+      padding: 12px 14px 12px 12px;
+      color: #fff3d3;
+      font-weight: 900;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    .dialogue-speaker {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--gold);
+      font-size: 18px;
+    }
+
+    .dialogue-line {
+      display: block;
+      font-size: 15px;
+      line-height: 1.42;
+      white-space: nowrap;
+    }
+
+    .dialogue-progress-button {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      width: 118px;
+      height: 118px;
+      transform: translateY(-50%);
+      border: 4px solid var(--line);
+      background: #ff3d3d;
+      color: #fff7d8;
+      font: inherit;
+      font-size: 18px;
+      font-weight: 1000;
+      border-color: #fff7d8;
+      text-shadow: 2px 2px 0 #000;
+      box-shadow: 5px 5px 0 rgba(0,0,0,.42);
+      cursor: pointer;
+    }
+
+    .dialogue-progress-button[hidden] {
+      display: none;
+    }
+
+    .dialogue.event-dialogue .dialogue-copy {
+      padding-right: 142px;
+    }
+  </style>
+  <link rel="stylesheet" href="./assets/ui_buttons.css">
+  <script src="./mobile_orientation_boot.js"></script>
+</head>
+<body>
+  <div class="game-frame">
+  <main class="screen" aria-label="상점 화면 초안">
+    <section class="card gold-panel" aria-label="보유 골드">
+      <span class="label">보유 골드</span>
+      <span class="value" id="goldHud">0G</span>
+    </section>
+
+    <aside class="shopkeeper after-break" id="shopkeeper">
+      <div class="speech">사장님 잠적</div>
+      <img class="shop-poster before" src="./assets/shop_poster_first_leisure_promo.png" alt="제1레져 낚시세트 프로모션 포스터">
+      <img class="shop-poster after" src="./assets/shop_poster_first_leisure_no_refund.png" alt="제1레져 낚시세트 환불불가 포스터">
+      <img class="shop-owner-cover" src="./assets/shop_owner_sprites/shop_owner_sprite_cover_poster.png?v=cover-poster-fullbody-20260604" alt="" aria-hidden="true">
+      <button class="seller" id="shopOwnerButton" type="button" aria-label="상점 사장">
+        <img src="./assets/shop_owner_sprites/shop_owner_emoji_rich.png?v=owner-arms-v1-20260604" alt="">
+      </button>
+      <div class="notice-paper">교환/환불<br>불가</div>
+      <div class="counter"></div>
+    </aside>
+
+    <nav class="tabs" aria-label="상점 분류">
+      <button class="tab active" type="button" data-tab="freshwater">민물 장비</button>
+      <button class="tab" type="button" data-tab="sea">바다 장비</button>
+      <button class="tab" type="button" data-tab="outfit">의상</button>
+      <button class="tab" type="button" data-tab="vehicle">차량</button>
+      <button class="tab" type="button" data-tab="boat">보트</button>
+    </nav>
+
+    <section class="items" aria-label="상품 목록" id="itemsList">
+      <button class="item owned" type="button">
+          <span>
+            <span class="item-name">장난감 낚시세트</span>
+          </span>
+        <span class="price">보유중</span>
+      </button>
+      <button class="item selected" type="button">
+          <span>
+            <span class="item-name">알리산 낚시세트</span>
+          </span>
+        <span class="price">2,800G</span>
+      </button>
+      <button class="item" type="button">
+          <span>
+            <span class="item-name">명인의 낚시세트</span>
+          </span>
+        <span class="price">7,500G</span>
+      </button>
+    </section>
+
+    <aside class="detail panel" id="detailPanel">
+      <strong class="detail-title" id="detailTitle">알리산 낚시세트</strong>
+      <div class="detail-visual" aria-hidden="true">
+        <img id="detailImage" src="./assets/rod_ali_icon.png?v=rod-quality-20260604" alt="">
+      </div>
+      <span class="label">상품 설명</span>
+      <p id="detailDesc">중급 낚시복을 갖춘 뒤 바로 쓸 수 있는 민물용 낚시세트. 피라미만 잡던 영우에게 첫 장비 업그레이드다.</p>
+      <div class="specs">
+        <div class="spec"><span id="detailTensionLabel">장비 레벨</span><strong id="detailTension">145</strong></div>
+        <div class="spec"><span id="detailPowerLabel">감기력</span><strong id="detailPower">3.8</strong></div>
+        <div class="spec"><span id="detailTypeLabel">종류</span><strong id="detailType">민물</strong></div>
+      </div>
+    </aside>
+
+    <section class="buy-row">
+      <div class="wallet panel">
+        <span class="label">구매 후 예상</span>
+        <span class="value" id="walletPreview">0G - 500G = 부족</span>
+      </div>
+      <button class="button buy disabled" type="button" id="buyButton">구매 불가</button>
+    </section>
+
+    <button class="home-button" type="button" onclick="location.href='game_home.html'">나가기</button>
+
+    <aside class="dialogue actor-shop" aria-label="상점 대사창">
+      <div class="portrait">
+        <img src="./assets/youngwoo_sprites/portrait_emotions_2x/beginner_neutral.png?v=youngwoo-left-face-outfit-hats-20260604" alt="영우 얼굴">
+      </div>
+      <div class="dialogue-copy">
+        <strong class="dialogue-speaker" id="shopDialogueSpeaker">낚시왕 남영우</strong>
+        <span class="dialogue-line" id="shopDialogueLine1">상점에 왔다.</span>
+        <span class="dialogue-line" id="shopDialogueLine2">필요한 장비를 보고 골드와 조건을 확인하자.</span>
+        <span class="dialogue-line" id="shopDialogueLine3">가격표는 물고기보다 사람을 먼저 낚는다.</span>
+        <button class="dialogue-progress-button" id="shopDialogueProgressButton" type="button" hidden>확인</button>
+      </div>
+    </aside>
+  </main>
+  </div>
+
+  <script src="./game_state.js?v=spoiler-cleanup-20260601b"></script>
+  <script src="./audio_manager.js?v=audio-foundation-20260604"></script>
+  <script>
+    function resizeGame() {
+      const baseW = 1180;
+      const baseH = 664;
+      const padding = 0.96;
+      const viewport = window.visualViewport;
+      const usableWidth = viewport?.width || window.innerWidth;
+      const usableHeight = viewport?.height || window.innerHeight;
+      const scale = Math.min(usableWidth / baseW, usableHeight / baseH) * padding;
+      const desktopLike = window.matchMedia("(pointer: fine) and (min-width: 900px)").matches;
+      const maxScale = desktopLike ? 1.25 : 1;
+      document.documentElement.style.setProperty("--game-scale", String(Math.min(scale, maxScale)));
+    }
+
+    window.addEventListener("resize", resizeGame);
+        window.addEventListener("orientationchange", resizeGame);
+        window.visualViewport?.addEventListener("resize", resizeGame);
+    resizeGame();
+
+    const tabButtons = document.querySelectorAll("[data-tab]");
+    const itemsList = document.getElementById("itemsList");
+    const detailTitle = document.getElementById("detailTitle");
+    const detailImage = document.getElementById("detailImage");
+    const detailDesc = document.getElementById("detailDesc");
+    const detailTensionLabel = document.getElementById("detailTensionLabel");
+    const detailTension = document.getElementById("detailTension");
+    const detailPowerLabel = document.getElementById("detailPowerLabel");
+    const detailPower = document.getElementById("detailPower");
+    const detailTypeLabel = document.getElementById("detailTypeLabel");
+    const detailType = document.getElementById("detailType");
+    const walletPreview = document.getElementById("walletPreview");
+    const buyButton = document.getElementById("buyButton");
+    const buyRow = document.querySelector(".buy-row");
+    const goldHud = document.getElementById("goldHud");
+    const shopkeeper = document.getElementById("shopkeeper");
+    const speech = shopkeeper.querySelector(".speech");
+    const shopOwnerButton = document.getElementById("shopOwnerButton");
+    const shopDialogue = document.querySelector(".dialogue");
+    const shopPortraitImage = shopDialogue.querySelector(".portrait img");
+    const shopDialogueSpeaker = document.getElementById("shopDialogueSpeaker");
+    const shopDialogueLines = ["shopDialogueLine1", "shopDialogueLine2", "shopDialogueLine3"].map((id) => document.getElementById(id));
+    const shopDialogueProgressButton = document.getElementById("shopDialogueProgressButton");
+    let gameState = window.GameState.load();
+    let currentShopState = gameState.flags.first_leisure_broken ? "afterBreak" : "normal";
+    let currentTab = "freshwater";
+    let currentProductId = "aliRod";
+    let activeShopEvent = null;
+    let ownerReturnAvailable = false;
+    const youngwooPortraitSrcByOutfit = {
+      beginnerOutfit: "./assets/youngwoo_sprites/portrait_emotions_2x/beginner_neutral.png?v=youngwoo-center-bottom-20260604",
+      midOutfit: "./assets/youngwoo_sprites/portrait_emotions_2x/mid_neutral.png?v=youngwoo-center-bottom-20260604",
+      premiumOutfit: "./assets/youngwoo_sprites/portrait_emotions_2x/premium_neutral.png?v=youngwoo-center-bottom-20260604"
+    };
+    const shopOwnerPortraitSrc = "./assets/shop_owner_sprites/shop_owner_emoji_rich.png?v=owner-arms-v1-20260604";
+    const debugParams = new URLSearchParams(location.search);
+    const devMode = debugParams.get("dev") === "1";
+
+    const itemNames = {
+      freshwater: {
+        toyRod: "장난감 낚시세트",
+        aliRod: "알리산 낚시세트",
+        japanRod: "명인의 낚시세트"
+      },
+      sea: {
+        noneSea: "없음",
+        firstLeisure: "제1레져 낚시세트",
+        temuRod: "테무산 낚시세트",
+        legendRod: "전설의 낚시세트"
+      },
+      outfit: {
+        beginnerOutfit: "입문 낚시복",
+        midOutfit: "중급 낚시복",
+        premiumOutfit: "고급 낚시복"
+      }
+    };
+
+    const productRules = {
+      toyRod: { type: "freshwater", price: 0, itemId: "toyRod", buyable: false },
+      aliRod: { type: "freshwater", price: 2800, itemId: "aliRod", requiresAll: [["outfit", "midOutfit", "중급 낚시복 필요"]], lockedText: "중급 낚시복 필요" },
+      japanRod: { type: "freshwater", price: 7500, itemId: "japanRod", requiresAll: [["outfit", "premiumOutfit", "고급 낚시복 필요"], ["freshwater", "aliRod", "Lv.2 필요"]], lockedText: "고급 낚시복 필요" },
+      firstLeisure: { type: "sea", price: 3000, itemId: "firstLeisure", flag: "first_leisure_owned" },
+      firstLeisureStopped: { type: "sea", price: 0, itemId: "firstLeisure", buyable: false },
+      temuRod: { type: "sea", price: 11000, itemId: "temuRod", requiresAll: [["outfit", "midOutfit", "중급 낚시복 필요"], ["sea", "firstLeisure", "Lv.1 필요"]], requiresFlag: "carnival_owned", lockedText: "중급 낚시복 필요", flagLockedText: "조건 미충족", flag: "temu_rod_owned" },
+      legendRod: { type: "sea", price: 30000, itemId: "legendRod", requiresAll: [["outfit", "premiumOutfit", "고급 낚시복 필요"], ["sea", "temuRod", "Lv.2 필요"]], lockedText: "고급 낚시복 필요", flag: "legend_rod_owned" },
+      tivoli: { type: "vehicle", price: 0, itemId: "tivoli", buyable: false },
+      g70: { type: "vehicle", price: 4500, itemId: "g70", requiresFlag: "tivoli_confiscated", lockedText: "조건 미충족", flag: "g70_purchased" },
+      carnival: { type: "vehicle", price: 14000, itemId: "carnival", requiresFlag: "jaemo_flipper_found", lockedText: "조건 미충족", flag: "carnival_owned" },
+      valleyBoat: { type: "boat", price: 0, itemId: "valleyBoat", buyable: false },
+      seaBoat: { type: "boat", price: 20000, itemId: "seaBoat", requiresFlag: "sea_boat_unlocked", lockedText: "조건 미충족", flag: "sea_boat_owned" },
+      beginnerOutfit: { type: "outfit", price: 0, itemId: "beginnerOutfit", buyable: false },
+      midOutfit: { type: "outfit", price: 1800, itemId: "midOutfit" },
+      premiumOutfit: { type: "outfit", price: 11000, itemId: "premiumOutfit", requiresOwned: ["outfit", "midOutfit"], lockedText: "Lv.2 필요" }
+    };
+
+    function hasFlag(flag) {
+      return Boolean(gameState.flags?.[flag]);
+    }
+
+    function isOwned(productId) {
+      const rule = productRules[productId];
+      return rule && window.GameState.hasItem(gameState, rule.type, rule.itemId);
+    }
+
+    function requirementsMet(productId) {
+      return !unmetRequirement(productId);
+    }
+
+    function isBrokenFirstLeisureBlockingTemu(productId) {
+      return productId === "temuRod"
+        && hasFlag("first_leisure_broken")
+        && !hasFlag("first_leisure_exchanged");
+    }
+
+    function unmetRequirement(productId) {
+      const rule = productRules[productId];
+      if (!rule) return "조건 미충족";
+      if (isBrokenFirstLeisureBlockingTemu(productId)) return "제1레져 파손";
+      if (productId === "g70" && hasFlag("g70_purchased") && hasFlag("g70_stolen") && !hasFlag("g70_key_found")) {
+        return "회수 필요";
+      }
+      const ownedRequirements = rule.requiresAll || (rule.requiresOwned ? [rule.requiresOwned] : []);
+      if (
+        rule.type === "sea"
+        && ownedRequirements.some((requirement) => requirement[0] === "sea" && requirement[1] === "firstLeisure")
+        && window.GameState.hasItem(gameState, "sea", "firstLeisure")
+        && !hasFlag("first_leisure_broken")
+      ) {
+        return "조건 미충족";
+      }
+      const missingOwned = ownedRequirements.find((requirement) => !window.GameState.hasItem(gameState, requirement[0], requirement[1]));
+      if (missingOwned) {
+        return missingOwned[2] || rule.lockedText || "이전 장비 필요";
+      }
+      if (rule.requiresFlag && !hasFlag(rule.requiresFlag)) return rule.flagLockedText || rule.lockedText || "조건 미충족";
+      if (productId === "firstLeisure" && hasFlag("first_leisure_broken")) return "판매 중지";
+      return "";
+    }
+
+    function canBuy(productId) {
+      const rule = productRules[productId];
+      if (!rule || rule.buyable === false) return false;
+      if (isOwned(productId)) return false;
+      if (!requirementsMet(productId)) return false;
+      return gameState.gold >= rule.price;
+    }
+
+    function canEquipOwnedProduct(productId) {
+      const rule = productRules[productId];
+      return Boolean(rule && rule.type === "outfit" && isOwned(productId) && gameState.loadout.outfit !== rule.itemId);
+    }
+
+    function labelForProduct(productId) {
+      const rule = productRules[productId];
+      if (!rule) return { price: "-", state: "locked", metaSuffix: "확인 필요" };
+      if (isOwned(productId)) return { price: "보유중", state: "owned", metaSuffix: "보유중" };
+      if (productId === "firstLeisureStopped") return { price: "판매중지", state: "locked", metaSuffix: "판매 중지" };
+      if (rule.buyable === false) return { price: "비매품", state: "locked", metaSuffix: "비매품" };
+      const unmet = unmetRequirement(productId);
+      if (unmet) return { price: `${rule.price.toLocaleString()}G`, state: "locked", metaSuffix: unmet };
+      if (gameState.gold < rule.price) return { price: `${rule.price.toLocaleString()}G`, state: "", metaSuffix: "골드 부족" };
+      return { price: `${rule.price.toLocaleString()}G`, state: "active", metaSuffix: "구매 가능" };
+    }
+
+    function purchasePreview(price) {
+      if (!price) return "구매 대상 아님";
+      const after = gameState.gold - price;
+      return after >= 0
+        ? `${gameState.gold.toLocaleString()}G - ${price.toLocaleString()}G = ${after.toLocaleString()}G`
+        : `${gameState.gold.toLocaleString()}G - ${price.toLocaleString()}G = 부족`;
+    }
+
+    function youngwooDisplayName() {
+      return window.GameState.displayYoungwooName(gameState);
+    }
+
+    function youngwooPortraitSrc() {
+      return youngwooPortraitSrcByOutfit[gameState.loadout?.outfit] || youngwooPortraitSrcByOutfit.beginnerOutfit;
+    }
+
+    function setShopDialogue(lines, speaker = "", actor = "youngwoo", eventMode = false) {
+      if (!eventMode) activeShopEvent = null;
+      const isShopActor = actor === "shop";
+      shopPortraitImage.src = actor === "shop" ? shopOwnerPortraitSrc : youngwooPortraitSrc();
+      shopPortraitImage.alt = actor === "shop" ? "상점주인 얼굴" : "영우 얼굴";
+      shopDialogueSpeaker.textContent = actor === "youngwoo" ? youngwooDisplayName() : speaker;
+      shopDialogue.classList.toggle("actor-shop", isShopActor);
+      shopkeeper.classList.toggle("owner-speaking", isShopActor && eventMode);
+      shopDialogue.classList.toggle("event-dialogue", Boolean(eventMode));
+      buyRow.classList.toggle("event-dialogue", Boolean(eventMode));
+      shopDialogueProgressButton.hidden = !eventMode;
+      shopDialogueLines.forEach((line, index) => {
+        line.textContent = lines[index] || "";
+      });
+    }
+
+    function showShopEvent(eventId) {
+      const event = window.GameState.eventDefinitions?.[eventId];
+      if (!event) return false;
+      activeShopEvent = { eventId, event };
+      window.GameAudio?.playSfx("event");
+      setShopDialogue(event.lines || [], event.speaker || "상점주인", "shop", true);
+      return true;
+    }
+
+    function advanceShopEventDialogue() {
+      if (!activeShopEvent) return;
+      const { eventId, event } = activeShopEvent;
+      activeShopEvent = null;
+      const afterActor = eventId === "first_leisure_exchanged" ? "youngwoo" : "shop";
+      const afterSpeaker = afterActor === "youngwoo" ? youngwooDisplayName() : "상점주인";
+      setShopDialogue(event.afterLines || ["이벤트를 확인했다.", "", ""], afterSpeaker, afterActor, false);
+    }
+
+    const shopDialogueCopy = {
+      toyRod: {
+        owned: ["장난감 낚시세트는 이미 보유중이다.", "아들의 믿음과 플라스틱의 한계가 같이 들어 있다.", "초반 민물은 이걸로도 시작된다. 영우도 시작은 했다."],
+        blocked: ["장난감 낚시세트는 판매 상품이 아니다.", "아들이 준 물건이라 가격을 매길 수 없다.", "사실 가격을 매기면 마음이 먼저 부러진다."]
+      },
+      aliRod: {
+        locked: ["알리산 낚시세트는 중급 낚시복부터 갖춘 뒤 살 수 있다.", "장비 레벨과 복장 레벨이 맞아야 창고에서 바로 쓸 수 있다.", "샀는데 못 끼는 참사는 이제 막아두자."],
+        poor: ["알리산 낚시세트는 2,800G다.", "중급복으로 문을 열고, 낚시대로 성능을 올리는 순서다.", "피라미 몇 마리만 더 설득해보자."],
+        ready: ["알리산 낚시세트를 살 수 있다.", "초반 민물 돈벌이가 훨씬 편해진다.", "영우가 드디어 장난감과 작별할 명분을 얻었다."],
+        owned: ["알리산 낚시세트는 이미 창고에 있다.", "중급복과 함께 쓰면 바로 제 몫을 한다.", "다음 목표는 고급복과 명인의 세트다."]
+      },
+      japanRod: {
+        locked: ["명인의 낚시세트는 고급 낚시복과 알리산 세트가 필요하다.", "옷이 먼저 티어를 열고, 장비가 손맛을 완성한다.", "명인의 이름값은 순서부터 따진다."],
+        poor: ["명인의 낚시세트는 7,500G다.", "가격을 보는 순간 영우가 자세를 고쳐 앉았다.", "민물 고급 어종을 노리려면 투자도 고급이다."],
+        ready: ["명인의 낚시세트를 살 수 있다.", "민물 후반 어종과 힘겨루기가 한결 안정된다.", "영우도 잠깐 명인처럼 보일 수 있다."],
+        owned: ["명인의 낚시세트는 이미 보유중이다.", "민물에서는 이제 꽤 그럴듯하다.", "바다 장비 쪽도 슬슬 지갑을 노려본다."]
+      },
+      firstLeisure: {
+        poor: ["제1레져 낚시세트는 3,000G다.", "바다 첫 도전에 필요한 기본 장비다.", "골드가 모이면 바로 살 수 있다."],
+        ready: ["제1레져 낚시세트를 살 수 있다.", "바다 첫 도전의 문이 열린다.", "장비를 챙겼으면 이제 바다로 나가보자."],
+        owned: ["제1레져 낚시세트는 이미 보유중이다.", "바다에 처음 나갈 준비는 됐다.", "창고에서 장착 상태를 확인하자."]
+      },
+      firstLeisureStopped: {
+        blocked: ["제1레져는 판매 중지다.", "상점 주인은 환불을 안 해준다.", "바뀐 포스터만 성실하게 붙어 있다."]
+      },
+      temuRod: {
+        brokenFirstLeisure: ["테무산 낚시세트는 아직 살 수 없다.", "상점 주인은 바뀐 포스터만 가리킨다.", "지금은 다른 단서를 먼저 확인하자."],
+        locked: ["테무산 낚시세트는 중급 낚시복과 바다 장비 조건이 필요하다.", "바다 Lv.2도 복장 레벨을 맞춰야 바로 쓸 수 있다.", "상점은 조건이 맞을 때만 지갑을 반긴다."],
+        poor: ["테무산 낚시세트는 11,000G다.", "가격표가 바다보다 깊다.", "골드를 더 모으면 구매할 수 있다."],
+        ready: ["테무산 낚시세트를 살 수 있다.", "바다 장비를 한 단계 올릴 수 있다.", "준비가 됐다면 지갑도 같이 각오하자."],
+        owned: ["테무산 낚시세트는 이미 보유중이다.", "바다 재도전 준비가 꽤 그럴듯해졌다.", "남은 건 차량과 영우의 침착함이다."]
+      },
+      legendRod: {
+        locked: ["전설의 낚시세트는 고급 낚시복과 테무산 세트가 필요하다.", "전설 장비는 옷차림도 전설급이어야 한다.", "전설은 보통 가격표부터 전설이다."],
+        poor: ["전설의 낚시세트는 30,000G다.", "영우가 가격을 보고 잠깐 전설 속으로 도망갔다.", "골드가 충분해야 전설도 현실이 된다."],
+        ready: ["전설의 낚시세트를 살 수 있다.", "가장 강한 바다 장비를 준비할 수 있다.", "이제 장비만큼은 이름값을 한다."],
+        owned: ["전설의 낚시세트는 이미 보유중이다.", "낚싯대 쪽 핑계는 거의 사라졌다.", "이제 물고기와 영우의 정면승부다."]
+      },
+      tivoli: {
+        owned: ["티볼리는 상태 확인용이다.", "영우의 첫 이동 수단이다.", "바다에 가려면 차량 상태도 확인해야 한다."],
+        blocked: ["티볼리는 새로 사는 상품이 아니다.", "현재 보유 상태만 확인할 수 있다.", "상점에서 새로 계약하는 차량은 따로 있다."]
+      },
+      g70: {
+        locked: ["G70은 아직 계약할 수 없다.", "구매 조건을 먼저 채워야 한다.", "상점은 아직 견적서만 보여준다."],
+        poor: ["G70은 4,500G다.", "가격은 스포츠 세단, 영우의 표정은 경차가 됐다.", "민물에서 더 벌어 바다 재도전의 발을 마련하자."],
+        ready: ["G70을 살 수 있다.", "바다로 다시 갈 발판이 생긴다.", "새 차는 늘 마음을 크게 만든다."],
+        owned: ["G70은 이미 보유중이다.", "영우의 어깨가 살짝 올라갔다.", "바다 재도전 준비가 조금 더 그럴듯해졌다."]
+      },
+      carnival: {
+        locked: ["카니발은 아직 구매 조건이 부족하다.", "민물에 떠 있는 수상한 물건부터 확인하자.", "정체를 알기 전까지 상점도 차 키를 내주지 않는다."],
+        poor: ["카니발은 14,000G다.", "가격표가 차체만큼 큼직하다.", "골드를 더 모으면 구매할 수 있다."],
+        ready: ["카니발을 살 수 있다.", "넉넉한 차량을 준비할 수 있다.", "이제 짐칸만큼 마음도 넓어질 차례다."],
+        owned: ["카니발은 이미 보유중이다.", "부러진 제1레져는 새 제1레져로 교환됐다.", "교환받은 장비를 장착하고 바다에 다시 가면 된다."]
+      },
+      valleyBoat: {
+        owned: ["민물보트는 비매품 보상이다.", "재모의 오리발 하나가 보트로 바뀌는 신비한 경제다.", "깊은 민물에서 카니발 자금을 모으자."],
+        blocked: ["민물보트는 상점에서 살 수 없다.", "민물에 떠 있는 수상한 물건을 직접 확인해보자.", "정체를 알기 전까지는 상점도 말을 아낀다."]
+      },
+      seaBoat: {
+        locked: ["바다보트는 아직 상점에서 살 수 없다.", "구매 조건을 먼저 채워야 한다.", "상점은 아직 가격표만 보여준다."],
+        poor: ["바다보트는 20,000G다.", "가격표만 봐도 파도가 친다.", "골드를 더 모으면 구매할 수 있다."],
+        ready: ["바다보트를 살 수 있다.", "더 먼 바다로 나갈 준비가 된다.", "영우의 지출도 드디어 해양 진출이다."],
+        owned: ["바다보트는 이미 보유중이다.", "더 먼 바다로 나갈 수 있다.", "배가 생기니 영우의 핑계도 줄었다."]
+      },
+      beginnerOutfit: {
+        owned: ["입문 낚시복은 기본 복장이다.", "낡았지만 약속은 여기서 시작됐다.", "영우의 초심과 생활감이 동시에 묻어 있다."]
+      },
+      midOutfit: {
+        locked: ["중급 낚시복은 상점 기본 판매 의상이다.", "옷이 먼저 장비 티어를 열어준다.", "희귀어에게 동네 산책 나온 사람처럼 보이면 곤란하다."],
+        poor: ["중급 낚시복은 1,800G다.", "먼저 옷을 갖추면 알리산 낚시세트를 바로 쓸 수 있다.", "옷값은 낮추고 낚시대에 진짜 돈을 쓰는 구조다."],
+        ready: ["중급 낚시복을 살 수 있다.", "Lv.2 낚시장비를 쓸 준비가 열린다.", "영우가 드디어 장비 말고 복장으로도 변명할 수 있다."],
+        owned: ["중급 낚시복은 이미 보유중이다.", "이제 알리산이나 테무산 같은 Lv.2 장비를 바로 쓸 수 있다.", "다음은 고급 낚시복이다."]
+      },
+      premiumOutfit: {
+        locked: ["고급 낚시복은 아직 이르다.", "중급 낚시복부터 갖춰야 고급으로 넘어간다.", "프로처럼 보이는 것도 순서가 있다."],
+        poor: ["고급 낚시복은 11,000G다.", "Lv.3 장비를 들기 위한 해금권이라고 보면 된다.", "큰놈들이 영우를 프로로 오해할 확률이 오른다."],
+        ready: ["고급 낚시복을 살 수 있다.", "Lv.3 낚시장비를 쓸 준비가 열린다.", "이제 외형만큼은 완전히 낚시왕이다."],
+        owned: ["고급 낚시복은 이미 보유중이다.", "명인의 세트와 전설 장비를 바로 쓸 수 있는 몸가짐이다.", "착각이 오래가길 빌자."]
+      }
+    };
+
+    function productDialogueFor(productId, status) {
+      const copy = shopDialogueCopy[productId] || {};
+      return copy[status] || copy.blocked || copy.locked || [`${productDetails[productId]?.title || "상품"}을 확인했다.`, "조건과 골드를 확인하자.", "상점의 가격표는 늘 침착하다."];
+    }
+
+    function updateProductDialogue(productId) {
+      const detail = detailState(productId);
+      const rule = productRules[productId];
+      if (productId === "firstLeisureStopped") {
+        setShopDialogue(productDialogueFor(productId, "blocked"));
+        return;
+      }
+      if (!rule || rule.buyable === false) {
+        setShopDialogue(productDialogueFor(productId, isOwned(productId) ? "owned" : "blocked"));
+        return;
+      }
+      if (isOwned(productId)) {
+        setShopDialogue(productDialogueFor(productId, "owned"));
+        return;
+      }
+      const unmet = unmetRequirement(productId);
+      if (unmet) {
+        if (productId === "g70" && unmet === "회수 필요") {
+          setShopDialogue(["G70은 다시 살 수 없다.", "준우가 들고 튄 차키를 찾아야 한다.", "상점주인도 이건 재고 문제가 아니라고 했다."]);
+          return;
+        }
+        if (isBrokenFirstLeisureBlockingTemu(productId)) {
+          setShopDialogue(productDialogueFor(productId, "brokenFirstLeisure"));
+          return;
+        }
+        setShopDialogue(productDialogueFor(productId, "locked"));
+        return;
+      }
+      if (gameState.gold < rule.price) {
+        setShopDialogue(productDialogueFor(productId, "poor"));
+        return;
+      }
+      setShopDialogue(productDialogueFor(productId, "ready"));
+    }
+
+    function detailState(productId) {
+      const rule = productRules[productId];
+      const base = productDetails[productId];
+      const price = rule?.price || 0;
+      const owned = isOwned(productId);
+      const unmet = unmetRequirement(productId);
+      const enough = gameState.gold >= price;
+      const detail = { ...base };
+
+      if (canEquipOwnedProduct(productId)) {
+        detail.condition = "현재 상태: 보유중<br>장착 가능";
+        detail.wallet = "보유 의상";
+        detail.buyLabel = "장착";
+        detail.canBuy = true;
+        return detail;
+      }
+
+      if (owned) {
+        detail.condition = "현재 상태: 보유중<br>구매 불가";
+        detail.wallet = "이미 보유중";
+        detail.buyLabel = rule?.type === "outfit" ? "장착중" : "보유중";
+        detail.canBuy = false;
+        return detail;
+      }
+
+      if (productId === "firstLeisureStopped") {
+        return detail;
+      }
+
+      if (!rule || rule.buyable === false) {
+        detail.canBuy = false;
+        return detail;
+      }
+
+      if (unmet) {
+        detail.condition = `구매 조건: ${unmet}<br>현재 상태: 조건 미충족`;
+        detail.wallet = purchasePreview(price);
+        detail.buyLabel = unmet;
+        detail.canBuy = false;
+        return detail;
+      }
+
+      detail.condition = `구매 조건: 충족<br>현재 상태: ${enough ? "구매 가능" : "골드 부족"}`;
+      detail.wallet = purchasePreview(price);
+      detail.buyLabel = enough ? "구매" : "구매 불가";
+      detail.canBuy = enough;
+      return detail;
+    }
+
+    const productDetails = {
+      toyRod: {
+        title: "장난감 낚시세트",
+        desc: "아들이 쓰다 건네준 플라스틱 장비 세트. 의외로 시작은 된다.",
+        label1: "장비 레벨",
+        tension: "Lv.1",
+        label2: "감기력",
+        power: "8",
+        label3: "안정성",
+        type: "5",
+        condition: "현재 상태: 보유중<br>구매 불가",
+        wallet: "이미 보유중",
+        buyLabel: "보유중",
+        canBuy: false
+      },
+      aliRod: {
+        title: "알리산 낚시세트",
+        desc: "대륙의 기적이라 불리는 가성비 최고의 낚시세트.",
+        label1: "장비 레벨",
+        tension: "Lv.2",
+        label2: "감기력",
+        power: "17",
+        label3: "안정성",
+        type: "14",
+        condition: "구매 조건: 조건 미충족<br>현재 상태: 조건 미충족",
+        wallet: "0G - 2,800G = 부족",
+        buyLabel: "구매 불가",
+        canBuy: false
+      },
+      japanRod: {
+        title: "명인의 낚시세트",
+        desc: "민물 고급 어종을 노리는 명인의 낚시세트. 영우가 들면 손맛도 조금은 품격 있어진다.",
+        label1: "장비 레벨",
+        tension: "Lv.3",
+        label2: "감기력",
+        power: "30",
+        label3: "안정성",
+        type: "25",
+        condition: "구매 조건: Lv.2 필요<br>현재 상태: 조건 미충족",
+        wallet: "0G - 7,500G = 부족",
+        buyLabel: "구매 불가",
+        canBuy: false
+      },
+      firstLeisure: {
+        title: "제1레져 낚시세트",
+        desc: "바다 진입을 위한 첫 바다 낚시세트. 상점주인은 정말 튼튼하다고 주장했다.",
+        label1: "장비 레벨",
+        tension: "Lv.1",
+        label2: "감기력",
+        power: "19",
+        label3: "안정성",
+        type: "7",
+        condition: "구매 조건: 기본 구매 가능<br>현재 상태: 골드 부족",
+        wallet: "0G - 3,000G = 부족",
+        buyLabel: "구매 불가",
+        canBuy: false
+      },
+      firstLeisureStopped: {
+        title: "제1레져 낚시세트",
+        desc: "한때 정말 튼튼하다고 팔리던 바다 낚시세트. 지금은 판매대에서 조용히 사라졌다.",
+        label1: "장비 레벨",
+        tension: "Lv.1",
+        label2: "감기력",
+        power: "19",
+        label3: "안정성",
+        type: "7",
+        condition: "현재 상태: 판매 중지<br>카운터 안내: 교환/환불 불가",
+        wallet: "판매 중지",
+        buyLabel: "판매 중지",
+        canBuy: false
+      },
+      temuRod: {
+        title: "테무산 낚시세트",
+        desc: "대륙의 기적 바다 버전. 바다 장비를 한 단계 올리고 싶을 때 눈에 들어온다.",
+        label1: "장비 레벨",
+        tension: "Lv.2",
+        label2: "감기력",
+        power: "28",
+        label3: "안정성",
+        type: "18",
+        condition: "구매 조건: 기본 구매 가능<br>현재 상태: 골드 부족",
+        wallet: "0G - 11,000G = 부족",
+        buyLabel: "구매 불가",
+        canBuy: false
+      },
+      legendRod: {
+        title: "전설의 낚시세트",
+        desc: "아들이 기대한 모든 물고기를 잡기 위한 최종 장비 세트.",
+        label1: "장비 레벨",
+        tension: "Lv.3",
+        label2: "감기력",
+        power: "50",
+        label3: "안정성",
+        type: "38",
+        condition: "구매 조건: Lv.2 필요<br>현재 상태: 조건 미충족",
+        wallet: "0G - 30,000G = 부족",
+        buyLabel: "구매 불가",
+        canBuy: false
+      },
+      tivoli: {
+        title: "티볼리",
+        desc: "영우의 생활감이 묻은 차량. 구매 상품이 아니라 현재 상태를 확인하는 용도다.",
+        label1: "차량 레벨",
+        tension: "Lv.1",
+        label2: "골드 획득",
+        power: "+0%",
+        label3: "바다 필드 진입 가능",
+        type: "",
+        condition: "현재 상태: 보유중<br>구매 불가. 차량 상태 확인용이다.",
+        wallet: "상태확인용",
+        buyLabel: "구매 불가",
+        canBuy: false
+      },
+      g70: {
+        title: "G70",
+        desc: "티볼리를 잃은 영우가 현실과 할부 사이에서 고른 스포츠 세단.",
+        label1: "차량 레벨",
+        tension: "Lv.2",
+        label2: "골드 획득",
+        power: "+10%",
+        label3: "바다 필드 진입 가능",
+        type: "",
+        condition: "구매 조건: 조건 미충족<br>현재 상태: 골드 부족",
+        wallet: "0G - 4,500G = 부족",
+        buyLabel: "구매 불가",
+        canBuy: false
+      },
+      carnival: {
+        title: "카니발",
+        desc: "넉넉한 짐칸을 가진 패밀리카. 장비와 생활감이 같이 들어간다.",
+        label1: "차량 레벨",
+        tension: "Lv.3",
+        label2: "골드 획득",
+        power: "+20%",
+        label3: "바다 필드 진입 가능",
+        type: "",
+        condition: "구매 조건: 조건 미충족<br>조건 달성 전에는 사건명을 숨긴다.",
+        wallet: "0G - 14,000G = 부족",
+        buyLabel: "구매 불가",
+        canBuy: false
+      },
+      valleyBoat: {
+        title: "민물보트",
+        desc: "상점에서는 살 수 없는 비매품 보트. 어떤 경로로 얻는지는 아직 알 수 없다.",
+        label1: "어종 확장",
+        tension: "민물",
+        label2: "신규 필드 추가",
+        power: "민물 보트",
+        label3: "신규 메인화면 획득",
+        type: "",
+        condition: "현재 상태: 비매품<br>상점 구매 불가",
+        wallet: "비매품",
+        buyLabel: "구매 불가",
+        canBuy: false
+      },
+      seaBoat: {
+        title: "바다보트",
+        desc: "더 먼 바다로 나가기 위한 이동 수단. 가격표만 봐도 멀미가 난다.",
+        label1: "어종 확장",
+        tension: "바다",
+        label2: "신규 필드 추가",
+        power: "바다 보트",
+        label3: "신규 메인화면 획득",
+        type: "",
+        condition: "구매 조건: 조건 미충족<br>현재 상태: 골드 부족",
+        wallet: "0G - 20,000G = 부족",
+        buyLabel: "구매 불가",
+        canBuy: false
+      },
+      beginnerOutfit: {
+        title: "입문 낚시복",
+        desc: "영우의 현재 낚시복. 낡았지만 아들과의 약속을 시작하게 해준 기본 복장이다.",
+        label1: "의상 레벨",
+        tension: "Lv.1",
+        label2: "희귀어 출현",
+        power: "+0%",
+        label3: "유실물 출현",
+        type: "+0%",
+        condition: "현재 상태: 보유중<br>기본 의상",
+        wallet: "이미 보유중",
+        buyLabel: "보유중",
+        canBuy: false
+      },
+      midOutfit: {
+        title: "중급 낚시복",
+        desc: "방수 재킷과 조끼를 갖춘 실전형 의상. 물고기가 영우를 덜 동네 사람처럼 본다.",
+        label1: "의상 레벨",
+        tension: "Lv.2",
+        label2: "희귀어 출현",
+        power: "+7%",
+        label3: "유실물 출현",
+        type: "+8%",
+        condition: "구매 조건: 기본 구매 가능<br>현재 상태: 골드 부족",
+        wallet: "0G - 1,800G = 부족",
+        buyLabel: "구매 불가",
+        canBuy: false
+      },
+      premiumOutfit: {
+        title: "고급 낚시복",
+        desc: "비싸 보이는 고급 낚시복. 희귀어가 영우를 프로로 오해할 확률이 오른다.",
+        label1: "의상 레벨",
+        tension: "Lv.3",
+        label2: "희귀어 출현",
+        power: "+14%",
+        label3: "유실물 출현",
+        type: "+16%",
+        condition: "구매 조건: Lv.2 필요<br>현재 상태: 조건 미충족",
+        wallet: "0G - 11,000G = 부족",
+        buyLabel: "구매 불가",
+        canBuy: false
+      }
+    };
+
+    const shopTabs = {
+      freshwater: {
+        selected: "aliRod",
+        items: [
+          { id: "toyRod", name: "장난감 낚시세트", meta: "민물 Lv.1 · 기본 장비 · 보유중", price: "보유중", state: "owned", icon: "rod", asset: "./assets/rod_toy_icon.png?v=rod-quality-20260604" },
+          { id: "aliRod", name: "알리산 낚시세트", meta: "민물 Lv.2 · 중급 낚시복 필요", price: "2,800G", state: "locked", icon: "rod", asset: "./assets/rod_ali_icon.png?v=rod-quality-20260604" },
+          { id: "japanRod", name: "명인의 낚시세트", meta: "민물 Lv.3 · 고급 낚시복 필요", price: "7,500G", state: "", icon: "rod", asset: "./assets/rod_japan_icon.png?v=rod-quality-20260604" }
+        ]
+      },
+      sea: {
+        selected: "firstLeisureStopped",
+        items: [
+          { id: "firstLeisure", name: "제1레져 낚시세트", meta: "바다 Lv.1 · 바다 진입 전 구매 가능", price: "3,000G", state: "active", icon: "rod", asset: "./assets/rod_first_leisure_icon.png?v=rod-quality-20260604", hiddenAfterBreak: true },
+          { id: "firstLeisureStopped", name: "제1레져 낚시세트", meta: "판매 중지 · 교환/환불 불가", price: "판매중지", state: "locked", icon: "rod", asset: "./assets/rod_first_leisure_icon.png?v=rod-quality-20260604", onlyAfterBreak: true },
+          { id: "temuRod", name: "테무산 낚시세트", meta: "바다 Lv.2 · 중급 낚시복 필요", price: "11,000G", state: "locked", icon: "rod", asset: "./assets/rod_temu_icon.png?v=rod-quality-20260604" },
+          { id: "legendRod", name: "전설의 낚시세트", meta: "바다 Lv.3 · 고급 낚시복 필요", price: "30,000G", state: "", icon: "rod", asset: "./assets/rod_legend_icon.png?v=rod-quality-20260604" }
+        ]
+      },
+      vehicle: {
+        selected: "tivoli",
+        items: [
+          { id: "tivoli", name: "티볼리", meta: "상태확인용 · 구매 불가", price: "보유중", state: "owned", icon: "status", asset: "./assets/tivoli_front.png" },
+          { id: "g70", name: "G70", meta: "신차 계약 · 조건 미충족", price: "4,500G", state: "", icon: "car", asset: "./assets/g70_front.png" },
+          { id: "carnival", name: "카니발", meta: "조건 충족 후 구매", price: "14,000G", state: "locked", icon: "car", asset: "./assets/carnival_front.png" }
+        ]
+      },
+      boat: {
+        selected: "seaBoat",
+        items: [
+          { id: "valleyBoat", name: "민물보트", meta: "조건 충족 후 해금", price: "비매품", state: "locked", icon: "boat", asset: "./assets/valley_boat_right.png?v=boat-quality-20260604" },
+          { id: "seaBoat", name: "바다보트", meta: "조건 충족 후 구매", price: "20,000G", state: "active", icon: "boat", asset: "./assets/sea_boat_right.png?v=boat-quality-20260604" }
+        ]
+      },
+      outfit: {
+        selected: "midOutfit",
+        items: [
+          { id: "beginnerOutfit", name: "입문 낚시복", meta: "의상 Lv.1 · 희귀어 출현 보정 없음", price: "보유중", state: "owned", icon: "outfit", asset: "./assets/outfit_beginner_icon.png?v=outfit-quality-20260604" },
+          { id: "midOutfit", name: "중급 낚시복", meta: "의상 Lv.2 · Lv.2 장비 해금", price: "1,800G", state: "active", icon: "outfit", asset: "./assets/outfit_mid_icon.png?v=outfit-quality-20260604" },
+          { id: "premiumOutfit", name: "고급 낚시복", meta: "의상 Lv.3 · Lv.3 장비 해금", price: "11,000G", state: "", icon: "outfit", asset: "./assets/outfit_premium_icon.png?v=outfit-quality-20260604" }
+        ]
+      }
+    };
+
+    function getVisibleItems(tabName) {
+      return shopTabs[tabName].items.filter((item) => {
+        const showBrokenState = currentShopState === "afterBreak" && !gameState.flags.first_leisure_exchanged;
+        if (item.onlyAfterBreak && !showBrokenState) return false;
+        if (item.hiddenAfterBreak && showBrokenState) return false;
+        return true;
+      });
+    }
+
+    function findProductItem(productId) {
+      for (const tab of Object.values(shopTabs)) {
+        const found = tab.items.find((item) => item.id === productId);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    function updateDetail(productId) {
+      currentProductId = productId;
+      if (shopTabs[currentTab]?.items.some((item) => item.id === productId)) {
+        shopTabs[currentTab].selected = productId;
+      }
+      const detail = detailState(productId);
+      const productItem = findProductItem(productId);
+      const rule = productRules[productId];
+      detailTitle.textContent = detail.title;
+      detailImage.src = productItem?.asset || "";
+      detailImage.className = [
+        rule?.type ? `detail-image-${rule.type}` : "",
+        productId === "japanRod" ? "detail-image-japanRod" : ""
+      ].filter(Boolean).join(" ");
+      detailDesc.textContent = detail.desc;
+      detailTensionLabel.textContent = detail.label1 || "장비 레벨";
+      detailPowerLabel.textContent = detail.label2 || "";
+      detailTypeLabel.textContent = detail.label3 || "";
+      detailTension.textContent = detail.tension;
+      detailPower.textContent = detail.power || "";
+      detailType.textContent = detail.type || "";
+      detailPowerLabel.parentElement.classList.toggle("hidden", !detail.label2);
+      detailTypeLabel.parentElement.classList.toggle("hidden", !detail.label3);
+      walletPreview.textContent = detail.wallet;
+      buyButton.textContent = detail.buyLabel;
+      buyButton.classList.toggle("available", detail.canBuy);
+      buyButton.classList.toggle("disabled", !detail.canBuy);
+      updateProductDialogue(productId);
+
+      itemsList.querySelectorAll(".item").forEach((item) => {
+        item.classList.toggle("selected", item.dataset.product === productId);
+      });
+    }
+
+    function renderHud() {
+      goldHud.textContent = `${gameState.gold.toLocaleString()}G`;
+    }
+
+    function renderTab(tabName) {
+      currentTab = tabName;
+      const tab = shopTabs[tabName];
+      const items = getVisibleItems(tabName);
+      const selectedId = items.some((item) => item.id === tab.selected) ? tab.selected : items[0].id;
+
+      tabButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.tab === tabName);
+      });
+
+      itemsList.innerHTML = items.map((item) => {
+        const dynamic = labelForProduct(item.id);
+        const selected = item.id === selectedId ? "selected" : "";
+        const itemName = item.name;
+        const itemMeta = `${item.meta.split(" · ")[0]} · ${dynamic.metaSuffix}`;
+        return `
+        <button class="item ${dynamic.state} ${selected}" type="button" data-product="${item.id}">
+          <span>
+            <span class="item-name">${itemName}</span>
+          </span>
+          <span class="price">${dynamic.price}</span>
+        </button>
+      `;
+      }).join("");
+
+      itemsList.querySelectorAll(".item").forEach((item) => {
+        item.addEventListener("click", () => updateDetail(item.dataset.product));
+      });
+
+      updateDetail(selectedId);
+    }
+
+    function renderShopState(state) {
+      currentShopState = state;
+      const afterBreak = state === "afterBreak" && !gameState.flags.first_leisure_exchanged;
+      shopkeeper.classList.toggle("after-break", afterBreak);
+      shopkeeper.classList.remove("owner-return", "exchange-complete");
+        speech.textContent = afterBreak ? "사장님 잠적" : gameState.flags.first_leisure_exchanged ? "고급차 고객님 특별 서비스 완료" : "제1레져 낚시세트는 정말 튼튼합니다. 아마도요.";
+      shopTabs.sea.selected = afterBreak ? "firstLeisureStopped" : "firstLeisure";
+      renderHud();
+      renderTab(currentTab);
+      if (afterBreak && !gameState.flags.first_leisure_poster_seen) {
+        gameState.flags.first_leisure_poster_seen = true;
+        gameState = window.GameState.save(gameState);
+        setShopDialogue([
+          "상점 포스터가 방금 바뀐 것 같은데...",
+          "상점 주인이 환불을 안 해준다.",
+          "민물에 뭐가 둥둥 떠다니니 그쪽부터 확인하자."
+        ]);
+        return;
+      }
+      setShopDialogue(window.GameState.currentGoal(gameState).lines);
+    }
+
+    function rollOwnerReturnEvent() {
+      ownerReturnAvailable = false;
+    }
+
+    function exchangeFirstLeisure() {
+      return;
+    }
+
+    function purchaseCurrentProduct() {
+      const rule = productRules[currentProductId];
+      if (canEquipOwnedProduct(currentProductId)) {
+        const equippedTitle = productDetails[currentProductId].title;
+        gameState.loadout.outfit = rule.itemId;
+        gameState = window.GameState.save(gameState);
+        window.GameAudio?.playSfx("confirm");
+        renderHud();
+        renderTab(currentTab);
+        setShopDialogue([`${equippedTitle} 장착 완료.`, "물고기가 영우를 조금 더 진지하게 볼 예정이다.", "적어도 옷은 준비됐다."]);
+        return;
+      }
+      if (!canBuy(currentProductId)) {
+        window.GameAudio?.playSfx("denied");
+        updateProductDialogue(currentProductId);
+        return;
+      }
+      const purchasedTitle = productDetails[currentProductId].title;
+      gameState.gold -= rule.price;
+      window.GameState.addItem(gameState, rule.type, rule.itemId);
+      if (rule.flag) gameState.flags[rule.flag] = true;
+      const exchangedFirstLeisure = currentProductId === "carnival"
+        && gameState.flags.first_leisure_broken
+        && !gameState.flags.first_leisure_exchanged;
+      if (exchangedFirstLeisure) {
+        gameState.flags.first_leisure_exchanged = true;
+        window.GameState.addItem(gameState, "sea", "firstLeisure");
+      }
+      if (rule.type === "freshwater" || rule.type === "sea" || rule.type === "vehicle" || rule.type === "boat" || rule.type === "outfit") {
+        gameState.loadout[rule.type] = rule.itemId;
+        if (rule.type === "freshwater") gameState.loadout.sea = "noneSea";
+        if (rule.type === "sea") gameState.loadout.freshwater = "noneFreshwater";
+      }
+      if (exchangedFirstLeisure && window.GameState.canEquipWithOutfit(gameState, "sea", "firstLeisure")) {
+        gameState.loadout.sea = "firstLeisure";
+        gameState.loadout.freshwater = "noneFreshwater";
+      }
+      gameState = window.GameState.save(gameState);
+      window.GameAudio?.playSfx("buy");
+      renderHud();
+      renderTab(currentTab);
+      if (exchangedFirstLeisure) {
+        shopkeeper.classList.add("exchange-complete");
+        speech.textContent = "고급차 고객님 특별 서비스 완료";
+        showShopEvent("first_leisure_exchanged");
+        return;
+      }
+      const equipped = gameState.loadout[rule.type] === rule.itemId;
+      if ((rule.type === "freshwater" || rule.type === "sea") && !equipped) {
+        setShopDialogue([`${purchasedTitle} 구매 완료.`, "창고에 보관됐다. 장착하려면 호환되는 낚시복이 필요하다.", "장비보다 옷차림이 먼저인 낚시 세계다."]);
+        return;
+      }
+      setShopDialogue([`${purchasedTitle} 구매 완료.`, equipped ? "구매한 장비는 바로 장착됐다." : "구매한 장비는 창고에 보관됐다.", "이제 핑계 하나가 또 줄었다."]);
+    }
+
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => renderTab(button.dataset.tab));
+    });
+
+    buyButton.addEventListener("click", purchaseCurrentProduct);
+    shopDialogueProgressButton.addEventListener("click", advanceShopEventDialogue);
+    shopOwnerButton.addEventListener("click", exchangeFirstLeisure);
+    rollOwnerReturnEvent();
+    window.GameAudio?.installGlobalUiSounds();
+    window.GameAudio?.setScene("shop");
+    renderShopState(currentShopState);
+    if (devMode && debugParams.get("debugShopEvent") === "first_leisure_exchanged") {
+      gameState.flags.first_leisure_exchanged = true;
+      window.GameState.addItem(gameState, "sea", "firstLeisure");
+      gameState = window.GameState.save(gameState);
+      renderShopState("normal");
+      shopkeeper.classList.add("exchange-complete");
+      speech.textContent = "고급차 고객님 특별 서비스 완료";
+      showShopEvent("first_leisure_exchanged");
+    }
+  </script>
+  <script src="./mobile_orientation.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,1196 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>낚시왕 남영우 - 도감</title>
+  <style>
+    :root {
+      --ink: #111522;
+      --line: #070a14;
+      --gold: #ffd34d;
+      --panel: #f5d987;
+      --deep: #172035;
+      --water: #48accf;
+      --green: #68b95f;
+      --muted: #8d7a5f;
+      --game-scale: 1;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #101522;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+      color: var(--ink);
+      image-rendering: pixelated;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    .game-frame {
+      position: relative;
+      width: calc(1180px * var(--game-scale));
+      height: calc(664px * var(--game-scale));
+    }
+
+    .screen {
+      position: relative;
+      width: 1180px;
+      height: 664px;
+      overflow: hidden;
+      border: 8px solid var(--line);
+      background:
+        linear-gradient(rgba(8, 12, 20, .1), rgba(8, 12, 20, .26)),
+        url("./assets/fishdex_modern_study_background.png") center / cover no-repeat;
+      box-shadow: 0 0 0 6px #2f3751;
+      transform: scale(var(--game-scale));
+      transform-origin: top left;
+    }
+
+    .screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.08) 50%, transparent 50%) 0 0 / 8px 8px,
+        linear-gradient(rgba(255,255,255,.05) 50%, transparent 50%) 0 0 / 8px 8px;
+      pointer-events: none;
+      mix-blend-mode: soft-light;
+      z-index: 20;
+    }
+
+    .screen::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 166px;
+      border-top: 6px solid var(--line);
+      background: #20263a;
+      z-index: 7;
+    }
+
+    .card,
+    .panel,
+    .dialogue,
+    .tab,
+    .entry,
+    .button {
+      border: 5px solid var(--line);
+      background: var(--panel);
+      box-shadow: 6px 6px 0 rgba(0,0,0,.28);
+    }
+
+    .progress {
+      padding: 10px 14px;
+    }
+
+    .progress-title {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 7px;
+      font-size: 17px;
+      font-weight: 1000;
+    }
+
+    .collection-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .collection-stat {
+      border: 3px solid var(--line);
+      background: #fff4c8;
+      padding: 5px 8px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 1000;
+    }
+
+    .card { padding: 8px 12px; }
+
+    .title {
+      font-size: 32px;
+      color: var(--gold);
+      font-weight: 1000;
+      text-shadow:
+        3px 0 0 var(--line),
+        -3px 0 0 var(--line),
+        0 3px 0 var(--line),
+        0 -3px 0 var(--line),
+        5px 5px 0 rgba(0,0,0,.28);
+    }
+
+    .label {
+      display: block;
+      color: #665128;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .value {
+      display: block;
+      margin-top: 6px;
+      font-size: 21px;
+      font-weight: 1000;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .tabs {
+      position: absolute;
+      left: 34px;
+      top: 34px;
+      width: 680px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      z-index: 7;
+    }
+
+    .tab {
+      height: 52px;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 1000;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: var(--gold);
+      transform: translateY(-4px);
+    }
+
+    .grid-panel {
+      position: absolute;
+      left: 34px;
+      top: 106px;
+      width: 680px;
+      bottom: 170px;
+      padding: 0;
+      z-index: 6;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .entry-grid {
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      align-content: center;
+      gap: 7px;
+    }
+
+    .entry-grid.feature-grid {
+      grid-template-columns: repeat(3, 1fr);
+      align-content: start;
+      gap: 14px;
+    }
+
+    .entry-grid.ending-grid {
+      grid-template-columns: repeat(2, 1fr);
+      align-content: start;
+      gap: 14px;
+    }
+
+    .entry-grid.junk-grid {
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      align-content: stretch;
+      gap: 8px;
+    }
+
+    .entry {
+      height: 54px;
+      display: grid;
+      grid-template-columns: 1fr;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 7px;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .feature-grid .entry {
+      height: 142px;
+      padding: 14px 16px;
+      align-items: center;
+      text-align: left;
+    }
+
+    .ending-grid .entry {
+      height: 118px;
+      padding: 14px 16px;
+      grid-template-columns: 70px 1fr;
+      align-items: center;
+      text-align: left;
+    }
+
+    .entry-trophy {
+      width: 62px;
+      height: 62px;
+      object-fit: contain;
+      image-rendering: auto;
+      filter: drop-shadow(3px 3px 0 rgba(0,0,0,.25));
+    }
+
+    .junk-grid .entry {
+      height: 100%;
+      min-height: 68px;
+      padding: 8px 9px;
+      align-items: center;
+    }
+
+    .entry.active {
+      outline: 5px solid var(--gold);
+      outline-offset: -10px;
+      box-shadow: 6px 6px 0 rgba(0,0,0,.28), inset 0 0 0 5px rgba(255, 240, 173, .72);
+    }
+
+    .entry.locked {
+      background: #bda977;
+      color: #62513a;
+      filter: grayscale(.4);
+    }
+
+    .ending-grid .entry.locked {
+      filter: none;
+    }
+
+    .ending-grid .entry.locked .entry-trophy {
+      opacity: 1;
+      filter: drop-shadow(3px 3px 0 rgba(0,0,0,.25));
+    }
+
+    .entry-name {
+      display: block;
+      font-size: 13px;
+      font-weight: 1000;
+      line-height: 1.05;
+    }
+
+    .feature-grid .entry-name,
+    .ending-grid .entry-name {
+      font-size: 22px;
+      line-height: 1.1;
+      white-space: normal;
+    }
+
+    .entry-meta {
+      display: block;
+      margin-top: 3px;
+      color: #665128;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .feature-grid .entry-meta,
+    .ending-grid .entry-meta {
+      margin-top: 10px;
+      font-size: 15px;
+    }
+
+    .detail {
+      position: absolute;
+      right: 24px;
+      top: 96px;
+      width: 400px;
+      bottom: 170px;
+      padding: 16px 18px;
+      z-index: 6;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .big-icon {
+      position: relative;
+      width: 150px;
+      height: 96px;
+      margin: 0 auto 14px;
+      box-sizing: border-box;
+      border: 6px solid var(--line);
+      background: var(--water);
+      box-shadow: inset -18px -14px 0 rgba(0,0,0,.22);
+    }
+
+    .big-icon::after {
+      content: "";
+      position: absolute;
+      right: -42px;
+      top: 24px;
+      border-left: 42px solid var(--line);
+      border-top: 24px solid transparent;
+      border-bottom: 24px solid transparent;
+    }
+
+    .big-icon.sprite {
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .big-icon.sprite img {
+      max-width: 136px;
+      max-height: 82px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(4px 4px 0 rgba(0,0,0,.3));
+    }
+
+    .big-icon.specimen-card {
+      width: 296px;
+      height: 166px;
+      background: #75d2df;
+      box-shadow:
+        5px 6px 0 rgba(0,0,0,.28);
+    }
+
+    .big-icon.specimen-card::after {
+      display: none;
+    }
+
+    .big-icon.specimen-card img {
+      max-width: 232px;
+      max-height: 96px;
+      image-rendering: auto;
+      filter: drop-shadow(5px 6px 0 rgba(0,0,0,.22));
+    }
+
+    .big-icon.fish-card {
+      background: #75d2df;
+    }
+
+    .big-icon.junk-card {
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.08) 50%, transparent 50%) 0 0 / 8px 8px,
+        linear-gradient(rgba(255,255,255,.06) 50%, transparent 50%) 0 0 / 8px 8px,
+        #5e8f75;
+    }
+
+    .big-icon.junk-card img {
+      max-width: 204px;
+      max-height: 120px;
+      filter: drop-shadow(5px 6px 0 rgba(0,0,0,.24));
+    }
+
+    .big-icon.event {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      height: auto;
+      margin: 0 auto 18px;
+      background: #111522;
+      box-shadow: 5px 6px 0 rgba(0,0,0,.28);
+    }
+
+    .big-icon.event::after {
+      display: none;
+    }
+
+    .big-icon.event img {
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      max-height: none;
+      object-fit: contain;
+      filter: none;
+    }
+
+    .detail.main-screen-detail .detail-title,
+    .detail.main-screen-detail .label,
+    .detail.main-screen-detail .desc,
+    .detail.main-screen-detail .specs {
+      display: none;
+    }
+
+    .detail.main-screen-detail .detail-view-button {
+      margin-top: 0;
+    }
+
+    .big-icon.ending {
+      width: 190px;
+      height: 190px;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.08) 50%, transparent 50%) 0 0 / 8px 8px,
+        linear-gradient(rgba(255,255,255,.06) 50%, transparent 50%) 0 0 / 8px 8px,
+        #77633d;
+      box-shadow: 5px 6px 0 rgba(0,0,0,.28);
+    }
+
+    .big-icon.ending::after {
+      display: none;
+    }
+
+    .big-icon.ending img {
+      max-width: 172px;
+      max-height: 172px;
+      image-rendering: auto;
+      filter: drop-shadow(5px 6px 0 rgba(0,0,0,.24));
+    }
+
+    .big-icon.locked {
+      width: 296px;
+      height: 166px;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.035) 50%, transparent 50%) 0 0 / 8px 8px,
+        linear-gradient(rgba(255,255,255,.025) 50%, transparent 50%) 0 0 / 8px 8px,
+        #2f3442;
+      box-shadow: 5px 6px 0 rgba(0,0,0,.28);
+      filter: none;
+      transform: none;
+    }
+
+    .big-icon.specimen-card.locked img {
+      max-width: 232px;
+      max-height: 96px;
+      opacity: .72;
+      filter: none;
+    }
+
+    .big-icon.specimen-card.locked {
+      background: #2f3442;
+      box-shadow: 5px 6px 0 rgba(0,0,0,.28);
+    }
+
+    .big-icon.junk-card.locked img {
+      max-width: 204px;
+      max-height: 120px;
+    }
+
+    .big-icon.locked::after {
+      display: none;
+    }
+
+    .big-icon.ending.locked {
+      width: 190px;
+      height: 190px;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.08) 50%, transparent 50%) 0 0 / 8px 8px,
+        linear-gradient(rgba(255,255,255,.06) 50%, transparent 50%) 0 0 / 8px 8px,
+        #77633d;
+    }
+
+    .detail-title {
+      display: block;
+      margin-bottom: 9px;
+      font-size: 26px;
+      font-weight: 1000;
+      line-height: 1.08;
+    }
+
+    .desc {
+      min-height: 64px;
+      margin: 6px 0 12px;
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .specs {
+      display: grid;
+      gap: 8px;
+    }
+
+    .spec {
+      display: flex;
+      justify-content: space-between;
+      border: 3px solid var(--line);
+      background: #fff4c8;
+      padding: 6px 8px;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .spec.hidden {
+      display: none;
+    }
+
+    .detail-view-button {
+      height: 48px;
+      margin-top: 12px;
+      border: 5px solid var(--line);
+      background: #fff0ad;
+      color: var(--ink);
+      font: inherit;
+      font-size: 19px;
+      font-weight: 1000;
+      cursor: pointer;
+      box-shadow: 5px 5px 0 rgba(0,0,0,.26);
+    }
+
+    .detail-view-button:hover,
+    .detail-view-button:focus-visible {
+      background: var(--gold);
+      outline: none;
+    }
+
+    .detail-view-button[hidden] {
+      display: none;
+    }
+
+    .preview-overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: rgba(8, 10, 16, .7);
+      z-index: 30;
+    }
+
+    .preview-overlay[hidden] {
+      display: none;
+    }
+
+    .preview-panel {
+      width: 820px;
+      border: 6px solid var(--line);
+      background: var(--panel);
+      box-shadow: 10px 10px 0 rgba(0,0,0,.34);
+      padding: 16px;
+    }
+
+    .preview-image {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: 5px solid var(--line);
+      background: #111522 center / contain no-repeat;
+      box-shadow: 5px 6px 0 rgba(0,0,0,.24);
+    }
+
+    .preview-panel.image-only .preview-title,
+    .preview-panel.image-only .preview-desc {
+      display: none;
+    }
+
+    .preview-panel.image-only {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .preview-panel.image-only .preview-close {
+      align-self: flex-end;
+      margin-top: 12px;
+    }
+
+    .preview-title {
+      display: block;
+      margin-top: 14px;
+      font-size: 30px;
+      font-weight: 1000;
+      line-height: 1.1;
+    }
+
+    .preview-desc {
+      margin: 8px 0 14px;
+      font-size: 17px;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .preview-close {
+      width: 150px;
+      height: 48px;
+      border: 5px solid var(--line);
+      background: #fff0ad;
+      font: inherit;
+      font-size: 19px;
+      font-weight: 1000;
+      cursor: pointer;
+      box-shadow: 5px 5px 0 rgba(0,0,0,.26);
+    }
+
+    .bottom {
+      position: absolute;
+      left: 16px;
+      right: 464px;
+      bottom: 9px;
+      height: 148px;
+      z-index: 8;
+    }
+
+    .dialogue {
+      height: 148px;
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 12px;
+      padding: 0;
+      background: var(--deep);
+      overflow: visible;
+    }
+
+    .portrait {
+      position: relative;
+      height: 118px;
+      align-self: center;
+      margin-left: 8px;
+      border: 4px solid var(--line);
+      background: #28324a;
+      overflow: hidden;
+    }
+
+    .portrait img {
+      position: absolute;
+      inset: 0;
+      width: 104px;
+      height: 110px;
+      image-rendering: auto;
+    }
+
+    .dialogue-copy {
+      min-width: 0;
+      padding: 12px 14px 12px 12px;
+      color: #fff3d3;
+      font-weight: 900;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    .dialogue-speaker {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--gold);
+      font-size: 18px;
+    }
+
+    .dialogue-line {
+      display: block;
+      font-size: 15px;
+      line-height: 1.42;
+      white-space: nowrap;
+    }
+
+    .button {
+      font: inherit;
+      font-size: 22px;
+      font-weight: 1000;
+      background: #fff0ad;
+      cursor: pointer;
+    }
+
+    .bottom .button {
+      height: auto;
+    }
+
+    .dex-actions {
+      position: absolute;
+      right: 16px;
+      bottom: 9px;
+      width: 436px;
+      height: 148px;
+      display: grid;
+      z-index: 8;
+    }
+
+    .home-button {
+      position: absolute !important;
+      right: 16px;
+      top: 14px;
+      z-index: 11;
+      min-width: 92px;
+      height: 40px;
+      border: 4px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(255, 230, 129, .62) 0 7px, transparent 7px),
+        var(--panel);
+      color: var(--ink);
+      font: inherit;
+      font-size: 16px;
+      font-weight: 1000;
+      box-shadow: 4px 4px 0 rgba(0,0,0,.28);
+      cursor: pointer;
+    }
+
+    .home-button:hover,
+    .home-button:focus-visible {
+      background:
+        linear-gradient(180deg, rgba(255, 235, 144, .78) 0 7px, transparent 7px),
+        var(--gold);
+      outline: none;
+    }
+
+    .dex-actions .progress {
+      min-width: 0;
+      height: 148px;
+      box-sizing: border-box;
+      padding: 12px 14px;
+      overflow: hidden;
+    }
+
+    .dex-actions .progress-title {
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+    .dex-actions .collection-stats {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .dex-actions .collection-stat {
+      align-items: center;
+      gap: 6px;
+      min-height: 38px;
+      font-size: 14px;
+      padding: 8px 10px;
+    }
+  </style>
+  <link rel="stylesheet" href="./assets/ui_buttons.css">
+  <script src="./mobile_orientation_boot.js"></script>
+</head>
+<body>
+  <div class="game-frame">
+  <main class="screen" aria-label="도감 화면">
+    <nav class="tabs" aria-label="&#46020;&#44048; &#48516;&#47448;">
+      <button class="tab active" type="button" data-tab="freshwater">&#48124;&#47932; 30&#51333;</button>
+      <button class="tab" type="button" data-tab="sea">&#48148;&#45796; 30&#51333;</button>
+      <button class="tab" type="button" data-tab="junk">&#50976;&#49892;&#47932; 20&#51333;</button>
+      <button class="tab" type="button" data-tab="events">메인화면 3종</button>
+      <button class="tab" type="button" data-tab="endings">칭호 5종</button>
+    </nav>
+
+    <button class="home-button" type="button" onclick="location.href='game_home.html'">&#45208;&#44032;&#44592;</button>
+
+    <section class="grid-panel panel">
+      <div class="entry-grid" id="entryGrid"></div>
+    </section>
+
+    <aside class="detail panel" aria-label="&#46020;&#44048; &#49345;&#49464;">
+      <div class="big-icon" id="detailIcon"></div>
+      <strong class="detail-title" id="detailTitle">&#48120;&#54925;&#46301;</strong>
+      <span class="label">&#46020;&#44048; &#49444;&#47749;</span>
+      <p class="desc" id="detailDesc">&#50500;&#51649; &#54869;&#51064;&#46104;&#51648; &#50506;&#51008; &#54637;&#47785;&#51060;&#45796;.</p>
+      <div class="specs">
+        <div class="spec"><span>&#48516;&#47448;</span><strong id="detailField">-</strong></div>
+        <div class="spec"><span>등급</span><strong id="detailLevel">-</strong></div>
+        <div class="spec"><span>HP / &#51200;&#54637;</span><strong id="detailStats">-</strong></div>
+        <div class="spec"><span>&#48372;&#49345;</span><strong id="detailReward">-</strong></div>
+      </div>
+      <button class="detail-view-button" id="detailViewButton" type="button" hidden>보기</button>
+    </aside>
+
+    <section class="preview-overlay" id="previewOverlay" hidden>
+      <div class="preview-panel" role="dialog" aria-modal="true" aria-label="도감 미리보기">
+        <div class="preview-image" id="previewImage"></div>
+        <strong class="preview-title" id="previewTitle"></strong>
+        <p class="preview-desc" id="previewDesc"></p>
+        <button class="preview-close" id="previewClose" type="button">닫기</button>
+      </div>
+    </section>
+
+    <section class="bottom">
+      <aside class="dialogue" aria-label="도감 대사창">
+        <div class="portrait">
+          <img src="./assets/youngwoo_sprites/portrait_emotions_2x/beginner_neutral.png?v=youngwoo-left-face-outfit-hats-20260604" alt="영우 얼굴">
+        </div>
+        <div class="dialogue-copy">
+          <strong class="dialogue-speaker" id="dexDialogueSpeaker">낚시왕 남영우</strong>
+          <span class="dialogue-line" id="dexDialogueLine1">도감은 약속의 영수증이다.</span>
+          <span class="dialogue-line" id="dexDialogueLine2">잡은 어종과 유실물을 확인하자.</span>
+          <span class="dialogue-line" id="dexDialogueLine3">빈 칸은 아직 영우를 모른 척하고 있다.</span>
+        </div>
+      </aside>
+    </section>
+
+    <section class="dex-actions">
+      <div class="progress panel">
+        <div class="progress-title">
+          <span>&#49688;&#51665;&#54788;&#54889;</span>
+          <span id="collectionTotal">0 / 88</span>
+        </div>
+        <div class="collection-stats">
+          <div class="collection-stat"><span>&#50612;&#51333;</span><strong id="fishCollectCount">0/60</strong></div>
+          <div class="collection-stat"><span>&#50976;&#49892;&#47932;</span><strong id="junkCollectCount">0/20</strong></div>
+          <div class="collection-stat"><span>메인화면</span><strong id="mainCollectCount">1/3</strong></div>
+          <div class="collection-stat"><span>칭호</span><strong id="endingCollectCount">0/5</strong></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  </div>
+
+  <script src="./game_state.js"></script>
+  <script src="./audio_manager.js?v=audio-foundation-20260604"></script>
+  <script src="./fish_sprite_manifest.js?v=quality-silhouette-live-20260604"></script>
+  <script src="./junk_sprite_manifest.js?v=junk-quality-20260604"></script>
+  <script>
+    function resizeGame() {
+      const baseW = 1180;
+      const baseH = 664;
+      const padding = 0.96;
+      const viewport = window.visualViewport;
+      const usableWidth = viewport?.width || window.innerWidth;
+      const usableHeight = viewport?.height || window.innerHeight;
+      const scale = Math.min(usableWidth / baseW, usableHeight / baseH) * padding;
+      const desktopLike = window.matchMedia("(pointer: fine) and (min-width: 900px)").matches;
+      const maxScale = desktopLike ? 1.25 : 1;
+      document.documentElement.style.setProperty("--game-scale", String(Math.min(scale, maxScale)));
+    }
+
+    window.addEventListener("resize", resizeGame);
+        window.addEventListener("orientationchange", resizeGame);
+        window.visualViewport?.addEventListener("resize", resizeGame);
+    resizeGame();
+
+    let gameState = window.GameState.load();
+
+    function formatJunkReward(item) {
+      if (item.rewardLabel) return item.rewardLabel;
+      const rewards = [];
+      if (item.gold) rewards.push(`${Number(item.gold).toLocaleString()}G`);
+      if (item.fame) rewards.push(`명성 ${Number(item.fame).toLocaleString()}`);
+      const permanent = item.permanentLabel || item.permanentEffect || item.statBonusLabel || item.abilityLabel;
+      if (permanent) rewards.push(`보유 효과(${permanent})`);
+      return rewards.length ? rewards.join(" / ") : "보상 없음";
+    }
+
+    function junkCategory(item) {
+      if (["재모의 오리발", "준우가 훔친 G70 열쇠", "영우의 초상화"].includes(item.name)) return "이벤트 유실물";
+      const permanent = item.permanentLabel || item.permanentEffect || item.statBonusLabel || item.abilityLabel;
+      return permanent ? "고급 유실물" : "유실물";
+    }
+
+    const titleTrophyImages = {
+      walker: "./assets/title_trophies/title_trophy_walker.png?v=title-trophy-hq-20260605",
+      gearManiac: "./assets/title_trophies/title_trophy_gear_maniac.png?v=title-trophy-hq-20260605",
+      rich: "./assets/title_trophies/title_trophy_rich.png?v=title-trophy-hq-20260605",
+      youtuber: "./assets/title_trophies/title_trophy_youtuber.png?v=title-trophy-hq-20260605",
+      fishingKing: "./assets/title_trophies/title_trophy_fishing_king.png?v=title-trophy-hq-20260605"
+    };
+
+    function formatFishReward(fish) {
+      const gold = Number(fish.gold || 0);
+      const fame = Number(fish.level || 0) * 50 + Number(fish.resistance || 0) * 5 + (Number(fish.level || 0) >= 10 ? 250 : 0);
+      return [`${gold.toLocaleString()}G`, `명성 ${fame.toLocaleString()}`].join(" / ");
+    }
+
+    function fishRowsFor(groups) {
+      return window.GameState.fishData
+        .filter((fish) => groups.includes(fish.field))
+        .map((fish) => [
+          fish.name,
+          fish.level,
+          fish.hp,
+          fish.resistance,
+          formatFishReward(fish),
+          false,
+          fish.desc
+        ]);
+    }
+
+    const dexData = {
+      freshwater: fishRowsFor(["freshwaterBasic", "freshwaterAdvanced"]),
+      sea: fishRowsFor(["seaNear", "seaOcean"]),
+      junk: window.GameState.junkData.map((item) => {
+        return [item.name, "-", "-", "-", formatJunkReward(item), false, item.desc, "", junkCategory(item)];
+      }),
+      events: [
+        ["낚시출발", "메인화면", "-", "-", "기본 획득", "main_start", "장난감 낚시세트를 들고 낚시를 떠나기 직전의 영우.", "./assets/main_stage_start_apartment.png"],
+        ["힘겨루기", "메인화면", "-", "-", "민물보트 획득", "valley_boat_owned", "민물보트 위에서 대형 민물고기와 힘겨루기하는 영우.", "./assets/main_stage_valley_boat.png"],
+        ["낚시고수", "메인화면", "-", "-", "바다보트 획득", "sea_boat_owned", "바다 대어와 마주한 최종 단계 메인화면.", "./assets/main_hero_youngwoo_yellowtail_v5.png"]
+      ],
+      endings: [
+        ["뚜벅이", "칭호", "-", "-", "유실물 확률 +8%, 골드 보상 -3%", "walker", "보유 차량이 0대일 때 얻는 칭호. 차는 없지만 물가에서 뭔가 줍는 감각은 날카로워진다."],
+        ["장비병", "칭호", "-", "-", "장비 안정성 +8%, 골드 보상 -5%", "gearManiac", "교환받은 제1레져까지 포함해 장비를 모두 모은 칭호. 장비는 안정되지만 지갑은 계속 장비 쪽으로 샌다."],
+        ["부자", "칭호", "-", "-", "골드 보상 +12%, 명성 획득 -5%", "rich", "누적 수입 100,000G를 달성한 칭호. 돈은 잘 벌지만 사람들은 살짝 거리감을 둔다."],
+        ["유투버", "칭호", "-", "-", "명성 +20%, 희귀어 +3%, 안정성 -3%", "youtuber", "누적 명성 20,000을 달성한 칭호. 대박각은 잘 잡지만 화면 욕심 때문에 손이 조금 흔들린다."],
+        ["낚시왕", "칭호", "-", "-", "감기력 +5%, 희귀어 +5%", "fishingKing", "도감 60종을 채워 아들과의 약속을 지키면 얻는 칭호. 드디어 이름값을 하기 시작한다."]
+      ]
+    };
+
+    const tabButtons = document.querySelectorAll("[data-tab]");
+    const entryGrid = document.getElementById("entryGrid");
+    const detailIcon = document.getElementById("detailIcon");
+    const detailTitle = document.getElementById("detailTitle");
+    const detailDesc = document.getElementById("detailDesc");
+    const detailField = document.getElementById("detailField");
+    const detailLevel = document.getElementById("detailLevel");
+    const detailStats = document.getElementById("detailStats");
+    const detailReward = document.getElementById("detailReward");
+    const collectionTotal = document.getElementById("collectionTotal");
+    const fishCollectCount = document.getElementById("fishCollectCount");
+    const junkCollectCount = document.getElementById("junkCollectCount");
+    const mainCollectCount = document.getElementById("mainCollectCount");
+    const endingCollectCount = document.getElementById("endingCollectCount");
+    const detailViewButton = document.getElementById("detailViewButton");
+    const dexDialogueSpeaker = document.getElementById("dexDialogueSpeaker");
+    const dexDialogueLines = ["dexDialogueLine1", "dexDialogueLine2", "dexDialogueLine3"].map((id) => document.getElementById(id));
+    const previewOverlay = document.getElementById("previewOverlay");
+    const previewImage = document.getElementById("previewImage");
+    const previewTitle = document.getElementById("previewTitle");
+    const previewDesc = document.getElementById("previewDesc");
+    const previewClose = document.getElementById("previewClose");
+    let activeDetailEntry = null;
+    let activeDetailTab = "freshwater";
+
+    function setDexDialogue(lines, speaker = "") {
+      dexDialogueSpeaker.textContent = speaker || window.GameState.displayYoungwooName(gameState);
+      dexDialogueLines.forEach((line, index) => {
+        line.textContent = lines[index] || "";
+      });
+    }
+
+    function tabLabel(tab) {
+      if (tab === "freshwater") return "민물";
+      if (tab === "sea") return "바다";
+      if (tab === "junk") return "유실물";
+      if (tab === "events") return "메인화면";
+      return "칭호";
+    }
+
+    const dexLockedCopy = {
+      freshwater: [
+        "민물 도감의 빈 칸이다.",
+        "아직 잡지 못했다. 물속에서는 영우 이름표가 안 보이나 보다.",
+        "초반은 장비보다 꾸준함이다. 그리고 약간의 손목."
+      ],
+      sea: [
+        "바다 도감의 빈 칸이다.",
+        "바다에서 아직 마주치지 못한 대상이다.",
+        "파도는 넓고 영우의 일정은 좁다."
+      ],
+      junk: [
+        "아직 못 찾은 유실물이다.",
+        "물고기보다 사연이 먼저 걸리는 날도 있다.",
+        "찌를 던지면 인생의 분실물도 같이 올라온다."
+      ],
+      events: [
+        "아직 획득하지 못한 메인화면이다.",
+        "진행 루트를 타면 장면이 하나씩 열린다.",
+        "영우의 커리어도 이제 스탬프 투어가 됐다."
+      ],
+      endings: [
+        "아직 획득하지 못한 칭호다.",
+        "조건과 능력치를 확인하고 진행 목표를 잡자.",
+        "얻은 칭호는 여기서 장착할 수 있다."
+      ]
+    };
+
+    const dexSpecialCopy = {
+      "피라미": ["피라미 기록 확인.", "작지만 도감 첫 칸을 채우는 기분은 크다.", "영우도 처음엔 여기서 용기를 빌렸다."],
+      "블루길": ["블루길 기록 확인.", "이 동네 적응력은 영우보다 훨씬 빠르다.", "잡는 쪽이 외래종처럼 어색할 때도 있다."],
+      "배스": ["배스 기록 확인.", "영우가 즐겨먹는 맛있는 반찬 후보.", "도감과 저녁 메뉴가 동시에 갱신된다."],
+      "대물 쏘가리": ["대물 쏘가리 기록 확인.", "민물의 제왕을 만났다.", "이쯤 되면 영우도 민물에서는 목소리가 커진다."],
+      "멸치": ["멸치 기록 확인.", "작지만 바다 입문 신고식은 확실하다.", "영우는 바다에서도 일단 작은 것부터 배운다."],
+      "우럭": ["우럭 기록 확인.", "우럭아 왜 우럭. 영우가 먼저 울었다.", "그래도 도감에 들어오면 꽤 든든하다."],
+      "부시리": ["부시리 기록 확인.", "묵직한 손맛과 가격표가 동시에 떠오른다.", "영우는 회식 장소부터 검색한다."],
+      "방어": ["방어 기록 확인.", "와이프의 마음을 움직일 수 있는 몇 안 되는 생선이다.", "티볼리 반환 루트의 생선계 협상 카드."],
+      "백상아리": ["백상아리 기록 확인.", "이빨보다 무서운 것은 준우의 읽씹이다.", "G70 차키가 떠오르면 영우의 눈도 같이 번쩍인다."],
+      "돗돔": ["돗돔 기록 확인.", "바다 최종보스급 존재감이다.", "영우의 낚싯대와 자존심이 동시에 휘어진다."],
+      "재모의 오리발": ["재모의 오리발 기록 확인.", "이 작은 오리발 하나가 민물보트 루트를 연다.", "낚시보다 인맥이 먼저였던 역사적인 물건이다."],
+      "영우의 초상화": ["영우의 초상화 기록 확인.", "일반엔딩 이후에만 발견되는 후반 유실물이다.", "약속을 지킨 뒤에야 액자 속 영우가 물가에서 올라왔다."],
+      "준우가 훔친 G70 열쇠": ["G70 열쇠 기록 확인.", "백상아리 뱃속에서 나온다면 더 이상 상식의 영역은 아니다.", "준우야, 차키 관리 교육이 필요하다."],
+      "낚시출발": ["낚시출발 메인화면 확인.", "장난감 낚시세트 하나로 약속이 시작됐다.", "이때의 영우는 아직 바다와 가격표를 몰랐다."],
+      "힘겨루기": ["힘겨루기 메인화면 확인.", "민물보트 위에서 영우가 본격적으로 흔들리기 시작한다.", "몸은 흔들려도 진행 루트는 앞으로 간다."],
+      "낚시고수": ["낚시고수 메인화면 확인.", "바다 대어와 마주한 최종 단계다.", "이제 영우가 장비에 걸맞은 표정을 지을 차례다."],
+      "뚜벅이": ["칭호 뚜벅이 확인.", "유실물 확률 +8%, 골드 보상 -3%.", "차는 없지만 발품은 남았다."],
+      "장비병": ["칭호 장비병 확인.", "장비 안정성 +8%, 골드 보상 -5%.", "창고가 곧 트로피룸이고 지갑은 전시품이다."],
+      "부자": ["칭호 부자 확인.", "골드 보상 +12%, 명성 획득 -5%.", "누적 수입은 많은데 물고기는 여전히 안 봐준다."],
+      "유투버": ["칭호 유투버 확인.", "명성 획득 +20%, 희귀어 출현 +3%, 장비 안정성 -3%.", "누적 명성은 높은데 손맛은 약간 흔들린다."],
+      "낚시왕": ["칭호 낚시왕 확인.", "감기력 +5%, 희귀어 출현 +5%.", "아들과의 약속 앞에서 드디어 이름값을 했다."]
+    };
+
+    function genericCaughtCopy(entry, tab) {
+      if (tab === "freshwater") {
+        if (Number(entry.level) >= 8) return [`${entry.name} 기록 확인.`, `민물 고레벨 Lv.${entry.level}. 보상은 ${entry.reward}.`, "영우가 민물 앞에서만큼은 꽤 당당해졌다."];
+        return [`${entry.name} 기록 확인.`, `${entry.field} Lv.${entry.level} / 보상 ${entry.reward}`, "도감 한 칸이 채워질 때마다 약속도 조금 가까워진다."];
+      }
+      if (tab === "sea") {
+        if (Number(entry.level) >= 9) return [`${entry.name} 기록 확인.`, `바다 고레벨 Lv.${entry.level}. 보상은 ${entry.reward}.`, "이쯤 되면 영우의 손목도 경력직이다."];
+        return [`${entry.name} 기록 확인.`, `${entry.field} Lv.${entry.level} / 보상 ${entry.reward}`, "바다 도감이 채워질수록 재도전이 덜 민망해진다."];
+      }
+      if (tab === "junk") return [`${entry.name}을 확인했다.`, `보상: ${entry.reward}`, "물고기보다 물건이 더 사연이 많을 때가 있다."];
+      return [`${entry.name} 기록 확인.`, entry.desc, "영우의 인생도 이제 도감에 박제되는 중이다."];
+    }
+
+    function updateDexDialogue(entry, tab) {
+      if (!entry.owned && tab !== "endings") {
+        setDexDialogue(dexLockedCopy[tab] || dexLockedCopy.freshwater);
+        return;
+      }
+      setDexDialogue(dexSpecialCopy[entry.name] || genericCaughtCopy(entry, tab));
+    }
+
+    function isCollected(tab, name, fallback) {
+      if (tab === "junk") return gameState.junk.includes(name);
+      if (tab === "events") return fallback === "main_start" || Boolean(gameState.flags?.[fallback]);
+      if (tab === "endings") {
+        return gameState.titles?.owned?.includes(fallback);
+      }
+      return gameState.caughtFish.includes(name) || fallback;
+    }
+
+    function updateCollectionStatus() {
+      const fishCount = gameState.caughtFish.length;
+      const junkCount = gameState.junk.length;
+      const titleScreenCount = dexData.events.filter((row) => isCollected("events", row[0], row[5])).length;
+      const endingCount = dexData.endings.filter((row) => isCollected("endings", row[0], row[5])).length;
+      const totalCollected = fishCount + junkCount + titleScreenCount + endingCount;
+      const totalTarget = window.GameState.fishData.length + dexData.junk.length + dexData.events.length + dexData.endings.length;
+      collectionTotal.textContent = `${totalCollected} / ${totalTarget}`;
+      fishCollectCount.textContent = `${fishCount}/${window.GameState.fishData.length}`;
+      junkCollectCount.textContent = `${junkCount}/${dexData.junk.length}`;
+      mainCollectCount.textContent = `${titleScreenCount}/${dexData.events.length}`;
+      endingCollectCount.textContent = `${endingCount}/${dexData.endings.length}`;
+    }
+
+    function normalizeEntry(tab, row, index) {
+      const [name, level, hp, resist, reward, owned, desc, image, category] = row;
+      return {
+        id: `${tab}-${index}`,
+        unlockId: owned,
+        name,
+        level,
+        hp,
+        resist,
+        reward,
+        owned: isCollected(tab, name, owned),
+        desc,
+        image,
+        field: category || (tab === "freshwater" ? "\uBBFC\uBB3C" : tab === "sea" ? "\uBC14\uB2E4" : tab === "events" ? "메인화면" : tab === "endings" ? "칭호" : "\uC720\uC2E4\uBB3C")
+      };
+    }
+
+    function updateDetail(entry, tab) {
+      activeDetailEntry = entry;
+      activeDetailTab = tab;
+      const hidden = !entry.owned;
+      const hideContent = hidden;
+      detailTitle.textContent = hideContent ? "???" : entry.name;
+      detailDesc.textContent = hideContent ? (tab === "endings" ? "아직 획득하지 못한 칭호다." : tab === "events" ? "아직 획득하지 못한 메인화면이다." : tab === "freshwater" || tab === "sea" ? "\uC544\uC9C1 \uD68D\uB4DD\uD558\uC9C0 \uBABB\uD55C \uC5B4\uC885\uC774\uB2E4." : "\uC544\uC9C1 \uD68D\uB4DD\uD558\uC9C0 \uBABB\uD55C \uC720\uC2E4\uBB3C\uC774\uB2E4.") : entry.desc;
+      detailIcon.closest(".detail")?.classList.toggle("main-screen-detail", tab === "events");
+      detailField.textContent = entry.field;
+      detailLevel.textContent = hideContent || entry.level === "-" || tab === "events" || tab === "endings" ? "-" : `Lv.${entry.level}`;
+      detailStats.textContent = hideContent || entry.hp === "-" ? "-" : `${entry.hp} / ${entry.resist}`;
+      detailReward.textContent = hideContent ? "-" : entry.reward;
+      detailField.parentElement.classList.toggle("hidden", tab === "freshwater" || tab === "sea" || tab === "events" || tab === "endings");
+      detailLevel.parentElement.classList.toggle("hidden", tab === "junk" || tab === "events" || tab === "endings");
+      detailStats.parentElement.classList.toggle("hidden", tab === "freshwater" || tab === "sea" || tab === "junk" || tab === "events" || tab === "endings");
+      detailReward.parentElement.classList.toggle("hidden", tab === "events");
+      const fishTab = tab === "freshwater" || tab === "sea";
+      const junkTab = tab === "junk";
+      const detailSrc = tab === "endings"
+        ? titleTrophyImages[entry.unlockId]
+        : fishTab
+        ? window.FishSprites?.src(entry.name, hideContent)
+        : junkTab
+          ? window.JunkSprites?.src(entry.name, hideContent)
+          : (hideContent ? "" : (tab === "events" ? entry.image : ""));
+      detailIcon.className = `big-icon ${detailSrc ? "sprite" : ""} ${fishTab || junkTab ? "specimen-card" : ""} ${fishTab ? "fish-card" : ""} ${junkTab ? "junk-card" : ""} ${tab === "events" ? "event" : ""} ${tab === "endings" ? "ending" : ""} ${hidden ? "locked" : ""}`;
+      detailIcon.innerHTML = detailSrc ? `<img src="${detailSrc}" alt="${hideContent && tab !== "endings" ? "??? ???" : entry.name}">` : "";
+      detailViewButton.hidden = tab === "events" ? hidden : !(tab === "endings" && entry.owned);
+      detailViewButton.textContent = tab === "endings"
+        ? (gameState.titles?.equipped === entry.unlockId ? "장착중" : "장착")
+        : "보기";
+      detailViewButton.disabled = tab === "endings" && gameState.titles?.equipped === entry.unlockId;
+      updateDexDialogue(entry, tab);
+    }
+
+    function openDetailPreview() {
+      if (!activeDetailEntry || activeDetailTab !== "events" || !activeDetailEntry.owned) return;
+      const image = activeDetailEntry.image;
+      previewImage.style.backgroundImage = `url("${image}")`;
+      previewTitle.textContent = activeDetailEntry.name;
+      previewDesc.textContent = activeDetailEntry.desc;
+      previewOverlay.querySelector(".preview-panel")?.classList.add("image-only");
+      previewOverlay.hidden = false;
+      previewClose.focus();
+    }
+
+    function equipDexTitle() {
+      if (!activeDetailEntry || activeDetailTab !== "endings" || !activeDetailEntry.owned) return;
+      gameState = window.GameState.setEquippedTitle(gameState, activeDetailEntry.unlockId);
+      window.GameAudio?.playSfx("title");
+      updateDetail(activeDetailEntry, activeDetailTab);
+      setDexDialogue([
+        `${activeDetailEntry.name} 칭호 장착 완료.`,
+        `이제 이름은 ${window.GameState.displayYoungwooName(gameState)}.`,
+        activeDetailEntry.reward
+      ]);
+    }
+
+    function handleDetailButton() {
+      if (activeDetailTab === "endings") equipDexTitle();
+      else openDetailPreview();
+    }
+
+    function closeDetailPreview() {
+      previewOverlay.hidden = true;
+      previewOverlay.querySelector(".preview-panel")?.classList.remove("image-only");
+      previewImage.style.backgroundImage = "";
+      detailViewButton.focus();
+    }
+
+    function renderTab(tab) {
+      gameState = window.GameState.load();
+      updateCollectionStatus();
+      const goal = window.GameState.currentGoal(gameState);
+      const entries = dexData[tab].map((row, index) => normalizeEntry(tab, row, index));
+      tabButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.tab === tab);
+      });
+      entryGrid.classList.toggle("feature-grid", tab === "events");
+      entryGrid.classList.toggle("ending-grid", tab === "endings");
+      entryGrid.classList.toggle("junk-grid", tab === "junk");
+
+      entryGrid.innerHTML = entries.map((entry, index) => {
+        const locked = !entry.owned;
+        const name = locked ? "???" : entry.name;
+        const meta = tab === "endings"
+          ? (gameState.titles?.equipped === entry.unlockId ? "장착중" : entry.owned ? "\uD68D\uB4DD" : "\uBBF8\uD68D\uB4DD")
+          : entry.owned ? "\uD68D\uB4DD" : "\uBBF8\uD68D\uB4DD";
+        const trophy = tab === "endings" ? `<img class="entry-trophy" src="${titleTrophyImages[entry.unlockId]}" alt="${entry.name} 트로피">` : "";
+        return `
+          <button class="entry ${locked ? "locked" : ""} ${index === 0 ? "active" : ""}" type="button" data-index="${index}">
+            ${trophy}
+            <span>
+              <span class="entry-name">${name}</span>
+              <span class="entry-meta">${meta}</span>
+            </span>
+          </button>
+        `;
+      }).join("");
+
+      entryGrid.querySelectorAll("[data-index]").forEach((button) => {
+        button.addEventListener("click", () => {
+          entryGrid.querySelectorAll(".entry").forEach((entryButton) => entryButton.classList.remove("active"));
+          button.classList.add("active");
+          updateDetail(entries[Number(button.dataset.index)], tab);
+        });
+      });
+
+      updateDetail(entries[0], tab);
+      setDexDialogue(goal.lines);
+    }
+
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => renderTab(button.dataset.tab));
+    });
+
+    detailViewButton.addEventListener("click", handleDetailButton);
+    previewClose.addEventListener("click", closeDetailPreview);
+    previewOverlay.addEventListener("click", (event) => {
+      if (event.target === previewOverlay) closeDetailPreview();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !previewOverlay.hidden) closeDetailPreview();
+    });
+
+    window.GameAudio?.installGlobalUiSounds();
+    window.GameAudio?.setScene("dex");
+    renderTab("freshwater");
+  </script>
+  <script src="./mobile_orientation.js"></script>
+</body>
+</html>
+

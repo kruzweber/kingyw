@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>낚시왕 남영우 - 필드 확인</title>
+  <style>
+    :root {
+      --ink: #111522;
+      --line: #070a14;
+      --gold: #ffd34d;
+      --panel: #f5d987;
+      --deep: #172035;
+      --water: #3aa7c8;
+      --shore: #d89a47;
+      --grass: #6ec166;
+      --sky: #7fd6f0;
+      --game-scale: 1;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #101522;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+      color: var(--ink);
+      image-rendering: pixelated;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    .game-frame {
+      position: relative;
+      width: calc(1180px * var(--game-scale));
+      height: calc(664px * var(--game-scale));
+    }
+
+    .screen {
+      position: relative;
+      width: 1180px;
+      height: 664px;
+      overflow: hidden;
+      border: 8px solid var(--line);
+      background: #101522;
+      box-shadow: 0 0 0 6px #2f3751;
+      transform: scale(var(--game-scale));
+      transform-origin: top left;
+    }
+
+    .screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.08) 50%, transparent 50%) 0 0 / 8px 8px,
+        linear-gradient(rgba(255,255,255,.05) 50%, transparent 50%) 0 0 / 8px 8px;
+      pointer-events: none;
+      mix-blend-mode: soft-light;
+      z-index: 30;
+    }
+
+    .card,
+    .panel,
+    .tab,
+    .button {
+      border: 5px solid var(--line);
+      background: var(--panel);
+      box-shadow: 6px 6px 0 rgba(0,0,0,.28);
+    }
+
+    .hud {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr .75fr .75fr;
+      gap: 10px;
+      z-index: 12;
+    }
+
+    .card {
+      min-height: 60px;
+      padding: 7px 10px;
+    }
+
+    .label {
+      display: block;
+      color: #665128;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .value {
+      display: block;
+      margin-top: 5px;
+      font-size: 22px;
+      font-weight: 1000;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+
+    .tabs {
+      position: absolute;
+      left: 18px;
+      top: 94px;
+      width: 276px;
+      display: grid;
+      gap: 8px;
+      z-index: 14;
+    }
+
+    .tab {
+      min-height: 44px;
+      padding: 0 12px;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 1000;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: var(--gold);
+      transform: translateX(8px);
+    }
+
+    .playfield {
+      position: absolute;
+      inset: 0 0 142px 0;
+      overflow: hidden;
+      background:
+        linear-gradient(var(--sky) 0 20%, #bde980 20% 28%, var(--grass) 28% 39%, var(--shore) 39% 44%, var(--water) 44% 100%);
+      z-index: 1;
+    }
+
+    .field-sea .playfield {
+      background:
+        linear-gradient(#87d8f2 0 22%, #f2d68b 22% 30%, #d69a4b 30% 35%, #2f9dbd 35% 100%);
+    }
+
+    .field-ocean .playfield {
+      background:
+        linear-gradient(#214667 0 18%, #2f86aa 18% 100%);
+    }
+
+    .sun {
+      position: absolute;
+      right: 92px;
+      top: 82px;
+      width: 62px;
+      height: 62px;
+      border: 5px solid var(--line);
+      background: var(--gold);
+      border-radius: 50%;
+      z-index: 1;
+    }
+
+    .cloud {
+      position: absolute;
+      left: 360px;
+      top: 92px;
+      width: 124px;
+      height: 34px;
+      border: 5px solid var(--line);
+      background: #fff5ca;
+      box-shadow: 58px 12px 0 #fff5ca;
+      z-index: 1;
+    }
+
+    .water-lines {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 44%;
+      bottom: 0;
+      overflow: hidden;
+      z-index: 2;
+    }
+
+    .field-sea .water-lines { top: 35%; }
+    .field-ocean .water-lines { top: 18%; }
+
+    .wave {
+      position: absolute;
+      left: -30px;
+      width: 130%;
+      height: 22px;
+      background: repeating-linear-gradient(90deg, rgba(255,255,255,.7) 0 18px, transparent 18px 42px);
+      opacity: .42;
+    }
+
+    .wave.one { top: 28px; }
+    .wave.two { top: 128px; opacity: .24; }
+    .wave.three { top: 236px; opacity: .18; }
+
+    .dock {
+      position: absolute;
+      left: 0;
+      top: 292px;
+      width: 314px;
+      height: 48px;
+      border: 4px solid var(--line);
+      background:
+        repeating-linear-gradient(90deg, #a96938 0 28px, #7b482b 28px 34px);
+      box-shadow: 0 12px 0 #5b3322;
+      z-index: 5;
+    }
+
+    .field-boat .dock,
+    .field-ocean .dock {
+      display: none;
+    }
+
+    .vehicle {
+      position: absolute;
+      left: 792px;
+      top: 174px;
+      width: 126px;
+      height: 44px;
+      border: 4px solid var(--line);
+      background: #d64237;
+      box-shadow: inset -18px -10px 0 #9b222a;
+      z-index: 4;
+    }
+
+    .vehicle::before,
+    .vehicle::after {
+      content: "";
+      position: absolute;
+      bottom: -15px;
+      width: 26px;
+      height: 26px;
+      border: 4px solid var(--line);
+      background: #1d1e2b;
+    }
+
+    .vehicle::before { left: 14px; }
+    .vehicle::after { right: 14px; }
+
+    .vehicle.asset-loaded {
+      left: 748px;
+      top: 132px;
+      width: 188px;
+      height: 92px;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .vehicle.asset-loaded::before,
+    .vehicle.asset-loaded::after {
+      display: none;
+    }
+
+    .vehicle img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(5px 5px 0 rgba(0,0,0,.28));
+    }
+
+    .field-boat .vehicle,
+    .field-ocean .vehicle {
+      display: none;
+    }
+
+    .boat {
+      position: absolute;
+      left: 392px;
+      top: 286px;
+      width: 186px;
+      height: 58px;
+      border: 5px solid var(--line);
+      background: #365f58;
+      box-shadow: inset 0 -15px 0 #243f3a, 0 8px 0 rgba(0,0,0,.24);
+      border-radius: 0 0 42px 42px;
+      display: none;
+      z-index: 6;
+    }
+
+    .boat::before {
+      content: "";
+      position: absolute;
+      left: 56px;
+      top: 14px;
+      width: 70px;
+      height: 18px;
+      border: 4px solid var(--line);
+      background: #86c5c0;
+    }
+
+    .field-boat .boat,
+    .field-ocean .boat {
+      display: block;
+    }
+
+    .field-ocean .boat {
+      left: 448px;
+      top: 312px;
+      width: 228px;
+      height: 72px;
+      background: #526f7d;
+      border-radius: 0 0 54px 54px;
+    }
+
+    .boat.asset-loaded {
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      border-radius: 0;
+    }
+
+    .boat.asset-loaded::before {
+      display: none;
+    }
+
+    .boat img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(5px 5px 0 rgba(0,0,0,.28));
+    }
+
+    .player {
+      position: absolute;
+      left: 142px;
+      top: 210px;
+      width: 92px;
+      image-rendering: pixelated;
+      filter: drop-shadow(6px 4px 0 rgba(0,0,0,.35));
+      z-index: 7;
+    }
+
+    .field-boat .player {
+      left: 438px;
+      top: 174px;
+    }
+
+    .field-sea .player {
+      top: 184px;
+    }
+
+    .field-ocean .player {
+      left: 505px;
+      top: 196px;
+    }
+
+    .rod {
+      position: absolute;
+      left: 208px;
+      top: 292px;
+      width: 214px;
+      height: 6px;
+      border: 2px solid var(--line);
+      background: #2a1914;
+      transform: rotate(17deg);
+      transform-origin: left center;
+      z-index: 8;
+    }
+
+    .field-boat .rod {
+      left: 506px;
+      top: 260px;
+    }
+
+    .field-ocean .rod {
+      left: 574px;
+      top: 284px;
+    }
+
+    .fish {
+      position: absolute;
+      width: 72px;
+      height: 32px;
+      border: 4px solid #10243a;
+      background: #24415c;
+      border-radius: 60% 45% 45% 60%;
+      opacity: .52;
+      z-index: 3;
+    }
+
+    .fish::after {
+      content: "";
+      position: absolute;
+      right: -25px;
+      top: 4px;
+      border-left: 26px solid #10243a;
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+    }
+
+    .fish.a { left: 520px; top: 438px; }
+    .fish.b { left: 790px; top: 518px; transform: scaleX(-1) scale(.82); }
+    .fish.c { left: 930px; top: 430px; transform: scale(1.15); }
+
+    .field-boat .fish.a { left: 296px; top: 436px; transform: scale(.9); }
+    .field-boat .fish.b { left: 730px; top: 508px; transform: scaleX(-1) scale(1.02); }
+    .field-boat .fish.c { left: 900px; top: 398px; transform: scale(1.25); }
+
+    .field-sea .fish {
+      background: #17334e;
+      opacity: .6;
+    }
+
+    .field-ocean .fish {
+      background: #0f263d;
+      opacity: .68;
+      transform: scale(1.35);
+    }
+
+    .field-ocean .fish.c {
+      width: 142px;
+      height: 58px;
+      left: 828px;
+      top: 420px;
+      opacity: .8;
+    }
+
+    .boss-alert {
+      position: absolute;
+      left: 50%;
+      top: 104px;
+      width: 560px;
+      transform: translateX(-50%);
+      border: 5px solid var(--line);
+      background: #e94c3d;
+      color: #fff3d3;
+      padding: 8px 14px;
+      text-align: center;
+      box-shadow: 7px 7px 0 rgba(0,0,0,.3);
+      text-shadow: 3px 3px 0 #000;
+      display: none;
+      z-index: 13;
+    }
+
+    .boss-alert strong {
+      display: block;
+      color: var(--gold);
+      font-size: 15px;
+      font-weight: 1000;
+    }
+
+    .boss-alert span {
+      display: block;
+      margin-top: 4px;
+      font-size: 19px;
+      font-weight: 1000;
+    }
+
+    .field-ocean .boss-alert {
+      display: block;
+    }
+
+    .bottom {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 142px;
+      display: grid;
+      grid-template-columns: 126px 1fr 250px;
+      gap: 12px;
+      padding: 12px 16px;
+      border-top: 6px solid var(--line);
+      background: #20263a;
+      z-index: 20;
+    }
+
+    .portrait {
+      overflow: hidden;
+      border: 4px solid var(--line);
+      background: #28324a;
+      position: relative;
+    }
+
+    .portrait img {
+      position: absolute;
+      left: -44px;
+      top: -18px;
+      width: 190px;
+      image-rendering: pixelated;
+    }
+
+    .log {
+      border: 4px solid var(--line);
+      background: var(--deep);
+      color: #fff3d3;
+      padding: 10px 12px;
+      font-weight: 900;
+      line-height: 1.38;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    .speaker {
+      display: block;
+      color: var(--gold);
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+
+    .line {
+      display: block;
+      white-space: nowrap;
+      font-size: 15px;
+    }
+
+    .panel {
+      padding: 10px;
+    }
+
+    .button {
+      width: 100%;
+      height: 48px;
+      margin-top: 10px;
+      font: inherit;
+      font-size: 20px;
+      font-weight: 1000;
+      background: #fff0ad;
+      cursor: pointer;
+    }
+
+    .button.primary {
+      background: var(--gold);
+    }
+  </style>
+  <link rel="stylesheet" href="./assets/ui_buttons.css">
+</head>
+<body>
+  <div class="game-frame">
+  <main class="screen field-fresh" id="screen" aria-label="필드 4종 목업">
+    <section class="hud">
+      <div class="card">
+        <span class="label">필드</span>
+        <span class="value" id="fieldName">민물 기본</span>
+      </div>
+      <div class="card">
+        <span class="label">필요 조건</span>
+        <span class="value" id="fieldReq">민물 장비</span>
+      </div>
+      <div class="card">
+        <span class="label">등장 어종</span>
+        <span class="value" id="fieldFish">10종</span>
+      </div>
+      <div class="card">
+        <span class="label">보트</span>
+        <span class="value" id="fieldBoat">미사용</span>
+      </div>
+    </section>
+
+    <nav class="tabs" aria-label="필드 선택">
+      <button class="tab active" type="button" data-field="fresh">민물 기본</button>
+      <button class="tab" type="button" data-field="valley">민물보트</button>
+      <button class="tab" type="button" data-field="sea">바다 근해</button>
+      <button class="tab" type="button" data-field="ocean">대양 보트</button>
+    </nav>
+
+    <section class="playfield">
+      <div class="sun"></div>
+      <div class="cloud"></div>
+      <div class="water-lines">
+        <div class="wave one"></div>
+        <div class="wave two"></div>
+        <div class="wave three"></div>
+      </div>
+      <div class="dock"></div>
+      <div class="vehicle" id="vehiclePreview"><img id="vehiclePreviewAsset" src="./assets/tivoli_right.png" alt="장착 차량"></div>
+      <div class="boat" id="boatPreview"><img id="boatPreviewAsset" src="./assets/valley_boat_right.png?v=boat-quality-20260604" alt="장착 보트"></div>
+      <img class="player" src="./assets/youngwoo_sprites/level_matched_alpha/youngwoo_beginner_toy_rod_idle.png" alt="영우">
+      <div class="rod"></div>
+      <div class="fish a"></div>
+      <div class="fish b"></div>
+      <div class="fish c"></div>
+      <div class="boss-alert">
+        <strong>Lv.10 보스급 어종 출현</strong>
+        <span id="bossCopy">낚싯줄이 바다가 아니라 심연에 걸렸다.</span>
+      </div>
+    </section>
+
+    <section class="bottom">
+      <div class="portrait">
+        <img src="./assets/youngwoo_sprites/portrait_emotions_2x/beginner_neutral.png" alt="영우 얼굴">
+      </div>
+      <div class="log">
+        <strong class="speaker">낚시왕 영우</strong>
+        <span class="line" id="log1">초반 민물 필드. 발판에서 기본 어종 10종을 노린다.</span>
+        <span class="line" id="log2">차량은 육지 배경에 보이고, 보트는 쓰지 않는다.</span>
+        <span class="line" id="log3">장난감 세트로도 시작은 가능하다.</span>
+      </div>
+      <div class="panel">
+        <span class="label">현재 판정</span>
+        <span class="value" id="entryState">입장 가능</span>
+        <button class="button primary" type="button" id="enterFieldButton">입장하기</button>
+        <button class="button" type="button" onclick="location.href='game_home.html'">나가기</button>
+      </div>
+    </section>
+  </main>
+  </div>
+
+  <script src="./game_state.js"></script>
+  <script>
+    let gameState = window.GameState.load();
+    let currentField = "fresh";
+
+    const fields = {
+      fresh: {
+        cls: "field-fresh",
+        name: "민물 기본",
+        req: "민물 장비",
+        fish: "10종",
+        boat: "미사용",
+        boss: "",
+        lines: [
+          "초반 민물 필드. 발판에서 기본 어종 10종을 노린다.",
+          "차량은 육지 배경에 보이고, 보트는 쓰지 않는다.",
+          "장난감 세트로도 시작은 가능하다."
+        ]
+      },
+      valley: {
+        cls: "field-boat",
+        name: "민물보트",
+        req: "민물보트",
+        fish: "확장 10종",
+        boat: "민물보트",
+        boss: "대청호의 전설이 다시 모습을 드러냈다.",
+        lines: [
+          "재모 이벤트 이후 열리는 민물 확장 필드.",
+          "영우가 민물보트에 올라 더 깊은 민물 어종을 노린다.",
+          "민물 후반 어종과 대청호 전설 계열 연출에 어울린다."
+        ]
+      },
+      sea: {
+        cls: "field-sea",
+        name: "바다 근해",
+        req: "바다 장비 + 차량",
+        fish: "근해 10종",
+        boat: "미사용",
+        boss: "백상아리가 접근한다.",
+        lines: [
+          "차량과 바다 장비가 있어야 들어오는 바다 초입.",
+          "제1레져 파괴와 준우 먹튀가 이어지는 핵심 이벤트 필드.",
+          "육지 쪽 차량과 넓어진 수면으로 민물과 확실히 구분한다."
+        ]
+      },
+      ocean: {
+        cls: "field-ocean",
+        name: "대양 보트",
+        req: "바다보트",
+        fish: "대양 10종",
+        boat: "바다보트",
+        boss: "낚싯줄이 바다가 아니라 심연에 걸렸다.",
+        lines: [
+          "바다보트 이후 열리는 최후반 필드.",
+          "수면이 화면 대부분을 차지하고, 큰 실루엣이 멀리 움직인다.",
+          "부시리, 백상아리, 크라켄 같은 후반 목표에 맞춘 분위기."
+        ]
+      }
+    };
+
+    const screen = document.getElementById("screen");
+    const tabs = document.querySelectorAll("[data-field]");
+    const fieldName = document.getElementById("fieldName");
+    const fieldReq = document.getElementById("fieldReq");
+    const fieldFish = document.getElementById("fieldFish");
+    const fieldBoat = document.getElementById("fieldBoat");
+    const bossCopy = document.getElementById("bossCopy");
+    const vehiclePreview = document.getElementById("vehiclePreview");
+    const vehiclePreviewAsset = document.getElementById("vehiclePreviewAsset");
+    const boatPreview = document.getElementById("boatPreview");
+    const boatPreviewAsset = document.getElementById("boatPreviewAsset");
+    const log1 = document.getElementById("log1");
+    const log2 = document.getElementById("log2");
+    const log3 = document.getElementById("log3");
+    const entryState = document.getElementById("entryState");
+    const enterFieldButton = document.getElementById("enterFieldButton");
+    const vehicleAssets = {
+      tivoli: "./assets/tivoli_right.png",
+      g70: "./assets/g70_right.png",
+      carnival: "./assets/carnival_right.png"
+    };
+    const boatAssets = {
+      valley: "./assets/valley_boat_right.png?v=boat-quality-20260604",
+      ocean: "./assets/sea_boat_right.png?v=boat-quality-20260604"
+    };
+
+    function resizeGame() {
+      const baseW = 1180;
+      const baseH = 664;
+      const padding = 0.96;
+      const viewport = window.visualViewport;
+      const usableWidth = viewport?.width || window.innerWidth;
+      const usableHeight = viewport?.height || window.innerHeight;
+      const scale = Math.min(usableWidth / baseW, usableHeight / baseH) * padding;
+      const desktopLike = window.matchMedia("(pointer: fine) and (min-width: 900px)").matches;
+      const maxScale = desktopLike ? 1.25 : 1;
+      document.documentElement.style.setProperty("--game-scale", String(Math.min(scale, maxScale)));
+    }
+
+    function hasItem(type, itemId) {
+      return window.GameState.hasItem(gameState, type, itemId);
+    }
+
+    function hasUsableVehicle() {
+      return gameState.loadout.vehicle && gameState.loadout.vehicle !== "noneVehicle";
+    }
+
+    function hasSeaRod() {
+      return gameState.loadout.sea && gameState.loadout.sea !== "noneSea";
+    }
+
+    function getEntryStatus(id) {
+      if (id === "fresh") {
+        return { ok: true, text: "입장 가능" };
+      }
+
+      if (id === "valley") {
+        return hasItem("boat", "valleyBoat")
+          ? { ok: true, text: gameState.loadout.boat === "valleyBoat" ? "입장 가능" : "보트 장착 필요" }
+          : { ok: false, text: "민물보트 필요" };
+      }
+
+      if (id === "sea") {
+        if (!gameState.flags.tivoli_confiscated && gameState.loadout.vehicle === "tivoli") {
+          return { ok: false, text: "이벤트 발생" };
+        }
+        if (!hasUsableVehicle()) return { ok: false, text: "차량 필요" };
+        if (!hasSeaRod()) return { ok: false, text: "바다 장비 필요" };
+        return { ok: true, text: "입장 가능" };
+      }
+
+      if (id === "ocean") {
+        if (!hasUsableVehicle()) return { ok: false, text: "차량 필요" };
+        if (!hasSeaRod()) return { ok: false, text: "바다 장비 필요" };
+        if (!hasItem("boat", "seaBoat")) return { ok: false, text: "바다보트 필요" };
+        return gameState.loadout.boat === "seaBoat" ? { ok: true, text: "입장 가능" } : { ok: false, text: "보트 장착 필요" };
+      }
+
+      return { ok: false, text: "조건 확인" };
+    }
+
+    function renderField(id) {
+      currentField = id;
+      gameState = window.GameState.load();
+      const field = fields[id];
+      const status = getEntryStatus(id);
+      screen.className = `screen ${field.cls}`;
+      tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.field === id));
+      fieldName.textContent = field.name;
+      fieldReq.textContent = field.req;
+      fieldFish.textContent = field.fish;
+      fieldBoat.textContent = field.boat;
+      bossCopy.textContent = field.boss;
+      const vehicleSrc = vehicleAssets[gameState.loadout.vehicle];
+      vehiclePreview.classList.toggle("asset-loaded", Boolean(vehicleSrc));
+      vehiclePreview.hidden = !vehicleSrc;
+      if (vehicleSrc) vehiclePreviewAsset.src = vehicleSrc;
+      const boatSrc = boatAssets[id];
+      boatPreview.classList.toggle("asset-loaded", Boolean(boatSrc));
+      if (boatSrc) boatPreviewAsset.src = boatSrc;
+      log1.textContent = field.lines[0];
+      log2.textContent = field.lines[1];
+      log3.textContent = field.lines[2];
+      entryState.textContent = status.text;
+    }
+
+    function enterCurrentField() {
+      gameState = window.GameState.load();
+
+      if (currentField === "sea" && !gameState.flags.tivoli_confiscated && gameState.loadout.vehicle === "tivoli") {
+        gameState.flags.tivoli_confiscated = true;
+        gameState.loadout.vehicle = "noneVehicle";
+        window.GameState.save(gameState);
+        entryState.textContent = "티볼리 압수";
+        log1.textContent = "와이프가 티볼리를 압수했다.";
+        log2.textContent = "바다보다 먼저 현실에 걸렸다.";
+        log3.textContent = "다시 돈을 모아 유효 차량과 바다 장비를 준비하자.";
+        return;
+      }
+
+      const status = getEntryStatus(currentField);
+
+      if (!status.ok || status.text !== "입장 가능") {
+        entryState.textContent = status.text;
+        log1.textContent = `${fields[currentField].name} 입장 실패.`;
+        log2.textContent = `현재 조건: ${status.text}`;
+        log3.textContent = "창고 장착이나 상점 구매, 이벤트 진행 상태를 확인하자.";
+        return;
+      }
+
+      const field = fields[currentField];
+      gameState.activeField = currentField;
+      window.GameState.save(gameState);
+      log1.textContent = `${field.name} 입장 성공.`;
+      log2.textContent = "이제 이 필드의 어종 테이블로 낚시를 시작할 수 있다.";
+      log3.textContent = currentField === "ocean" ? field.boss : "낚시 미니게임으로 이동한다.";
+      window.setTimeout(() => {
+        location.href = "fishing_screen.html";
+      }, 500);
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => renderField(tab.dataset.field));
+    });
+
+    enterFieldButton.addEventListener("click", enterCurrentField);
+
+    window.addEventListener("resize", resizeGame);
+        window.addEventListener("orientationchange", resizeGame);
+        window.visualViewport?.addEventListener("resize", resizeGame);
+    resizeGame();
+    const initialField = new URLSearchParams(location.search).get("field");
+    renderField(fields[initialField] ? initialField : "fresh");
+  </script>
+</body>
+</html>

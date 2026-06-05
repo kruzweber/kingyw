@@ -1,0 +1,3165 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>낚시왕 남영우 - 창고</title>
+  <style>
+    :root {
+      --ink: #111522;
+      --line: #070a14;
+      --gold: #ffd34d;
+      --equipped-border: #ffd34d;
+      --red: #e94c3d;
+      --panel: #f0d39a;
+      --deep: #172035;
+      --water: #48accf;
+      --green: #68b95f;
+      --slot-bg: rgba(38, 43, 54, .58);
+      --slot-equipped-bg: #3e4f65;
+      --game-scale: 1;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #101522;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+      color: var(--ink);
+      image-rendering: pixelated;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    .game-frame {
+      position: relative;
+      width: calc(1180px * var(--game-scale));
+      height: calc(664px * var(--game-scale));
+    }
+
+    .screen {
+      position: relative;
+      width: 1180px;
+      height: 664px;
+      overflow: hidden;
+      border: 8px solid var(--line);
+      background:
+        linear-gradient(rgba(20, 16, 12, .04), rgba(18, 12, 8, .1)),
+        url("./assets/home_garage_modern_bright_v5.png") center / cover no-repeat;
+      box-shadow: 0 0 0 6px #2f3751;
+      transform: scale(var(--game-scale));
+      transform-origin: top left;
+    }
+
+    .screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.08) 50%, transparent 50%) 0 0 / 8px 8px,
+        linear-gradient(rgba(255,255,255,.05) 50%, transparent 50%) 0 0 / 8px 8px;
+      pointer-events: none;
+      mix-blend-mode: soft-light;
+      z-index: 20;
+    }
+
+    .screen::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 166px;
+      border-top: 6px solid var(--line);
+      background: #20263a;
+      z-index: 7;
+    }
+
+    .hud {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 16px;
+      display: grid;
+      grid-template-columns: 1.35fr .86fr .86fr .94fr .76fr .68fr;
+      gap: 10px;
+      z-index: 8;
+    }
+
+    .panel,
+    .equip-button,
+    .equip-tab {
+      border: 5px solid var(--line);
+      background: var(--panel);
+      box-shadow: 6px 6px 0 rgba(0,0,0,.28);
+    }
+
+    .card,
+    .dialogue {
+      border: 4px solid var(--line);
+      background: var(--panel);
+      box-shadow: 5px 5px 0 rgba(0,0,0,.26);
+    }
+
+    .card {
+      min-height: 40px;
+      padding: 5px 8px;
+    }
+
+    .label {
+      display: block;
+      color: #665128;
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .value {
+      display: block;
+      margin-top: 3px;
+      font-size: 16px;
+      font-weight: 1000;
+      white-space: nowrap;
+    }
+
+    .garage {
+      position: absolute;
+      left: 38px;
+      right: 354px;
+      top: 98px;
+      bottom: 122px;
+      border: 6px solid transparent;
+      background: transparent;
+      box-shadow: none;
+      z-index: 1;
+      overflow: visible;
+    }
+
+    .garage::before {
+      display: none;
+    }
+
+    .garage::after {
+      display: none;
+    }
+
+    .garage-title {
+      position: absolute;
+      left: 18px;
+      top: 14px;
+      height: auto;
+      display: flex;
+      align-items: center;
+      z-index: 4;
+      color: #fff3d3;
+      font-size: 24px;
+      font-weight: 1000;
+      text-shadow: 3px 3px 0 #000;
+    }
+
+    .ground-shadow {
+      display: none;
+    }
+
+    .rod-slots {
+      position: absolute;
+      left: 133px;
+      top: 3px;
+      width: auto;
+      display: grid;
+      grid-template-columns: repeat(3, 72px);
+      grid-template-rows: repeat(2, 72px);
+      gap: 2px 0;
+      z-index: 5;
+    }
+
+    .rod-slots::before,
+    .vehicle-bays::before,
+    .boat-slots::before,
+    .outfit-slots::before {
+      display: none;
+    }
+
+    .rod-slots::before { content: "낚시대"; }
+
+    .rod-slot {
+      position: relative;
+      width: 72px;
+      height: 72px;
+      border: 3px solid transparent;
+      background: transparent;
+      box-shadow: none;
+      overflow: hidden;
+    }
+
+    .rod-slot::before {
+      content: "";
+      position: absolute;
+      left: 24px;
+      top: 17px;
+      width: 78px;
+      height: 3px;
+      border: 2px solid var(--line);
+      background: transparent;
+      transform: rotate(-12deg);
+      opacity: .28;
+    }
+
+    .rod-slot.owned::before {
+      background: #2a1914;
+      opacity: 1;
+      border-style: solid;
+    }
+
+    .rod-slot.owned::after {
+      content: "";
+      position: absolute;
+      left: 86px;
+      top: 19px;
+      width: 11px;
+      height: 11px;
+      border: 3px solid var(--line);
+      background: #d9c07a;
+      border-radius: 50%;
+    }
+
+    .rod-slot.equipped::after {
+      content: "";
+      display: block;
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      border: 4px solid var(--equipped-border);
+      box-shadow:
+        inset 0 0 0 2px rgba(255, 211, 77, .4),
+        0 0 8px rgba(255, 211, 77, .24);
+      pointer-events: none;
+    }
+
+    .rod-slot.sea.owned::before { background: #304a63; }
+    .rod-slot.legend.owned::before { background: var(--gold); }
+
+    .rod-slot.has-asset::before,
+    .rod-slot.has-asset::after {
+      display: none;
+    }
+
+    .rod-slot.has-asset.equipped::after {
+      display: none;
+    }
+
+    .rod-slot.has-asset.equipped {
+      border-color: var(--equipped-border);
+      outline: 4px solid var(--equipped-border);
+      outline-offset: -4px;
+      box-shadow:
+        inset 0 0 0 2px rgba(255, 211, 77, .42),
+        0 0 8px rgba(255, 211, 77, .24);
+    }
+
+    .rod-slot[data-equipped="true"] {
+      border: 3px solid var(--equipped-border) !important;
+      outline: 0 !important;
+      box-shadow:
+        inset 0 0 0 2px rgba(255, 211, 77, .36),
+        0 0 8px rgba(255, 211, 77, .18) !important;
+      background: rgba(255, 211, 77, .08) !important;
+    }
+
+    .rod-asset {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 102px;
+      height: 76px;
+      object-fit: contain;
+      image-rendering: auto;
+      opacity: 0;
+      transform: translate(-50%, -50%);
+      filter: drop-shadow(3px 3px 0 rgba(0,0,0,.28));
+    }
+
+    #rodSlotAli .rod-asset,
+    #rodSlotJapan .rod-asset {
+      width: 108px;
+      height: 80px;
+    }
+
+    #rodSlotJapan .rod-asset {
+      width: 108px;
+      height: 80px;
+    }
+
+    #rodSlotToy,
+    #rodSlotAli,
+    #rodSlotJapan {
+      transform: translateY(3px);
+    }
+
+    .rod-slot.owned .rod-asset {
+      opacity: 1;
+    }
+
+    .rod-slot.broken .rod-asset {
+      opacity: 1;
+    }
+
+    .rod-slot.broken {
+      border-color: rgba(228, 61, 48, .78);
+      border-style: solid;
+      background: rgba(80, 48, 38, .32);
+      filter: none;
+      opacity: 1;
+      box-shadow:
+        inset 0 0 0 2px rgba(228, 61, 48, .18),
+        4px 5px 0 rgba(0,0,0,.14);
+    }
+
+    .rod-slot.broken::before {
+      left: 24px;
+      top: 15px;
+      width: 42px;
+      height: 3px;
+      background: #4b2a20;
+      opacity: 1;
+      transform: rotate(-18deg);
+    }
+
+    .rod-slot.broken::after {
+      content: "";
+      position: absolute;
+      left: 70px;
+      top: 23px;
+      width: 38px;
+      height: 3px;
+      border: 2px solid var(--line);
+      background: #4b2a20;
+      transform: rotate(16deg);
+    }
+
+    .rod-slot.blocked {
+      border-color: rgba(228, 61, 48, .62);
+      border-style: solid;
+      background: rgba(95, 38, 34, .24);
+      filter: grayscale(.55);
+      opacity: .9;
+      box-shadow:
+        inset 0 0 0 2px rgba(228, 61, 48, .14),
+        4px 5px 0 rgba(0,0,0,.14);
+    }
+
+    .slot-label {
+      display: none;
+    }
+
+    .locked {
+      filter: grayscale(1);
+      opacity: .34;
+    }
+
+    .rod-slot,
+    .vehicle-bay,
+    .boat-slot,
+    .outfit-slot {
+      cursor: pointer;
+    }
+
+    .rod-slot.locked,
+    .vehicle-bay.locked,
+    .boat-slot.locked,
+    .outfit-slot.locked {
+      cursor: default;
+    }
+
+    .vehicle-bays {
+      position: absolute;
+      left: -21px;
+      bottom: 90px;
+      display: grid;
+      grid-template-columns: repeat(3, 166px);
+      gap: 18px;
+      z-index: 5;
+    }
+
+    .vehicle-bays::before { content: "차량"; }
+
+    .vehicle-bay {
+      position: relative;
+      width: 166px;
+      height: 128px;
+      border: 3px solid transparent;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .vehicle-bay.locked {
+      border-style: solid;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .vehicle-asset {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 193px;
+      height: 155px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      opacity: 0;
+      transform: translate(-50%, -50%);
+      filter: drop-shadow(4px 4px 0 rgba(0,0,0,.28));
+    }
+
+    .vehicle-bay.owned .vehicle-asset {
+      opacity: 1;
+    }
+
+    #tivoliSlot .vehicle-asset {
+      top: calc(50% + 8px);
+    }
+
+    #g70Slot .vehicle-asset {
+      width: 184px;
+      height: 148px;
+      top: calc(50% + 3px);
+    }
+
+    .boat-slots {
+      position: absolute;
+      right: -286px;
+      top: 278px;
+      display: grid;
+      grid-template-columns: 210px;
+      gap: 8px;
+      z-index: 5;
+    }
+
+    .boat-slots::before { content: "보트"; }
+
+    .boat-slot {
+      --boat-frame-width: 210px;
+      --boat-frame-height: 72px;
+      --boat-frame-x: 50%;
+      --boat-frame-y: 50%;
+      position: relative;
+      height: 72px;
+      border: 3px solid transparent;
+      background: transparent;
+      box-shadow: none;
+      overflow: visible;
+    }
+
+    .boat-slot.owned {
+      border-style: solid;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .boat-slot.owned.equipped {
+      box-shadow: none;
+    }
+
+    .boat-slot::before {
+      content: "";
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 17px;
+      height: 6px;
+      border: 3px solid var(--line);
+      background: rgba(255,255,255,.28);
+      opacity: .35;
+    }
+
+    .boat-slot.owned::before {
+      opacity: 1;
+      background: #86c5c0;
+    }
+
+    .boat-asset {
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      top: 6px;
+      width: calc(100% - 12px);
+      height: 58px;
+      object-fit: contain;
+      image-rendering: auto;
+      opacity: 0;
+      filter: none;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    #seaBoatSlot .boat-asset {
+      left: 50%;
+      right: auto;
+      top: 50%;
+      width: 780px;
+      height: 271px;
+      transform: translate(-50%, -50%);
+    }
+
+    #seaBoatSlot {
+      --boat-frame-width: 276px;
+      --boat-frame-height: 110px;
+      position: absolute;
+      right: 268px;
+      top: -13px;
+      width: 210px;
+      height: 72px;
+      justify-self: end;
+      z-index: 1;
+    }
+
+    #valleyBoatSlot .boat-asset {
+      left: calc(50% - 41px);
+      right: auto;
+      top: 50%;
+      width: 568px;
+      height: 200px;
+      transform: translate(-50%, -50%);
+    }
+
+    #valleyBoatSlot {
+      --boat-frame-x: calc(50% - 41px);
+      --boat-frame-y: calc(50% - 6px);
+      --boat-frame-width: 214px;
+      --boat-frame-height: 86px;
+      top: -15px;
+      width: 300px;
+      height: 118px;
+      z-index: 2;
+    }
+
+    .boat-slot.owned .boat-asset {
+      opacity: 1;
+    }
+
+    .boat-slot.has-asset::before {
+      display: none;
+    }
+
+    .outfit-slots {
+      position: absolute;
+      right: 38px;
+      top: 51px;
+      display: grid;
+      grid-template-columns: repeat(3, 72px);
+      gap: 1px;
+      z-index: 5;
+    }
+
+    .outfit-slots::before { content: "의상"; }
+
+    .outfit-slot {
+      position: relative;
+      width: 72px;
+      height: 98px;
+      border: 3px solid transparent;
+      background: transparent;
+      box-shadow: none;
+      overflow: visible;
+    }
+
+    #premiumOutfitSlot {
+      overflow: visible;
+    }
+
+    .outfit-slot.locked {
+      border-style: solid;
+      background: transparent;
+      filter: grayscale(.45);
+    }
+
+    .outfit-slot.owned {
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .rod-slot.equipped,
+    .vehicle-bay.equipped,
+    .boat-slot.equipped,
+    .outfit-slot.equipped {
+      background: rgba(255, 211, 77, .08);
+      border-color: var(--equipped-border);
+      outline: 3px solid var(--equipped-border);
+      outline-offset: -3px;
+      box-shadow:
+        inset 0 0 0 2px rgba(255, 211, 77, .36),
+        0 0 8px rgba(255, 211, 77, .18);
+    }
+
+    .boat-slot.owned.equipped {
+      background: transparent;
+      border-color: transparent;
+      outline: 0;
+      box-shadow: none;
+    }
+
+    .boat-slot.owned.equipped::after {
+      content: "";
+      position: absolute;
+      left: var(--boat-frame-x);
+      top: var(--boat-frame-y);
+      width: var(--boat-frame-width);
+      height: var(--boat-frame-height);
+      transform: translate(-50%, -50%);
+      border: 4px solid var(--equipped-border);
+      box-shadow: inset 0 0 0 2px rgba(255, 211, 77, .42);
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .outfit-slot.equipped {
+      border-color: transparent;
+      outline: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .outfit-slot.equipped::after {
+      content: "";
+      position: absolute;
+      left: var(--outfit-frame-left, 50%);
+      top: var(--outfit-frame-top, 50%);
+      width: 64px;
+      height: 80px;
+      transform: translate(-50%, -50%);
+      box-shadow:
+        inset 0 0 0 3px var(--equipped-border),
+        inset 0 0 0 5px rgba(255, 211, 77, .36),
+        0 0 8px rgba(255, 211, 77, .18);
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .outfit-slot::before {
+      content: "";
+      position: absolute;
+      left: 15px;
+      top: 8px;
+      width: 28px;
+      height: 26px;
+      border: 3px solid var(--line);
+      border-radius: 10px 10px 4px 4px;
+      background: rgba(255,255,255,.2);
+      opacity: .45;
+    }
+
+    .outfit-slot.owned::before {
+      opacity: 1;
+      background: #8ed3df;
+    }
+
+    .outfit-slot.has-asset::before {
+      display: none;
+    }
+
+    .outfit-asset {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 75px;
+      height: 91px;
+      object-fit: contain;
+      image-rendering: auto;
+      opacity: 0;
+      transform: translate(-50%, -50%);
+      filter: drop-shadow(3px 3px 0 rgba(0,0,0,.28));
+    }
+
+    #beginnerOutfitSlot .outfit-asset {
+      left: calc(50% + 6px);
+      top: calc(50% - 3px);
+    }
+
+    #beginnerOutfitSlot {
+      --outfit-frame-left: calc(50% + 6px);
+      --outfit-frame-top: calc(50% - 3px);
+    }
+
+    #midOutfitSlot .outfit-asset {
+      left: calc(50% - 1px);
+      top: calc(50% - 2px);
+    }
+
+    #midOutfitSlot {
+      --outfit-frame-left: calc(50% - 1px);
+      --outfit-frame-top: calc(50% - 2px);
+    }
+
+    #premiumOutfitSlot .outfit-asset {
+      left: calc(50% - 8px);
+      top: 50%;
+    }
+
+    #premiumOutfitSlot {
+      --outfit-frame-left: calc(50% - 8px);
+      --outfit-frame-top: 50%;
+    }
+
+    .outfit-slot.owned .outfit-asset {
+      opacity: 1;
+    }
+
+    .water-wave {
+      display: none;
+    }
+
+    .fish {
+      display: none;
+    }
+
+    .fish::after {
+      content: "";
+      position: absolute;
+      right: -26px;
+      top: 4px;
+      border-left: 27px solid #10243a;
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+    }
+
+    .fish.one { left: 492px; top: 474px; }
+    .fish.two { left: 730px; top: 560px; transform: scaleX(-1) scale(.8); }
+    .fish.three { left: 910px; top: 430px; transform: scale(.72); }
+
+    .action-panel {
+      position: absolute;
+      right: 28px;
+      top: 94px;
+      bottom: auto;
+      width: 252px;
+      height: auto;
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: repeat(5, 44px);
+      gap: 8px;
+      z-index: 8;
+    }
+
+    .action-panel button {
+      position: relative;
+      overflow: hidden;
+      height: auto;
+      border: 5px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(255, 230, 129, .62) 0 7px, transparent 7px),
+        var(--panel);
+      color: var(--ink);
+      font: inherit;
+      font-size: 15px;
+      font-weight: 1000;
+      text-align: left;
+      padding: 0 16px 2px;
+      box-shadow: 6px 6px 0 rgba(0,0,0,.28);
+      cursor: pointer;
+      text-shadow: 1px 1px 0 rgba(255,235,148,.62);
+      image-rendering: pixelated;
+    }
+
+    .action-panel button.primary {
+      background:
+        linear-gradient(180deg, rgba(255, 230, 129, .68) 0 7px, transparent 7px),
+        var(--panel);
+      color: var(--ink);
+      transform: none;
+      text-shadow: 1px 1px 0 rgba(255,235,148,.62);
+    }
+
+    .action-panel button:hover,
+    .action-panel button.active {
+      background:
+        linear-gradient(180deg, rgba(255, 235, 144, .78) 0 7px, transparent 7px),
+        var(--gold);
+      color: var(--ink);
+      transform: translateX(-10px);
+      outline: none;
+      text-shadow: 1px 1px 0 rgba(255,235,148,.62);
+    }
+
+    .action-panel button:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 2px;
+    }
+
+    .action-panel button:active {
+      transform: translateX(-7px) translateY(2px);
+      box-shadow: 3px 3px 0 rgba(0,0,0,.34);
+    }
+
+    .equipment-panel {
+      position: absolute;
+      left: 286px;
+      top: 94px;
+      width: 330px;
+      bottom: 184px;
+      padding: 12px;
+      z-index: 9;
+    }
+
+    .equipment-panel[hidden] {
+      display: none;
+    }
+
+    .equip-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      font-size: 18px;
+      font-weight: 1000;
+    }
+
+    .equip-close {
+      width: 34px;
+      height: 30px;
+      border: 4px solid var(--line);
+      background: #fff0ad;
+      font: inherit;
+      font-weight: 1000;
+      cursor: pointer;
+    }
+
+    .equip-tabs {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .equip-tab {
+      min-height: 34px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 1000;
+      cursor: pointer;
+      box-shadow: 4px 4px 0 rgba(0,0,0,.24);
+    }
+
+    .equip-tab.active {
+      background: var(--gold);
+    }
+
+    .equip-list {
+      display: grid;
+      gap: 7px;
+    }
+
+    .equip-button {
+      min-height: 54px;
+      display: grid;
+      grid-template-columns: 1fr 70px;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      box-shadow: 4px 4px 0 rgba(0,0,0,.24);
+    }
+
+    .equip-button.locked {
+      background: #bda977;
+      color: #62513a;
+      cursor: default;
+      filter: grayscale(.45);
+    }
+
+    .equip-button.equipped {
+      background: #fff0ad;
+    }
+
+    .event-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      display: grid;
+      place-items: center;
+      background: rgba(6, 9, 18, .68);
+    }
+
+    .event-overlay[hidden] {
+      display: none;
+    }
+
+    .event-modal {
+      position: relative;
+      width: 900px;
+      height: 506px;
+      border: 7px solid var(--line);
+      background: #172035;
+      box-shadow: 12px 12px 0 rgba(0,0,0,.34);
+      overflow: hidden;
+    }
+
+    .event-stage {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      top: 22px;
+      bottom: 126px;
+      border: 5px solid var(--line);
+      overflow: hidden;
+      background:
+        linear-gradient(#7fd6f0 0 25%, #bde980 25% 37%, #6ec166 37% 51%, #8b6747 51% 100%);
+    }
+
+    .event-actor {
+      position: absolute;
+      bottom: 52px;
+      width: 102px;
+      height: 132px;
+      border: 6px solid var(--line);
+      background: #33505d;
+      box-shadow: inset 0 -24px 0 #24333e, 7px 7px 0 rgba(0,0,0,.24);
+      z-index: 4;
+    }
+
+    .event-actor::before {
+      content: "";
+      position: absolute;
+      left: 23px;
+      top: -46px;
+      width: 52px;
+      height: 52px;
+      border: 6px solid var(--line);
+      background: #f1b27d;
+    }
+
+    .event-actor.youngwoo {
+      left: 92px;
+      bottom: 36px;
+      width: 118px;
+      height: 170px;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      overflow: visible;
+    }
+
+    .event-actor.youngwoo::before {
+      display: none;
+    }
+
+    .event-actor.youngwoo img {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: 116px;
+      height: auto;
+      max-height: 170px;
+      transform: translateX(-50%);
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(5px 5px 0 rgba(0,0,0,.35));
+    }
+
+    .event-actor.youngwoo img.emotion {
+      width: 160px;
+      max-height: 170px;
+      bottom: -2px;
+    }
+
+    .event-actor.youngwoo canvas {
+      position: absolute;
+      left: 50%;
+      bottom: -4px;
+      width: 164px;
+      height: 204px;
+      transform: translateX(-50%);
+      image-rendering: pixelated;
+      filter: drop-shadow(5px 5px 0 rgba(0,0,0,.35));
+    }
+
+    .event-actor.wife {
+      right: 116px;
+      background: #7b4f73;
+    }
+
+    .event-car {
+      position: absolute;
+      right: 245px;
+      bottom: 58px;
+      width: 176px;
+      height: 132px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(6px 6px 0 rgba(0,0,0,.35));
+      z-index: 3;
+    }
+
+    .event-cutin {
+      position: absolute;
+      left: 50%;
+      top: 48%;
+      transform: translate(-50%, -50%) rotate(-4deg);
+      border: 7px solid var(--line);
+      background: #e94c3d;
+      color: #fff3d3;
+      min-width: 240px;
+      padding: 14px 24px;
+      text-align: center;
+      font-size: 44px;
+      font-weight: 1000;
+      text-shadow: 4px 4px 0 #000;
+      box-shadow: 9px 9px 0 rgba(0,0,0,.3);
+      z-index: 5;
+    }
+
+    .event-dialogue {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: 18px;
+      height: 92px;
+      display: grid;
+      grid-template-columns: 96px 1fr 132px;
+      gap: 12px;
+      padding: 10px;
+      border: 5px solid var(--line);
+      background: #172035;
+    }
+
+    .event-portrait {
+      border: 4px solid var(--line);
+      background: #28324a;
+      display: grid;
+      place-items: center;
+      color: var(--gold);
+      font-size: 28px;
+      font-weight: 1000;
+    }
+
+    .event-copy {
+      color: #fff3d3;
+      font-weight: 900;
+      line-height: 1.35;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    .event-speaker {
+      display: block;
+      color: var(--gold);
+      font-size: 18px;
+      margin-bottom: 3px;
+    }
+
+    .event-line {
+      display: block;
+      font-size: 16px;
+      white-space: nowrap;
+    }
+
+    .event-close {
+      border: 5px solid var(--line);
+      background: #fff0ad;
+      font: inherit;
+      font-size: 20px;
+      font-weight: 1000;
+      cursor: pointer;
+    }
+
+    .equip-name {
+      display: block;
+      font-size: 15px;
+      font-weight: 1000;
+      line-height: 1.05;
+    }
+
+    .equip-meta {
+      display: block;
+      margin-top: 4px;
+      color: #665128;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .equip-state {
+      font-size: 12px;
+      font-weight: 1000;
+      text-align: right;
+    }
+
+    .progress {
+      position: absolute;
+      right: 16px;
+      top: auto;
+      bottom: 9px;
+      width: 436px;
+      height: 148px;
+      box-sizing: border-box;
+      padding: 14px;
+      z-index: 8;
+    }
+
+    .progress-title {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--ink);
+      font-size: 17px;
+      font-weight: 1000;
+    }
+
+    .bar {
+      height: 16px;
+      border: 4px solid var(--line);
+      background: #fff5ca;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      width: 8%;
+      height: 100%;
+      background: var(--green);
+    }
+
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: 13px;
+      font-weight: 900;
+      color: #5f4b2b;
+    }
+
+    .admin-open-button {
+      position: absolute;
+      right: 28px;
+      bottom: 18px;
+      display: none;
+      min-width: 82px;
+      height: 34px;
+      border: 3px solid var(--line);
+      background: #f2d18b;
+      color: var(--ink);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 1000;
+      cursor: pointer;
+      box-shadow: 4px 4px 0 rgba(0,0,0,.22);
+      z-index: 13;
+    }
+
+    body.dev-mode .admin-open-button {
+      display: block;
+    }
+
+    .admin-open-button:hover,
+    .admin-open-button:focus-visible {
+      background: var(--gold);
+      outline: none;
+    }
+
+    .admin-overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: rgba(6, 9, 16, .55);
+      z-index: 18;
+    }
+
+    .admin-overlay[hidden] {
+      display: none;
+    }
+
+    .admin-panel {
+      width: 560px;
+      max-width: calc(100% - 32px);
+      max-height: 82%;
+      padding: 10px;
+      border: 4px solid var(--line);
+      background: rgba(20, 26, 41, .92);
+      box-shadow: 5px 5px 0 rgba(0,0,0,.28);
+      overflow-y: auto;
+    }
+
+    .admin-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .admin-title {
+      display: block;
+      color: var(--gold);
+      font-size: 14px;
+      font-weight: 1000;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    .admin-close {
+      width: 32px;
+      min-height: 28px;
+      padding: 0;
+    }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .admin-panel button {
+      min-height: 30px;
+      border: 3px solid var(--line);
+      background: #f2d18b;
+      color: var(--ink);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 1000;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 rgba(0,0,0,.22);
+      line-height: 1.15;
+    }
+
+    .admin-panel button.wide {
+      grid-column: span 3;
+    }
+
+    .admin-panel button:hover,
+    .admin-panel button:focus-visible {
+      background: var(--gold);
+      outline: none;
+    }
+
+    .admin-panel button.danger {
+      background: #f3a6a6;
+    }
+
+    .admin-panel button.danger.confirm {
+      background: #ef4444;
+      color: #fff7d8;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    .ending-overlay {
+      position: absolute;
+      inset: 0;
+      display: block;
+      background: #05080f;
+      z-index: 40;
+    }
+
+    .ending-overlay[hidden] {
+      display: none;
+    }
+
+    .ending-popup {
+      --ending-bg: url("./assets/main_hero_youngwoo_yellowtail_v5.png");
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      border: 0;
+      background: #0f1d32 var(--ending-bg) center / cover no-repeat;
+      box-shadow: none;
+      color: #fff3d3;
+      image-rendering: auto;
+      animation: endingWake 2.2s ease-out forwards;
+    }
+
+    .ending-popup::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(0,0,0,.34), rgba(0,0,0,.04) 46%, rgba(0,0,0,.22));
+      pointer-events: none;
+    }
+
+    .ending-popup::after {
+      display: none;
+    }
+
+    .ending-popup-title {
+      position: absolute;
+      left: 34px;
+      top: 28px;
+      right: 196px;
+      z-index: 2;
+      margin: 0;
+      color: var(--gold);
+      font-size: 38px;
+      font-weight: 1000;
+      line-height: 1.08;
+      overflow-wrap: keep-all;
+      word-break: keep-all;
+      text-shadow: 5px 5px 0 #000, 0 0 18px rgba(255, 211, 77, .28);
+    }
+
+    .ending-popup-subtitle {
+      position: absolute;
+      left: 38px;
+      top: 82px;
+      z-index: 2;
+      color: #fff6c8;
+      font-size: 19px;
+      font-weight: 1000;
+      text-shadow: 3px 3px 0 #000;
+    }
+
+    .ending-popup-lines {
+      position: absolute;
+      left: 34px;
+      right: 34px;
+      bottom: 30px;
+      z-index: 2;
+      padding: 16px 20px;
+      border: 5px solid var(--line);
+      background: rgba(12, 18, 32, .88);
+      box-shadow: 6px 6px 0 rgba(0,0,0,.3);
+      opacity: 0;
+      transform: translateY(14px);
+      animation: endingLineBoxIn .65s ease-out 1.05s forwards;
+    }
+
+    .ending-popup-line {
+      display: block;
+      min-height: 30px;
+      color: #fff3d3;
+      font-size: 21px;
+      font-weight: 1000;
+      line-height: 1.38;
+      text-shadow: 3px 3px 0 #000;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: endingLineIn .7s ease-out forwards;
+    }
+
+    .ending-popup-line:nth-child(1) { animation-delay: 1.45s; }
+    .ending-popup-line:nth-child(2) { animation-delay: 2.55s; }
+    .ending-popup-line:nth-child(3) { animation-delay: 3.65s; }
+
+    .ending-popup-close {
+      position: absolute !important;
+      right: 20px;
+      top: 18px;
+      z-index: 3;
+      min-width: 116px;
+      height: 44px;
+      border: 4px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      font: inherit;
+      font-size: 17px;
+      font-weight: 1000;
+      cursor: pointer;
+      box-shadow: 5px 5px 0 rgba(0,0,0,.28);
+    }
+
+    @keyframes endingWake {
+      0% { filter: brightness(.7) saturate(.86); }
+      100% { filter: brightness(1) saturate(1); }
+    }
+
+    @keyframes endingLineBoxIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes endingLineIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ending-popup,
+      .ending-popup-lines,
+      .ending-popup-line {
+        animation: none;
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .ending-popup-close:hover,
+    .ending-popup-close:focus-visible {
+      background: var(--gold);
+      outline: none;
+    }
+
+    .dialogue {
+      position: absolute;
+      left: 16px;
+      right: 464px;
+      bottom: 9px;
+      width: auto;
+      height: 148px;
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 12px;
+      padding: 0;
+      border: 5px solid var(--line);
+      background: var(--deep);
+      z-index: 8;
+      align-items: normal;
+      box-shadow: 6px 6px 0 rgba(0,0,0,.28);
+    }
+
+    .dialogue.actor-wife {
+      background:
+        linear-gradient(180deg, rgba(255, 212, 235, .12), rgba(255, 212, 235, 0)),
+        #3a2638;
+    }
+
+    .dialogue.actor-junwoo {
+      background:
+        linear-gradient(180deg, rgba(209, 178, 255, .12), rgba(209, 178, 255, 0)),
+        #322540;
+    }
+
+    .dialogue.actor-jaemo {
+      background:
+        linear-gradient(180deg, rgba(162, 255, 209, .12), rgba(162, 255, 209, 0)),
+        #203d37;
+    }
+
+    .dialogue.actor-shop {
+      background:
+        linear-gradient(180deg, rgba(255, 212, 90, .14), rgba(255, 212, 90, 0)),
+        #3f3520;
+    }
+
+    .dialogue.event-dialogue {
+      background:
+        linear-gradient(180deg, rgba(255, 212, 90, .18), rgba(255, 212, 90, 0)),
+        #402348;
+      border-color: var(--gold);
+      box-shadow:
+        0 0 0 5px #7c2d12,
+        0 0 0 10px rgba(255, 212, 90, .34),
+        5px 5px 0 rgba(98, 43, 141, .44);
+      animation: eventPulse 1.1s steps(2, end) infinite;
+    }
+
+    .dialogue.event-dialogue::before {
+      content: "EVENT";
+      position: absolute;
+      left: 21px;
+      top: -18px;
+      width: 86px;
+      box-sizing: border-box;
+      z-index: 2;
+      padding: 3px 12px 4px;
+      border: 4px solid var(--line);
+      background: #ff3d3d;
+      color: #fff7d8;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 1000;
+      letter-spacing: 0;
+      text-shadow: 2px 2px 0 #000;
+      box-shadow: 4px 4px 0 rgba(0,0,0,.32);
+    }
+
+    .dialogue.event-dialogue .portrait {
+      background: #402b51;
+      border-color: var(--gold);
+    }
+
+    .dialogue.event-dialogue .text {
+      color: #fff4bf;
+    }
+
+    .dialogue.event-dialogue .speaker {
+      color: #ffef85;
+    }
+
+    .dialogue.event-dialogue.title-notice {
+      background:
+        linear-gradient(180deg, rgba(125, 240, 200, .2), rgba(125, 240, 200, 0)),
+        #123f3d;
+      border-color: #7df0c8;
+      box-shadow:
+        0 0 0 5px #0f766e,
+        0 0 0 10px rgba(125, 240, 200, .3),
+        5px 5px 0 rgba(8, 79, 74, .44);
+    }
+
+    .dialogue.event-dialogue.title-notice::before {
+      content: "TITLE";
+      background: #16a34a;
+      color: #ecfff7;
+    }
+
+    .dialogue.event-dialogue.title-notice .portrait {
+      background: #183f3a;
+      border-color: #7df0c8;
+    }
+
+    .dialogue.event-dialogue.title-notice .text {
+      color: #eafff6;
+    }
+
+    .dialogue.event-dialogue.title-notice .speaker {
+      color: #9fffd5;
+    }
+
+    @keyframes eventPulse {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.16); }
+    }
+
+    .portrait {
+      overflow: hidden;
+      border: 4px solid var(--line);
+      background: #28324a;
+      position: relative;
+      width: 112px;
+      height: 118px;
+      align-self: center;
+      margin-left: 8px;
+      transform: none;
+    }
+
+    .portrait img {
+      position: absolute;
+      left: -44px;
+      top: -18px;
+      width: 190px;
+      image-rendering: auto;
+    }
+
+    .portrait img.emotion {
+      left: -34px;
+      top: -14px;
+      width: 178px;
+    }
+
+    .portrait img.portrait-single {
+      position: absolute;
+      inset: 0;
+      width: 104px;
+      height: 110px;
+      image-rendering: auto;
+    }
+
+    .portrait img[hidden],
+    .portrait canvas[hidden] {
+      display: none;
+    }
+
+    .portrait canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      image-rendering: auto;
+    }
+
+    .text {
+      position: relative;
+      color: #fff3d3;
+      min-width: 0;
+      padding: 12px 132px 12px 12px;
+      font-weight: 900;
+      text-shadow: 2px 2px 0 #000;
+      transform: none;
+    }
+
+    .speaker {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--gold);
+      font-size: 18px;
+    }
+
+    .line {
+      display: block;
+      font-size: 15px;
+      line-height: 1.42;
+      white-space: nowrap;
+    }
+
+    .dialogue-progress-button {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      width: 118px;
+      height: 118px;
+      transform: translateY(-50%);
+      border: 4px solid var(--line);
+      background: var(--gold);
+      color: var(--ink);
+      font: inherit;
+      font-size: 17px;
+      font-weight: 1000;
+      box-shadow: 5px 5px 0 rgba(0,0,0,.32);
+      cursor: pointer;
+    }
+
+    .dialogue-progress-button[hidden] {
+      display: none;
+    }
+
+    .dialogue-progress-button:active {
+      transform: translate(2px, calc(-50% + 2px));
+      box-shadow: 1px 1px 0 rgba(0,0,0,.32);
+    }
+
+    .dialogue.event-dialogue .dialogue-progress-button {
+      background: #ff3d3d;
+      color: #fff7d8;
+      border-color: #fff7d8;
+      text-shadow: 2px 2px 0 #000;
+      box-shadow: 5px 5px 0 rgba(0,0,0,.42);
+    }
+  </style>
+  <link rel="stylesheet" href="./assets/ui_buttons.css">
+  <script src="./mobile_orientation_boot.js"></script>
+</head>
+<body>
+  <div class="game-frame">
+  <main class="screen" aria-label="새 게임 시작 후 첫 허브 화면">
+    <section class="hud">
+      <div class="card">
+        <span class="label">장착 장비</span>
+        <span class="value" id="freshwaterHud">장난감 낚시세트</span>
+      </div>
+      <div class="card">
+        <span class="label">장착 의상</span>
+        <span class="value" id="outfitHud">입문 낚시복</span>
+      </div>
+      <div class="card">
+        <span class="label">장착 차량</span>
+        <span class="value" id="vehicleHud">티볼리</span>
+      </div>
+      <div class="card">
+        <span class="label">장착 보트</span>
+        <span class="value" id="boatHud">없음</span>
+      </div>
+      <div class="card">
+        <span class="label">골드</span>
+        <span class="value" id="goldHud">0G</span>
+      </div>
+      <div class="card">
+        <span class="label">명성</span>
+        <span class="value" id="fameHud">0</span>
+      </div>
+    </section>
+
+    <div class="ground-shadow"></div>
+    <div class="garage">
+      <div class="rod-slots">
+        <div class="rod-slot has-asset" id="rodSlotToy"><img class="rod-asset" src="./assets/rod_toy_icon.png?v=rod-quality-20260604" alt="장난감 낚시대"><span class="slot-label">빈 장비칸</span></div>
+        <div class="rod-slot has-asset" id="rodSlotAli"><img class="rod-asset" src="./assets/rod_ali_icon.png?v=rod-quality-20260604" alt="알리산 낚시대"><span class="slot-label">빈 장비칸</span></div>
+        <div class="rod-slot has-asset" id="rodSlotJapan"><img class="rod-asset" src="./assets/rod_japan_icon.png?v=rod-quality-20260604" alt="명인의 낚시대"><span class="slot-label">빈 장비칸</span></div>
+        <div class="rod-slot sea has-asset" id="rodSlotFirstLeisure"><img class="rod-asset" src="./assets/rod_first_leisure_icon.png?v=rod-quality-20260604" data-normal-src="./assets/rod_first_leisure_icon.png?v=rod-quality-20260604" data-broken-src="./assets/rod_first_leisure_broken_icon.png?v=rod-quality-20260604" alt="제1레져 낚시대"><span class="slot-label">빈 장비칸</span></div>
+        <div class="rod-slot sea has-asset" id="rodSlotTemu"><img class="rod-asset" src="./assets/rod_temu_icon.png?v=rod-quality-20260604" alt="테무산 낚시대"><span class="slot-label">빈 장비칸</span></div>
+        <div class="rod-slot sea legend has-asset" id="rodSlotLegend"><img class="rod-asset" src="./assets/rod_legend_icon.png?v=rod-quality-20260604" alt="전설의 낚시대"><span class="slot-label">빈 장비칸</span></div>
+      </div>
+      <div class="vehicle-bays">
+        <div class="vehicle-bay tivoli has-asset" id="tivoliSlot"><img class="vehicle-asset" src="./assets/tivoli_front.png" alt="티볼리"><span class="slot-label">빈 차량칸</span></div>
+        <div class="vehicle-bay g70 has-asset" id="g70Slot"><img class="vehicle-asset" src="./assets/g70_front.png" alt="G70"><span class="slot-label">빈 차량칸</span></div>
+        <div class="vehicle-bay carnival has-asset" id="carnivalSlot"><img class="vehicle-asset" src="./assets/carnival_front.png" alt="카니발"><span class="slot-label">빈 차량칸</span></div>
+      </div>
+      <div class="boat-slots">
+        <div class="boat-slot locked has-asset" id="valleyBoatSlot"><img class="boat-asset" src="./assets/valley_boat_right.png?v=boat-quality-20260604" alt="민물보트"><span class="slot-label">빈 보트칸</span></div>
+        <div class="boat-slot locked has-asset" id="seaBoatSlot"><img class="boat-asset" src="./assets/sea_boat_right_v2.png?v=boat-quality-20260604" alt="바다보트"><span class="slot-label">빈 보트칸</span></div>
+      </div>
+      <div class="outfit-slots">
+        <div class="outfit-slot has-asset" id="beginnerOutfitSlot"><img class="outfit-asset" src="./assets/outfit_beginner_icon.png?v=outfit-quality-20260604" alt="입문 낚시복"><span class="slot-label">입문 낚시복</span></div>
+        <div class="outfit-slot locked has-asset" id="midOutfitSlot"><img class="outfit-asset" src="./assets/outfit_mid_icon.png?v=outfit-quality-20260604" alt="중급 낚시복"><span class="slot-label">빈 의상칸</span></div>
+        <div class="outfit-slot locked has-asset" id="premiumOutfitSlot"><img class="outfit-asset" src="./assets/outfit_premium_icon.png?v=outfit-quality-20260604" alt="고급 낚시복"><span class="slot-label">빈 의상칸</span></div>
+      </div>
+    </div>
+    <div class="water-wave"></div>
+    <div class="fish one"></div>
+    <div class="fish two"></div>
+    <div class="fish three"></div>
+
+    <nav class="action-panel" aria-label="허브 메뉴">
+      <button type="button" id="freshFishingButton">민물 낚시</button>
+      <button type="button" id="seaFishingButton">바다 낚시</button>
+      <button type="button" onclick="location.href='shop_screen.html'">상점</button>
+      <button type="button" onclick="location.href='fishdex_screen.html'">도감</button>
+      <button type="button" onclick="location.href='index.html'">메인화면</button>
+    </nav>
+
+    <aside class="progress panel">
+      <strong class="progress-title">아들과의 약속</strong>
+      <div class="bar"><div class="bar-fill" id="promiseFill"></div></div>
+      <div class="progress-row">
+        <span id="promiseCount">수집 0종</span>
+        <span>목표 60종</span>
+      </div>
+    </aside>
+
+    <button class="admin-open-button" id="adminOpenButton" type="button">관리자</button>
+    <section class="admin-overlay" id="adminOverlay" hidden>
+      <aside class="admin-panel" aria-label="관리자 미리보기">
+        <div class="admin-head">
+          <strong class="admin-title">관리자 미리보기</strong>
+          <button class="admin-close" id="adminCloseButton" type="button" aria-label="관리자 메뉴 닫기">X</button>
+        </div>
+        <div class="admin-grid" id="adminPreviewGrid"></div>
+      </aside>
+    </section>
+
+    <section class="ending-overlay" id="endingOverlay" hidden aria-modal="true" role="dialog" aria-label="엔딩 확인">
+      <div class="ending-popup" id="endingPopup">
+        <h1 class="ending-popup-title" id="endingPopupTitle">엔딩</h1>
+        <div class="ending-popup-subtitle" id="endingPopupSubtitle">&#45210;&#49884;&#50773; &#45224;&#50689;&#50864;</div>
+        <button class="ending-popup-close" id="endingPopupClose" type="button">확인</button>
+        <section class="ending-popup-lines" aria-label="엔딩 대사">
+          <span class="ending-popup-line" id="endingPopupLine1"></span>
+          <span class="ending-popup-line" id="endingPopupLine2"></span>
+          <span class="ending-popup-line" id="endingPopupLine3"></span>
+        </section>
+      </div>
+    </section>
+
+    <aside class="dialogue">
+      <div class="portrait">
+        <img id="portraitSpriteImage" class="portrait-single" alt="영우 얼굴" hidden>
+        <canvas id="portraitSprite" width="208" height="220" aria-label="영우 얼굴"></canvas>
+      </div>
+      <div class="text">
+        <strong class="speaker" id="dialogueSpeaker">낚시왕 남영우</strong>
+        <span class="line" id="dialogueLine1">아들의 장난감 낚시세트 하나로 시작한다.</span>
+        <span class="line" id="dialogueLine2">일단 민물에서 돈을 모으자.</span>
+        <span class="line" id="dialogueLine3">바다는... 차도 장비도 있어야 갈 수 있다.</span>
+        <button class="dialogue-progress-button" id="dialogueProgressButton" type="button" hidden>확인</button>
+      </div>
+    </aside>
+
+    <section class="event-overlay" id="eventOverlay" hidden aria-modal="true" role="dialog" aria-label="이벤트 연출">
+      <div class="event-modal">
+        <div class="event-stage">
+          <div class="event-actor youngwoo"><canvas id="eventYoungwooSprite" width="164" height="204" aria-label="영우 전신 감정"></canvas></div>
+          <div class="event-actor wife"></div>
+          <img class="event-car" src="./assets/tivoli_front.png" alt="티볼리 압수 차량">
+          <div class="event-cutin" id="eventCutin">압수!</div>
+        </div>
+        <aside class="event-dialogue">
+          <div class="event-portrait" id="eventPortrait">와</div>
+          <div class="event-copy">
+            <strong class="event-speaker" id="eventSpeaker">와이프</strong>
+            <span class="event-line" id="eventLine1">마트 가야 하니까 차 키 줘.</span>
+            <span class="event-line" id="eventLine2">영우는 바다보다 먼저 현실에 걸렸다.</span>
+          </div>
+          <button class="event-close" id="eventClose" type="button">확인</button>
+        </aside>
+      </div>
+    </section>
+    <script src="./game_state.js?v=spoiler-cleanup-20260601b"></script>
+    <script src="./audio_manager.js?v=audio-foundation-20260604"></script>
+    <script>
+      function resizeGame() {
+      const baseW = 1180;
+      const baseH = 664;
+      const padding = 0.96;
+      const viewport = window.visualViewport;
+      const usableWidth = viewport?.width || window.innerWidth;
+      const usableHeight = viewport?.height || window.innerHeight;
+      const scale = Math.min(usableWidth / baseW, usableHeight / baseH) * padding;
+      const desktopLike = window.matchMedia("(pointer: fine) and (min-width: 900px)").matches;
+      const maxScale = desktopLike ? 1.25 : 1;
+      document.documentElement.style.setProperty("--game-scale", String(Math.min(scale, maxScale)));
+      }
+
+      window.addEventListener("resize", resizeGame);
+        window.addEventListener("orientationchange", resizeGame);
+        window.visualViewport?.addEventListener("resize", resizeGame);
+      resizeGame();
+
+      const devMode = new URLSearchParams(location.search).get("dev") === "1";
+      document.body.classList.toggle("dev-mode", devMode);
+      let gameState = window.GameState.load();
+
+      const equipment = {
+        freshwater: [
+          { id: "noneFreshwater", name: "없음", meta: "민물 장비 미장착", owned: true },
+          { id: "toyRod", name: "장난감 낚시세트", meta: "민물 Lv.1 · 보유중", owned: true },
+          { id: "aliRod", name: "알리산 낚시세트", meta: "민물 Lv.2 · 상점 구매", owned: false },
+          { id: "japanRod", name: "명인의 낚시세트", meta: "민물 Lv.3 · Lv.2 필요", owned: false }
+        ],
+        sea: [
+          { id: "noneSea", name: "없음", meta: "바다 장비 미장착", owned: true },
+          { id: "firstLeisure", name: "제1레져 낚시세트", meta: "바다 Lv.1 · 상점 구매", owned: false },
+          { id: "temuRod", name: "테무산 낚시세트", meta: "바다 Lv.2 · 조건 충족 후 구매", owned: false },
+          { id: "legendRod", name: "전설의 낚시세트", meta: "바다 Lv.3 · Lv.2 필요", owned: false }
+        ],
+        vehicle: [
+          { id: "noneVehicle", name: "없음", meta: "차량 미장착 · 바다 진입 불가", owned: true },
+          { id: "tivoli", name: "티볼리", meta: "차량 · 보유중", owned: true },
+          { id: "g70", name: "G70", meta: "차량 · 조건 미충족", owned: false },
+          { id: "carnival", name: "카니발", meta: "차량 · 조건 미충족", owned: false }
+        ],
+        boat: [
+          { id: "noneBoat", name: "없음", meta: "보트 미장착", owned: true },
+          { id: "valleyBoat", name: "민물보트", meta: "조건 충족 후 해금", owned: false },
+          { id: "seaBoat", name: "바다보트", meta: "조건 충족 후 구매", owned: false }
+        ],
+        outfit: [
+          { id: "beginnerOutfit", name: "입문 낚시복", meta: "의상 Lv.1 · 기본 복장", owned: true },
+          { id: "midOutfit", name: "중급 낚시복", meta: "의상 Lv.2 · 희귀어 출현 증가", owned: false },
+          { id: "premiumOutfit", name: "고급 낚시복", meta: "의상 Lv.3 · 희귀어 출현 대폭 증가", owned: false }
+        ]
+      };
+
+      function syncOwnedItems() {
+        for (const type of Object.keys(equipment)) {
+          equipment[type].forEach((item) => {
+            item.owned = window.GameState.hasItem(gameState, type, item.id);
+          });
+        }
+        if (gameState.flags.tivoli_confiscated && !gameState.flags.tivoli_returned) {
+          const tivoli = itemById("vehicle", "tivoli");
+          if (tivoli) tivoli.owned = false;
+        }
+      }
+
+      function currentYoungwooTitle() {
+        return window.GameState.displayYoungwooName(gameState);
+      }
+
+      function isWifeActor(actor) {
+        return actor === "wife" || actor === "tivoli_confiscated" || actor === "tivoli_returned";
+      }
+
+      function dialogueActorForEvent(eventId) {
+        if (eventId === "g70_stolen" || eventId === "g70_key_dropped") return "junwoo";
+        if (eventId === "jaemo_flipper_found") return "jaemo";
+        if (eventId === "first_leisure_exchanged") return "shop";
+        if (isWifeActor(eventId)) return "wife";
+        return "youngwoo";
+      }
+
+      function dialogueActorName(actor = "youngwoo") {
+        if (actor === "wife" || isWifeActor(actor)) return "\uc640\uc774\ud504";
+        if (actor === "junwoo") return "\uc900\uc6b0";
+        if (actor === "jaemo") return "\uc7ac\ubaa8";
+        if (actor === "shop") return "\uc81c1\ub808\uc838 \uc0ac\uc7a5";
+        return currentYoungwooTitle();
+      }
+
+      function updateDialogueSpeaker(actor = "youngwoo") {
+        dialogueSpeaker.textContent = dialogueActorName(actor);
+      }
+
+      const equipLabels = {
+        freshwater: document.getElementById("freshwaterHud"),
+        vehicle: document.getElementById("vehicleHud"),
+        boat: document.getElementById("boatHud"),
+        outfit: document.getElementById("outfitHud")
+      };
+
+      const freshFishingButton = document.getElementById("freshFishingButton");
+      const seaFishingButton = document.getElementById("seaFishingButton");
+      const tivoliSlot = document.getElementById("tivoliSlot");
+      const g70Slot = document.getElementById("g70Slot");
+      const carnivalSlot = document.getElementById("carnivalSlot");
+      const valleyBoatSlot = document.getElementById("valleyBoatSlot");
+      const seaBoatSlot = document.getElementById("seaBoatSlot");
+      const beginnerOutfitSlot = document.getElementById("beginnerOutfitSlot");
+      const midOutfitSlot = document.getElementById("midOutfitSlot");
+      const premiumOutfitSlot = document.getElementById("premiumOutfitSlot");
+      const storageSlots = {
+        toyRod: document.getElementById("rodSlotToy"),
+        aliRod: document.getElementById("rodSlotAli"),
+        japanRod: document.getElementById("rodSlotJapan"),
+        firstLeisure: document.getElementById("rodSlotFirstLeisure"),
+        temuRod: document.getElementById("rodSlotTemu"),
+        legendRod: document.getElementById("rodSlotLegend"),
+        tivoli: tivoliSlot,
+        g70: g70Slot,
+        carnival: carnivalSlot,
+        valleyBoat: valleyBoatSlot,
+        seaBoat: seaBoatSlot,
+        beginnerOutfit: beginnerOutfitSlot,
+        midOutfit: midOutfitSlot,
+        premiumOutfit: premiumOutfitSlot
+      };
+      const goldHud = document.getElementById("goldHud");
+      const fameHud = document.getElementById("fameHud");
+      const promiseFill = document.getElementById("promiseFill");
+      const promiseCount = document.getElementById("promiseCount");
+      const dialogueBox = document.querySelector(".dialogue");
+      const dialogueSpeaker = document.getElementById("dialogueSpeaker");
+      const dialogueLine1 = document.getElementById("dialogueLine1");
+      const dialogueLine2 = document.getElementById("dialogueLine2");
+      const dialogueLine3 = document.getElementById("dialogueLine3");
+      const dialogueProgressButton = document.getElementById("dialogueProgressButton");
+      const eventOverlay = document.getElementById("eventOverlay");
+      const eventClose = document.getElementById("eventClose");
+      const adminOpenButton = document.getElementById("adminOpenButton");
+      const adminCloseButton = document.getElementById("adminCloseButton");
+      const adminOverlay = document.getElementById("adminOverlay");
+      const adminPreviewGrid = document.getElementById("adminPreviewGrid");
+      const endingOverlay = document.getElementById("endingOverlay");
+      const endingPopup = document.getElementById("endingPopup");
+      const endingPopupTitle = document.getElementById("endingPopupTitle");
+      const endingPopupSubtitle = document.getElementById("endingPopupSubtitle");
+      const endingPopupLine1 = document.getElementById("endingPopupLine1");
+      const endingPopupLine2 = document.getElementById("endingPopupLine2");
+      const endingPopupLine3 = document.getElementById("endingPopupLine3");
+      const endingPopupClose = document.getElementById("endingPopupClose");
+      let activeEndingId = null;
+      let activeEndingPreview = false;
+      const eventCutin = document.getElementById("eventCutin");
+      const eventPortrait = document.getElementById("eventPortrait");
+      const eventSpeaker = document.getElementById("eventSpeaker");
+      const eventLine1 = document.getElementById("eventLine1");
+      const eventLine2 = document.getElementById("eventLine2");
+      const portraitSpriteImage = document.getElementById("portraitSpriteImage");
+      const portraitSprite = document.getElementById("portraitSprite");
+      const eventYoungwooSprite = document.getElementById("eventYoungwooSprite");
+      const portraitCtx = portraitSprite.getContext("2d");
+      const eventYoungwooCtx = eventYoungwooSprite.getContext("2d");
+      const emotionScratchCanvas = document.createElement("canvas");
+      const emotionScratchCtx = emotionScratchCanvas.getContext("2d", { willReadFrequently: true });
+      const emotionPortraitCropCache = new Map();
+      const portraitSheetCropCache = new Map();
+      const guestPortraitCropCache = new WeakMap();
+      let activeEventId = null;
+      let activeDialogueEvent = null;
+      let currentDialogueActor = "youngwoo";
+      if (portraitSpriteImage) {
+        portraitSpriteImage.addEventListener("error", () => {
+          const fallbackSrc = "./assets/youngwoo_sprites/portrait_emotions_2x/beginner_proud.png?v=youngwoo-left-face-outfit-hats-20260604";
+          if (!portraitSpriteImage.src.includes("beginner_proud.png")) portraitSpriteImage.src = fallbackSrc;
+        });
+      }
+      const guestPortraitImages = {
+        tivoli_confiscated: new Image(),
+        tivoli_returned: new Image(),
+        junwoo: new Image(),
+        junwoo_crying: new Image(),
+        jaemo: new Image()
+      };
+      let currentGuestPortraitKey = "";
+      const portraitEmotionSheets = {
+        beginner: new Image(),
+        mid: new Image(),
+        premium: new Image()
+      };
+      guestPortraitImages.tivoli_confiscated.src = "./assets/wife_confiscate.png?v=wife-quality-bottom-20260604";
+      guestPortraitImages.tivoli_returned.src = "./assets/wife_approve.png?v=wife-approve-event-20260605";
+      guestPortraitImages.junwoo.src = "./assets/junwoo_sprites/junwoo_emoji_laugh.png?v=junwoo-photo-redraw-20260604";
+      guestPortraitImages.junwoo_crying.src = "./assets/junwoo_sprites/junwoo_emoji_crying.png?v=junwoo-photo-redraw-20260604";
+      guestPortraitImages.jaemo.src = "./assets/jaemo_sprites/jaemo_emoji_kind_smile.png?v=jaemo-256-20260604";
+      Object.entries(guestPortraitImages).forEach(([actor, image]) => {
+        image.addEventListener("load", () => {
+          if (currentGuestPortraitKey === actor) drawGuestPortrait(actor);
+        });
+      });
+      portraitEmotionSheets.beginner.src = "./assets/youngwoo_sprites/emotion_sheets/youngwoo_beginner_sprite_face_hd_sheet_alpha.png?v=sprite-face-outfit-match-20260603";
+      portraitEmotionSheets.mid.src = "./assets/youngwoo_sprites/emotion_sheets/youngwoo_mid_sprite_face_hd_sheet_alpha.png?v=sprite-face-no-first-20260603";
+      portraitEmotionSheets.premium.src = "./assets/youngwoo_sprites/emotion_sheets/youngwoo_premium_sprite_face_hd_sheet_alpha.png?v=sprite-face-no-first-20260603";
+      const emotionSheetColumns = 12;
+      const emotionSheetRows = 3;
+      const emotionSheetWidth = 1774;
+      const emotionSheetHeight = 887;
+      const portraitEmotionColumns = 6;
+      const portraitEmotionRows = 4;
+      const emotionOutfitIds = {
+        beginnerOutfit: "beginner",
+        midOutfit: "mid",
+        premiumOutfit: "premium"
+      };
+      const emotionColumns = {
+        neutral: 0,
+        happy: 1,
+        proud: 10,
+        surprised: 4,
+        panic: 5,
+        angry: 7,
+        sad: 8,
+        crying: 9,
+        determined: 16,
+        revenge: 11,
+        victory: 10,
+        moved: 18
+      };
+      const eventEmotionMap = {
+        tivoli_confiscated: "panic",
+        first_leisure_exchanged: "happy",
+        g70_stolen: "angry",
+        jaemo_flipper_found: "happy",
+        tivoli_returned: "happy",
+        g70_key_found: "revenge",
+        revenge_ending_seen: "victory",
+        rich_ending_seen: "victory",
+        youtuber_ending_seen: "proud",
+        normal_ending_seen: "moved",
+        true_ending_seen: "moved"
+      };
+
+      function portraitEmotionFileName(emotion = "neutral") {
+        return {
+          victory: "proud",
+          revenge: "sparkle",
+          moved: "exhausted"
+        }[emotion] || emotion;
+      }
+
+      function portraitImageSrc(outfitKey = currentEmotionOutfitKey(), emotion = "neutral") {
+        const outfit = outfitKey === "premium" ? "premium" : outfitKey === "mid" ? "mid" : "beginner";
+        return `./assets/youngwoo_sprites/portrait_emotions_2x/${outfit}_${portraitEmotionFileName(emotion)}.png?v=youngwoo-left-face-outfit-hats-20260604`;
+      }
+
+      Object.values(portraitEmotionSheets).forEach((sheet) => {
+        sheet.addEventListener("load", () => {
+          applyOutfitSprites();
+        });
+      });
+
+      function itemById(type, id) {
+        return equipment[type].find((item) => item.id === id);
+      }
+
+      function storageItemName(type, id) {
+        const item = itemById(type, id);
+        if (!item) return "";
+        return item.name;
+      }
+
+    function setStorageSlot(slot, item, type, emptyLabel) {
+      if (!slot || !item) return;
+      const owned = item.owned;
+      const gearBlocked = owned
+        && (type === "freshwater" || type === "sea")
+        && !window.GameState.canEquipWithOutfit(gameState, type, item.id);
+      const equipped = owned && !gearBlocked && gameState.loadout[type] === item.id;
+      slot.classList.toggle("owned", owned);
+      slot.classList.toggle("locked", !owned || gearBlocked);
+      slot.classList.toggle("blocked", gearBlocked);
+      slot.classList.toggle("equipped", equipped);
+      if (type === "freshwater" || type === "sea") slot.dataset.equipped = equipped ? "true" : "false";
+      slot.classList.remove("broken");
+        const asset = slot.querySelector(".rod-asset[data-normal-src]");
+        if (asset) asset.src = asset.dataset.normalSrc;
+        const label = slot.querySelector(".slot-label");
+        if (label) {
+          label.textContent = !owned
+            ? emptyLabel
+            : gearBlocked
+              ? `${storageItemName(type, item.id)} / 의상 Lv 부족`
+              : storageItemName(type, item.id);
+        }
+      }
+
+      function setBrokenFirstLeisureSlot() {
+        const slot = storageSlots.firstLeisure;
+        if (!slot) return;
+        slot.dataset.equipped = "false";
+        slot.classList.remove("owned", "locked", "equipped", "blocked");
+        slot.classList.add("broken");
+        const asset = slot.querySelector(".rod-asset[data-broken-src]");
+        if (asset) asset.src = asset.dataset.brokenSrc;
+        const label = slot.querySelector(".slot-label");
+        if (label) label.textContent = "부러진 제1레져";
+      }
+
+      function currentEmotionOutfitKey() {
+        const outfitId = emotionOutfitIds[gameState.loadout.outfit] || "beginner";
+        return outfitId;
+      }
+
+      function isEmotionFaceSkinPixel(r, g, b, a) {
+        return a > 170
+          && r > 132 && r < 255
+          && g > 72 && g < 205
+          && b > 38 && b < 170
+          && r > g + 18
+          && g > b - 8;
+      }
+
+      function emotionCellRect(outfitRow, column) {
+        const cellW = emotionSheetWidth / emotionSheetColumns;
+        const cellH = emotionSheetHeight / emotionSheetRows;
+        return {
+          x: column * cellW,
+          y: outfitRow * cellH,
+          width: cellW,
+          height: cellH
+        };
+      }
+
+      function emotionPortraitCrop(outfitRow, column) {
+        const cacheKey = `${outfitRow}:${column}`;
+        if (emotionPortraitCropCache.has(cacheKey)) return emotionPortraitCropCache.get(cacheKey);
+
+        const cell = emotionCellRect(outfitRow, column);
+        const sourceW = Math.round(cell.width);
+        const sourceH = Math.round(cell.height);
+        const fallback = {
+          x: cell.x + cell.width * 0.18,
+          y: cell.y,
+          width: cell.width * 0.64,
+          height: cell.height * 0.42
+        };
+
+        try {
+          emotionScratchCanvas.width = sourceW;
+          emotionScratchCanvas.height = sourceH;
+          emotionScratchCtx.clearRect(0, 0, sourceW, sourceH);
+          emotionScratchCtx.drawImage(emotionSheet, cell.x, cell.y, cell.width, cell.height, 0, 0, sourceW, sourceH);
+          const pixels = emotionScratchCtx.getImageData(0, 0, sourceW, sourceH).data;
+          const yLimit = Math.floor(sourceH * 0.46);
+          let count = 0;
+          let sumX = 0;
+          let sumY = 0;
+          let minX = sourceW;
+          let minY = sourceH;
+          let maxX = 0;
+          let maxY = 0;
+
+          for (let y = 0; y < yLimit; y += 1) {
+            for (let x = 0; x < sourceW; x += 1) {
+              const index = (y * sourceW + x) * 4;
+              const r = pixels[index];
+              const g = pixels[index + 1];
+              const b = pixels[index + 2];
+              const a = pixels[index + 3];
+              if (!isEmotionFaceSkinPixel(r, g, b, a)) continue;
+              count += 1;
+              sumX += x;
+              sumY += y;
+              minX = Math.min(minX, x);
+              minY = Math.min(minY, y);
+              maxX = Math.max(maxX, x);
+              maxY = Math.max(maxY, y);
+            }
+          }
+
+          if (count < 24) {
+            emotionPortraitCropCache.set(cacheKey, fallback);
+            return fallback;
+          }
+
+          const centerX = sumX / count;
+          const centerY = sumY / count;
+          const faceSpan = Math.max(maxX - minX, maxY - minY);
+          const cropH = clamp(faceSpan * 2.7, sourceH * 0.24, sourceH * 0.38);
+          const cropW = clamp(faceSpan * 2.45, sourceW * 0.34, sourceW * 0.52);
+          const crop = {
+            x: cell.x + clamp(centerX - cropW * 0.5, 0, sourceW - cropW),
+            y: cell.y + clamp(centerY - cropH * 0.56, 0, sourceH - cropH),
+            width: cropW,
+            height: cropH
+          };
+          emotionPortraitCropCache.set(cacheKey, crop);
+          return crop;
+        } catch (error) {
+          emotionPortraitCropCache.set(cacheKey, fallback);
+          return fallback;
+        }
+      }
+
+      function portraitSheetCrop(sheet, column) {
+        const cellW = sheet.naturalWidth / portraitEmotionColumns;
+        const cellH = sheet.naturalHeight / portraitEmotionRows;
+        const cellX = (column % portraitEmotionColumns) * cellW;
+        const cellY = Math.floor(column / portraitEmotionColumns) * cellH;
+        const cacheKey = `${sheet.src}:${column}`;
+        if (portraitSheetCropCache.has(cacheKey)) return portraitSheetCropCache.get(cacheKey);
+        const sourceW = Math.round(cellW);
+        const sourceH = Math.round(cellH);
+        const fallback = { x: cellX, y: cellY, width: cellW, height: cellH };
+
+        try {
+          emotionScratchCanvas.width = sourceW;
+          emotionScratchCanvas.height = sourceH;
+          emotionScratchCtx.clearRect(0, 0, sourceW, sourceH);
+          emotionScratchCtx.drawImage(sheet, cellX, cellY, cellW, cellH, 0, 0, sourceW, sourceH);
+          const pixels = emotionScratchCtx.getImageData(0, 0, sourceW, sourceH).data;
+          const skin = new Uint8Array(sourceW * sourceH);
+          const visited = new Uint8Array(sourceW * sourceH);
+          const yLimit = Math.floor(sourceH * 0.68);
+
+          for (let y = 0; y < yLimit; y += 1) {
+            for (let x = 0; x < sourceW; x += 1) {
+              const index = (y * sourceW + x) * 4;
+              if (isEmotionFaceSkinPixel(pixels[index], pixels[index + 1], pixels[index + 2], pixels[index + 3])) {
+                skin[y * sourceW + x] = 1;
+              }
+            }
+          }
+
+          let best = null;
+          const queue = [];
+          for (let y = 0; y < yLimit; y += 1) {
+            for (let x = 0; x < sourceW; x += 1) {
+              const start = y * sourceW + x;
+              if (!skin[start] || visited[start]) continue;
+              visited[start] = 1;
+              queue.length = 0;
+              queue.push(start);
+              let head = 0;
+              let count = 0;
+              let minX = x;
+              let minY = y;
+              let maxX = x;
+              let maxY = y;
+
+              while (head < queue.length) {
+                const current = queue[head];
+                head += 1;
+                const cx = current % sourceW;
+                const cy = Math.floor(current / sourceW);
+                count += 1;
+                minX = Math.min(minX, cx);
+                minY = Math.min(minY, cy);
+                maxX = Math.max(maxX, cx);
+                maxY = Math.max(maxY, cy);
+
+                const neighbors = [current - 1, current + 1, current - sourceW, current + sourceW];
+                for (const next of neighbors) {
+                  if (next < 0 || next >= skin.length || visited[next] || !skin[next]) continue;
+                  const nx = next % sourceW;
+                  const ny = Math.floor(next / sourceW);
+                  if (Math.abs(nx - cx) + Math.abs(ny - cy) !== 1) continue;
+                  visited[next] = 1;
+                  queue.push(next);
+                }
+              }
+
+              if (count < 20) continue;
+              const centerX = (minX + maxX + 1) * 0.5;
+              const centerY = (minY + maxY + 1) * 0.5;
+              const score = count - Math.abs(centerX - sourceW * 0.5) * 0.12 - centerY * 0.04;
+              if (!best || score > best.score) best = { count, minX, minY, maxX, maxY, centerX, centerY, score };
+            }
+          }
+
+          if (!best) {
+            portraitSheetCropCache.set(cacheKey, fallback);
+            return fallback;
+          }
+
+          const faceW = best.maxX - best.minX + 1;
+          const faceH = best.maxY - best.minY + 1;
+          const canvasAspect = portraitSprite.width / portraitSprite.height;
+          let cropH = clamp(Math.max(faceW, faceH) * 3.45, sourceH * 0.68, sourceH * 0.88);
+          let cropW = cropH * canvasAspect;
+          if (cropW > sourceW) {
+            cropW = sourceW;
+            cropH = cropW / canvasAspect;
+          }
+          cropW = Math.min(sourceW, cropH * canvasAspect);
+          const crop = {
+            x: cellX + clamp(best.centerX - cropW * 0.5, 0, sourceW - cropW),
+            y: cellY + clamp(best.centerY - cropH * 0.38, 0, sourceH - cropH),
+            width: cropW,
+            height: cropH
+          };
+          portraitSheetCropCache.set(cacheKey, crop);
+          return crop;
+        } catch (error) {
+          portraitSheetCropCache.set(cacheKey, fallback);
+          return fallback;
+        }
+      }
+
+      function drawEmotionSprite(canvas, context, emotion = "neutral", mode = "body") {
+        const column = emotionColumns[emotion] ?? emotionColumns.neutral;
+        const outfitKey = currentEmotionOutfitKey();
+
+        if (mode === "portrait") {
+          if (canvas === portraitSprite && portraitSpriteImage) {
+            portraitSprite.hidden = true;
+            portraitSpriteImage.hidden = false;
+            portraitSpriteImage.src = portraitImageSrc(outfitKey, emotion);
+            return;
+          }
+        }
+
+        const sheet = portraitEmotionSheets[outfitKey] || portraitEmotionSheets.beginner;
+        if (!sheet.complete || sheet.naturalWidth <= 0) return;
+
+        if (mode === "portrait") {
+          const cellW = sheet.naturalWidth / portraitEmotionColumns;
+          const cellH = sheet.naturalHeight / portraitEmotionRows;
+          const sx = (column % portraitEmotionColumns) * cellW;
+          const sy = Math.floor(column / portraitEmotionColumns) * cellH;
+          const drawW = cellW * (612 / sheet.naturalWidth);
+          const drawH = cellH * (408 / sheet.naturalHeight);
+          const dx = (canvas.width - drawW) / 2;
+          const dy = canvas.height - drawH;
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          context.imageSmoothingEnabled = true;
+          context.imageSmoothingQuality = "high";
+          context.fillStyle = "#28324a";
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          context.drawImage(sheet, sx, sy, cellW, cellH, dx, dy, drawW, drawH);
+          return;
+        }
+
+        const sw = sheet.naturalWidth / portraitEmotionColumns;
+        const sh = sheet.naturalHeight / portraitEmotionRows;
+        const bleed = 4;
+        const sx = Math.round((column % portraitEmotionColumns) * sw) + bleed;
+        const sy = Math.round(Math.floor(column / portraitEmotionColumns) * sh) + bleed;
+        const sourceW = Math.max(1, Math.round(sw) - bleed * 2);
+        const sourceH = Math.max(1, Math.round(sh) - bleed * 2);
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.imageSmoothingEnabled = false;
+        const scale = Math.min(canvas.width / sourceW, canvas.height / sourceH);
+        const drawW = sourceW * scale;
+        const drawH = sourceH * scale;
+        const dx = (canvas.width - drawW) / 2;
+        const dy = (canvas.height - drawH) / 2;
+        context.drawImage(sheet, sx, sy, sourceW, sourceH, dx, dy, drawW, drawH);
+      }
+
+      function inferDialogueEmotion(lines = []) {
+        const text = lines.filter(Boolean).join(" ");
+        if (/장착 완료|돌아왔다|얻었다|생겼다|수집|살 수 있게/.test(text)) return "proud";
+        if (/복수|준우야|먹튀|이 자식/.test(text)) return "revenge";
+        if (/압수|없다|미장착|불가|부러|환불|잠적|산책|맨손/.test(text)) return "sad";
+        if (/CCTV|눈이 마주쳤다|정체 불명|아직/.test(text)) return "surprised";
+        if (/아들|약속|진엔딩/.test(text)) return "moved";
+        if (/돈|G70|창고에|보조키|부자/.test(text)) return "victory";
+        return "neutral";
+      }
+
+      function applyOutfitSprites() {
+        if (!activeDialogueEvent && !currentGuestPortraitKey) {
+          drawEmotionSprite(portraitSprite, portraitCtx, "neutral", "portrait");
+        }
+        drawEmotionSprite(eventYoungwooSprite, eventYoungwooCtx, "neutral", "body");
+      }
+
+      function updateGarageView() {
+        gameState = window.GameState.load();
+        const homeReturnEvent = window.GameState.triggerHomeReturnEvents(gameState);
+        gameState = homeReturnEvent.state;
+        gameState = window.GameState.collectAvailableEndings(gameState);
+        syncOwnedItems();
+        applyOutfitSprites();
+        updateDialogueSpeaker();
+        const equippedFresh = gameState.loadout.freshwater && gameState.loadout.freshwater !== "noneFreshwater";
+        const equippedSea = gameState.loadout.sea && gameState.loadout.sea !== "noneSea";
+        const equippedRodType = equippedSea ? "sea" : "freshwater";
+        const equippedRodId = equippedSea ? gameState.loadout.sea : gameState.loadout.freshwater;
+        equipLabels.freshwater.textContent = equippedFresh || equippedSea ? itemById(equippedRodType, equippedRodId).name : "미장착";
+        equipLabels.vehicle.textContent = itemById("vehicle", gameState.loadout.vehicle).name;
+        equipLabels.boat.textContent = itemById("boat", gameState.loadout.boat).name;
+        equipLabels.outfit.textContent = itemById("outfit", gameState.loadout.outfit).name;
+        equipment.freshwater.filter((item) => item.id !== "noneFreshwater").forEach((item) => setStorageSlot(storageSlots[item.id], item, "freshwater", "빈 장비칸"));
+        equipment.sea.filter((item) => item.id !== "noneSea").forEach((item) => setStorageSlot(storageSlots[item.id], item, "sea", "빈 장비칸"));
+        if (gameState.flags.first_leisure_broken && !gameState.flags.first_leisure_exchanged) setBrokenFirstLeisureSlot();
+        equipment.vehicle.filter((item) => item.id !== "noneVehicle").forEach((item) => setStorageSlot(storageSlots[item.id], item, "vehicle", "빈 차량칸"));
+        equipment.boat.filter((item) => item.id !== "noneBoat").forEach((item) => setStorageSlot(storageSlots[item.id], item, "boat", "빈 보트칸"));
+        equipment.outfit.forEach((item) => setStorageSlot(storageSlots[item.id], item, "outfit", "빈 의상칸"));
+        ["toyRod", "aliRod", "japanRod", "firstLeisure", "temuRod", "legendRod"].forEach((itemId) => {
+          const slot = storageSlots[itemId];
+          if (!slot || slot.classList.contains("broken") || slot.classList.contains("blocked")) return;
+          const equipped = gameState.loadout.freshwater === itemId
+            || (!gameState.loadout.freshwater || gameState.loadout.freshwater === "noneFreshwater")
+              && gameState.loadout.sea === itemId;
+          slot.dataset.equipped = equipped ? "true" : "false";
+          slot.classList.toggle("equipped", equipped);
+        });
+        goldHud.textContent = `${gameState.gold.toLocaleString()}G`;
+        fameHud.textContent = gameState.fame.toLocaleString();
+        promiseFill.style.width = `${Math.min(100, gameState.caughtFish.length / window.GameState.fishData.length * 100)}%`;
+        promiseCount.textContent = `수집 ${gameState.caughtFish.length}종`;
+      }
+
+      function drawGuestPortrait(actor = "wife") {
+        currentGuestPortraitKey = actor;
+        if (portraitSpriteImage) portraitSpriteImage.hidden = true;
+        portraitSprite.hidden = false;
+        portraitCtx.clearRect(0, 0, portraitSprite.width, portraitSprite.height);
+        portraitCtx.imageSmoothingEnabled = false;
+        const image = guestPortraitImages[actor] || guestPortraitImages.tivoli_confiscated;
+        if (image?.complete && image.naturalWidth > 0) {
+          const crop = guestPortraitContentBounds(image);
+          const isWifePortrait = actor === "tivoli_confiscated" || actor === "tivoli_returned";
+          const scale = Math.min(portraitSprite.width / crop.width, portraitSprite.height / crop.height) * (isWifePortrait ? 1.08 : 0.96);
+          const width = crop.width * scale;
+          const height = crop.height * scale;
+          const drawY = isWifePortrait ? portraitSprite.height - height + 12 : (portraitSprite.height - height) / 2;
+          portraitCtx.drawImage(
+            image,
+            crop.x,
+            crop.y,
+            crop.width,
+            crop.height,
+            (portraitSprite.width - width) / 2,
+            drawY,
+            width,
+            height
+          );
+          return;
+        }
+        portraitCtx.fillStyle = "#28324a";
+        portraitCtx.fillRect(0, 0, portraitSprite.width, portraitSprite.height);
+        portraitCtx.strokeStyle = "#080b16";
+        portraitCtx.lineWidth = 5;
+        portraitCtx.fillStyle = "#3b2438";
+        portraitCtx.fillRect(31, 18, 64, 80);
+        portraitCtx.strokeRect(31, 18, 64, 80);
+        portraitCtx.fillStyle = "#f1b27d";
+        portraitCtx.fillRect(40, 34, 46, 42);
+        portraitCtx.strokeRect(40, 34, 46, 42);
+        portraitCtx.fillStyle = "#080b16";
+        portraitCtx.fillRect(50, 50, 6, 6);
+        portraitCtx.fillRect(70, 50, 6, 6);
+        portraitCtx.fillRect(57, 66, 14, 4);
+        portraitCtx.fillStyle = "#7b4f73";
+        portraitCtx.fillRect(36, 80, 54, 28);
+        portraitCtx.strokeRect(36, 80, 54, 28);
+      }
+
+      function guestPortraitContentBounds(image) {
+        if (guestPortraitCropCache.has(image)) return guestPortraitCropCache.get(image);
+        const fallback = { x: 0, y: 0, width: image.naturalWidth, height: image.naturalHeight };
+        try {
+          emotionScratchCanvas.width = image.naturalWidth;
+          emotionScratchCanvas.height = image.naturalHeight;
+          emotionScratchCtx.clearRect(0, 0, image.naturalWidth, image.naturalHeight);
+          emotionScratchCtx.drawImage(image, 0, 0);
+          const pixels = emotionScratchCtx.getImageData(0, 0, image.naturalWidth, image.naturalHeight).data;
+          let minX = image.naturalWidth;
+          let minY = image.naturalHeight;
+          let maxX = -1;
+          let maxY = -1;
+          for (let y = 0; y < image.naturalHeight; y += 1) {
+            for (let x = 0; x < image.naturalWidth; x += 1) {
+              const alpha = pixels[(y * image.naturalWidth + x) * 4 + 3];
+              if (alpha < 12) continue;
+              minX = Math.min(minX, x);
+              minY = Math.min(minY, y);
+              maxX = Math.max(maxX, x);
+              maxY = Math.max(maxY, y);
+            }
+          }
+          if (maxX < minX || maxY < minY) {
+            guestPortraitCropCache.set(image, fallback);
+            return fallback;
+          }
+          const pad = 2;
+          const cropX = Math.max(0, minX - pad);
+          const cropY = Math.max(0, minY - pad);
+          const bounds = {
+            x: cropX,
+            y: cropY,
+            width: Math.min(image.naturalWidth - cropX, maxX - minX + 1 + pad * 2),
+            height: Math.min(image.naturalHeight - cropY, maxY - minY + 1 + pad * 2)
+          };
+          guestPortraitCropCache.set(image, bounds);
+          return bounds;
+        } catch (error) {
+          guestPortraitCropCache.set(image, fallback);
+          return fallback;
+        }
+      }
+
+      function setDialogueVisualMode(actor = "youngwoo", eventMode = false, showProgress = true, titleNotice = false) {
+        dialogueBox.classList.remove("event-dialogue", "title-notice", "actor-wife", "actor-junwoo", "actor-jaemo", "actor-shop");
+        if (!eventMode) {
+          dialogueProgressButton.hidden = true;
+          return;
+        }
+        dialogueBox.classList.add("event-dialogue", `actor-${actor}`);
+        if (titleNotice) dialogueBox.classList.add("title-notice");
+        dialogueProgressButton.hidden = !showProgress;
+      }
+
+      function drawDialoguePortrait(actor, emotion, eventId = "") {
+        if (actor !== "wife" && actor !== "junwoo" && actor !== "jaemo") currentGuestPortraitKey = "";
+        if (actor === "wife") drawGuestPortrait(eventId || "tivoli_confiscated");
+        else if (actor === "junwoo") drawGuestPortrait("junwoo");
+        else if (actor === "jaemo") drawGuestPortrait("jaemo");
+        else drawEmotionSprite(portraitSprite, portraitCtx, emotion, "portrait");
+      }
+
+      function setDialogue(lines, emotion = inferDialogueEmotion(lines), actor = "youngwoo") {
+        activeDialogueEvent = null;
+        setDialogueVisualMode("youngwoo", false);
+        currentDialogueActor = actor;
+        updateDialogueSpeaker(actor);
+        dialogueLine1.textContent = lines[0];
+        dialogueLine2.textContent = lines[1];
+        dialogueLine3.textContent = lines[2];
+        if (isWifeActor(actor)) drawGuestPortrait(actor);
+        else drawDialoguePortrait(actor, emotion);
+      }
+
+      function showTitleNoticeIfAny() {
+        const result = window.GameState.consumeTitleNotices(gameState);
+        gameState = result.state;
+        const notice = result.notices?.[0];
+        if (!notice) return false;
+        const lines = notice.notice || [`[칭호 획득] ${notice.name}`, "도감의 칭호 탭에서 장착하거나 바꿀 수 있다.", ""];
+        activeDialogueEvent = { titleNotice: true };
+        window.GameAudio?.playSfx("title");
+        setDialogueVisualMode("youngwoo", true, true, true);
+        currentDialogueActor = "youngwoo";
+        dialogueSpeaker.textContent = "칭호 획득";
+        dialogueProgressButton.textContent = "확인";
+        dialogueLine1.textContent = lines[0] || "";
+        dialogueLine2.textContent = lines[1] || "";
+        dialogueLine3.textContent = lines[2] || "";
+        drawDialoguePortrait("youngwoo", "proud");
+        return true;
+      }
+
+      function showAdminTitleNotice(titleId) {
+        const title = window.GameState.titleDefinitions?.[titleId];
+        if (!title) return;
+        closeAdminMenu();
+        const lines = title.notice || [`[칭호 획득] ${title.name}`, "도감의 칭호 탭에서 장착하거나 바꿀 수 있다.", ""];
+        activeDialogueEvent = { titleNotice: true };
+        window.GameAudio?.playSfx("title");
+        setDialogueVisualMode("youngwoo", true, true, true);
+        currentDialogueActor = "youngwoo";
+        dialogueSpeaker.textContent = "칭호 획득";
+        dialogueProgressButton.textContent = "확인";
+        dialogueLine1.textContent = lines[0] || "";
+        dialogueLine2.textContent = lines[1] || "";
+        dialogueLine3.textContent = lines[2] || "";
+        drawDialoguePortrait("youngwoo", "proud");
+      }
+
+      function showDialogueEvent(eventId, event, preview = false) {
+        const actor = dialogueActorForEvent(eventId);
+        activeDialogueEvent = { eventId, event, preview };
+        if (!preview) window.GameAudio?.playSfx("event");
+        setDialogueVisualMode(actor, true);
+        currentDialogueActor = actor;
+        updateDialogueSpeaker(actor);
+        dialogueProgressButton.textContent = "\ud655\uc778";
+        dialogueLine1.textContent = `[${event.cutin || event.type || "\uc774\ubca4\ud2b8"}]`;
+        dialogueLine2.textContent = event.lines?.[0] || "";
+        dialogueLine3.textContent = event.lines?.[1] || event.afterLines?.[0] || "";
+        drawDialoguePortrait(actor, eventEmotionMap[eventId] || "surprised", eventId);
+      }
+
+      function advanceDialogueEvent() {
+        if (!activeDialogueEvent) return;
+        if (activeDialogueEvent.titleNotice) {
+          activeDialogueEvent = null;
+          setDialogueVisualMode("youngwoo", false);
+          if (!showPendingEvent() && !setHomeEntryEndingDialogue()) setCurrentGoalDialogue();
+          return;
+        }
+        const { eventId, event, preview } = activeDialogueEvent;
+        activeDialogueEvent = null;
+        if (preview) {
+          setDialogue(["미리보기를 닫았다.", "관리자 메뉴에서 다른 이벤트를 확인할 수 있다.", ""], "neutral");
+          return;
+        }
+        if (eventId === "tivoli_confiscated") {
+          window.GameState.grantTitle(gameState, "walker", { autoEquip: true });
+          gameState = window.GameState.save(gameState);
+        }
+        if (showTitleNoticeIfAny()) return;
+        if (event?.afterLines) setDialogue(event.afterLines, eventEmotionMap[eventId] || "neutral", "youngwoo");
+        else setDialogue(["이벤트를 확인했다.", "", ""], "neutral");
+      }
+
+      function showEvent(eventId) {
+        const event = window.GameState.eventDefinitions[eventId];
+        if (!event) return;
+        gameState = window.GameState.load();
+        applyOutfitSprites();
+        activeEventId = null;
+        gameState = window.GameState.consumeEvent(gameState, eventId).state;
+        updateGarageView();
+        if (routePendingEnding()) return;
+        showDialogueEvent(eventId, event, false);
+        return;
+        eventCutin.textContent = event.cutin || event.type || "이벤트";
+        eventPortrait.textContent = event.portrait || "!";
+        eventSpeaker.textContent = event.speaker || "이벤트";
+        eventLine1.textContent = event.lines?.[0] || "";
+        eventLine2.textContent = event.lines?.[1] || "";
+        eventOverlay.hidden = false;
+        eventClose.focus();
+      }
+
+      function showAdminPreviewEvent(eventId) {
+        const event = window.GameState.eventDefinitions[eventId];
+        if (!event) return;
+        applyOutfitSprites();
+        activeEventId = null;
+        showDialogueEvent(eventId, event, true);
+        return;
+        eventOverlay.dataset.preview = "true";
+        drawEmotionSprite(eventYoungwooSprite, eventYoungwooCtx, eventEmotionMap[eventId] || "surprised", "body");
+        eventCutin.textContent = event.cutin || event.type || "이벤트";
+        eventPortrait.textContent = event.portrait || "!";
+        eventSpeaker.textContent = `[미리보기] ${event.speaker || "이벤트"}`;
+        eventLine1.textContent = event.lines?.[0] || "";
+        eventLine2.textContent = event.lines?.[1] || "";
+        eventOverlay.hidden = false;
+        eventClose.focus();
+      }
+
+      function showAdminEventShortcut(eventId) {
+        const event = window.GameState.eventDefinitions[eventId];
+        if (!event) return;
+        applyOutfitSprites();
+        activeEventId = null;
+        showDialogueEvent(eventId, event, false);
+      }
+
+      function endingPopupCopy(endingId, event) {
+        const copies = {
+          normal_ending_seen: { title: "[일반엔딩] 영우는 약속을 지켰다", subtitle: "60종 도감 완성" },
+          true_ending_seen: { title: "[진엔딩] 영우는 약속을 지켰고, 박물관을 차렸다", subtitle: "남영우 낚시기념관 개장" }
+        };
+        return copies[endingId] || { title: event?.cutin || "엔딩", subtitle: event?.speaker || currentYoungwooTitle() };
+      }
+
+      function endingPopupBackground(endingId) {
+        if (endingId === "normal_ending_seen") return "./assets/ending_normal_family.png?v=ending-keyart-20260605";
+        if (endingId === "true_ending_seen") return "./assets/ending_true_museum.png?v=ending-keyart-gear-toy-20260605";
+        return "./assets/main_hero_youngwoo_yellowtail_v5.png";
+      }
+
+      function showEndingPopup(endingId, preview = false) {
+        const event = window.GameState.eventDefinitions[endingId];
+        if (!event || !window.GameState.isEndingEvent(endingId)) return false;
+        const copy = endingPopupCopy(endingId, event);
+        const lines = [...(event.lines || []), ...(event.afterLines || [])].slice(0, 3);
+        activeEndingId = endingId;
+        activeEndingPreview = preview;
+        endingPopup.style.setProperty("--ending-bg", "url(\"" + endingPopupBackground(endingId) + "\")");
+        endingPopupTitle.textContent = copy.title;
+        endingPopupSubtitle.textContent = copy.subtitle;
+        endingPopupLine1.textContent = lines[0] || "";
+        endingPopupLine2.textContent = lines[1] || "";
+        endingPopupLine3.textContent = lines[2] || "";
+        endingOverlay.hidden = false;
+        endingPopupClose.focus();
+        return true;
+      }
+
+      function closeEndingPopup() {
+        endingOverlay.hidden = true;
+        if (activeEndingId && !activeEndingPreview) {
+          gameState = window.GameState.load();
+          if (gameState.pendingEvents?.includes(activeEndingId)) {
+            gameState = window.GameState.consumeEvent(gameState, activeEndingId).state;
+          }
+          updateGarageView();
+          setHomeEntryEndingDialogue();
+        }
+        activeEndingId = null;
+        activeEndingPreview = false;
+        adminOpenButton.focus();
+      }
+
+      function openAdminEnding(endingId) {
+        closeAdminMenu();
+        showEndingPopup(endingId, true);
+      }
+
+      function adminSaveAndGo(nextState, url) {
+        gameState = window.GameState.save(nextState);
+        location.href = url;
+      }
+
+      function prepareAdminFieldEvent(eventId) {
+        const next = window.GameState.load();
+        next.gold = Math.max(next.gold || 0, 120000);
+        next.stats = {
+          ...(next.stats || {}),
+          lifetimeGoldEarned: Math.max(next.stats?.lifetimeGoldEarned || 0, 120000),
+          lifetimeFameEarned: Math.max(next.stats?.lifetimeFameEarned || 0, 25000)
+        };
+        window.GameState.addItem(next, "outfit", "premiumOutfit");
+        window.GameState.addItem(next, "freshwater", "japanRod");
+        window.GameState.addItem(next, "sea", "legendRod");
+        window.GameState.addItem(next, "vehicle", "tivoli");
+        window.GameState.addItem(next, "vehicle", "g70");
+        window.GameState.addItem(next, "vehicle", "carnival");
+        window.GameState.addItem(next, "boat", "valleyBoat");
+        window.GameState.addItem(next, "boat", "seaBoat");
+        next.loadout.outfit = "premiumOutfit";
+        next.flags.intro_complete = true;
+        if (eventId === "tivoli_confiscated") {
+          next.loadout.vehicle = "tivoli";
+          next.loadout.sea = "firstLeisure";
+          window.GameState.addItem(next, "sea", "firstLeisure");
+          next.activeField = "sea";
+          return adminSaveAndGo(next, "fishing_screen.html?dev=1&debugTivoliConfiscated=1");
+        }
+        if (eventId === "jaemo_flipper_found") {
+          next.flags.g70_stolen = true;
+          delete next.flags.jaemo_flipper_found;
+          delete next.flags.valley_boat_owned;
+          next.loadout.freshwater = "toyRod";
+          next.loadout.sea = "noneSea";
+          next.loadout.boat = "noneBoat";
+          next.activeField = "fresh";
+          return adminSaveAndGo(next, "fishing_screen.html?dev=1&debugJaemoFlipper=1");
+        }
+        if (eventId === "g70_stolen") {
+          next.flags.first_leisure_broken = true;
+          next.flags.first_leisure_exchanged = true;
+          next.flags.g70_purchased = true;
+          next.loadout.vehicle = "g70";
+          next.activeField = "sea";
+          return adminSaveAndGo(next, "fishing_screen.html?dev=1&debugJunwooTheft=1");
+        }
+        if (eventId === "g70_key_dropped") {
+          next.flags.carnival_owned = true;
+          next.flags.first_leisure_broken = true;
+          next.flags.first_leisure_exchanged = true;
+          next.loadout.vehicle = "carnival";
+          next.loadout.sea = "firstLeisure";
+          next.activeField = "sea";
+          return adminSaveAndGo(next, "fishing_screen.html?dev=1&debugG70KeyDropped=1");
+        }
+        if (eventId === "g70_key_found") {
+          next.flags.sea_boat_owned = true;
+          next.loadout.boat = "seaBoat";
+          next.loadout.sea = "legendRod";
+          next.activeField = "ocean";
+          return adminSaveAndGo(next, "fishing_screen.html?dev=1&debugG70KeyFound=1");
+        }
+        if (eventId === "tivoli_returned") {
+          next.flags.tivoli_confiscated = true;
+          next.flags.tivoli_return_pending = true;
+          next.flags.sea_boat_owned = true;
+          next.loadout.vehicle = "noneVehicle";
+          next.activeField = "sea";
+          return adminSaveAndGo(next, "game_home.html?dev=1&debugEvent=tivoli_returned");
+        }
+        return false;
+      }
+
+      function prepareAdminShopEvent(eventId) {
+        const next = window.GameState.load();
+        next.gold = Math.max(next.gold || 0, 120000);
+        next.flags.carnival_owned = true;
+        next.flags.first_leisure_broken = true;
+        delete next.flags.first_leisure_exchanged;
+        window.GameState.addItem(next, "vehicle", "carnival");
+        window.GameState.addItem(next, "outfit", "premiumOutfit");
+        next.loadout.vehicle = "carnival";
+        next.loadout.outfit = "premiumOutfit";
+        next.loadout.sea = "noneSea";
+        adminSaveAndGo(next, "shop_screen.html?dev=1&debugShopEvent=first_leisure_exchanged");
+        return true;
+      }
+
+      function runAdminEventShortcut(eventId) {
+        if (eventId === "tivoli_confiscated") {
+          closeAdminMenu();
+          showAdminEventShortcut(eventId);
+          return;
+        }
+        if (eventId === "first_leisure_exchanged" && prepareAdminShopEvent(eventId)) return;
+        if (prepareAdminFieldEvent(eventId)) return;
+        if (window.GameState.isEndingEvent(eventId)) {
+          openAdminEnding(eventId);
+          return;
+        }
+        closeAdminMenu();
+        showAdminEventShortcut(eventId);
+      }
+
+      function grantAllAdminJunk() {
+        gameState = window.GameState.load();
+        gameState.caughtFish = Array.from(new Set([...(gameState.caughtFish || []), ...window.GameState.fishData.map((fish) => fish.name)]));
+        gameState.junk = Array.from(new Set([...(gameState.junk || []), ...window.GameState.junkData.map((item) => item.name)]));
+        gameState.flags.intro_complete = true;
+        gameState.flags.valley_boat_owned = true;
+        gameState.flags.sea_boat_owned = true;
+        gameState.flags.normal_ending_seen = true;
+        gameState.endings = Array.from(new Set([...(gameState.endings || []), "normal_ending_seen"]));
+        gameState.achievements = Array.from(new Set([...(gameState.achievements || []), "revenge_ending_seen", "rich_ending_seen", "youtuber_ending_seen"]));
+        Object.keys(window.GameState.titleDefinitions || {}).forEach((titleId) => {
+          window.GameState.grantTitle(gameState, titleId);
+        });
+        gameState = window.GameState.collectAvailableEndings(gameState);
+        updateGarageView();
+        setDialogue(["도감을 모두 채웠다.", `어종 ${gameState.caughtFish.length}/${window.GameState.fishData.length} · 유실물 ${gameState.junk.length}/${window.GameState.junkData.length}`, "메인화면과 칭호도 도감 확인용으로 열었다."], "proud");
+      }
+
+      function grantAllAdminItems() {
+        gameState = window.GameState.load();
+        gameState.gold = Math.max(gameState.gold || 0, 120000);
+        gameState.stats = {
+          ...(gameState.stats || {}),
+          lifetimeGoldEarned: Math.max(gameState.stats?.lifetimeGoldEarned || 0, 120000),
+          lifetimeFameEarned: Math.max(gameState.stats?.lifetimeFameEarned || 0, 25000)
+        };
+        Object.entries({
+          freshwater: ["toyRod", "aliRod", "japanRod"],
+          sea: ["firstLeisure", "temuRod", "legendRod"],
+          vehicle: ["tivoli", "g70", "carnival"],
+          boat: ["valleyBoat", "seaBoat"],
+          outfit: ["beginnerOutfit", "midOutfit", "premiumOutfit"]
+        }).forEach(([type, ids]) => ids.forEach((itemId) => window.GameState.addItem(gameState, type, itemId)));
+        gameState.flags.intro_complete = true;
+        gameState.flags.valley_boat_owned = true;
+        gameState.flags.sea_boat_owned = true;
+        gameState.flags.carnival_owned = true;
+        gameState.flags.g70_purchased = true;
+        gameState.flags.first_leisure_broken = true;
+        gameState.flags.first_leisure_exchanged = true;
+        gameState.flags.g70_key_found = true;
+        gameState.flags.tivoli_returned = true;
+        gameState.loadout.outfit = "premiumOutfit";
+        gameState.loadout.sea = "legendRod";
+        gameState.loadout.freshwater = "noneFreshwater";
+        gameState.loadout.vehicle = "carnival";
+        gameState.loadout.boat = "seaBoat";
+        updateGarageView();
+        setDialogue(["장비, 차량, 보트, 옷을 모두 채웠다.", "도감 수집 상태는 건드리지 않았다.", "상점과 필드 장착 테스트를 바로 하면 된다."], "proud");
+      }
+
+      function addAdminGold(amount) {
+        gameState = window.GameState.load();
+        gameState.gold = Math.max(0, (gameState.gold || 0) + amount);
+        if (!gameState.stats) gameState.stats = {};
+        gameState.stats.lifetimeGoldEarned = Math.max(
+          Number(gameState.stats.lifetimeGoldEarned || 0),
+          Number(gameState.gold || 0)
+        );
+        gameState = window.GameState.save(gameState);
+        updateGarageView();
+        setDialogue([`관리자 메뉴로 ${amount.toLocaleString()}G를 추가했다.`, `현재 골드: ${gameState.gold.toLocaleString()}G`, "상점/장비 테스트를 계속하자."], "proud");
+      }
+
+      let adminResetArmed = false;
+      function resetAdminGame(button) {
+        if (!adminResetArmed) {
+          adminResetArmed = true;
+          button.classList.add("confirm");
+          button.textContent = "정말 초기화";
+          setTimeout(() => {
+            adminResetArmed = false;
+            button.classList.remove("confirm");
+            button.textContent = "게임 초기화";
+          }, 3500);
+          return;
+        }
+        window.GameState.reset();
+        location.reload();
+      }
+
+      function openAdminMenu() {
+        if (!devMode) return;
+        adminOverlay.hidden = false;
+        adminCloseButton.focus();
+      }
+
+      function closeAdminMenu() {
+        adminOverlay.hidden = true;
+        adminOpenButton.focus();
+      }
+
+      function buildAdminPreviewMenu() {
+        if (!adminPreviewGrid || adminPreviewGrid.children.length) return;
+        const fixedItems = [
+          { id: "gold_10000", label: "+10,000G", kind: "utility" },
+          { id: "all_junk", label: "도감 다 채우기", kind: "allJunk", wide: true },
+          { id: "all_items", label: "장비, 차량, 보트, 옷 다 채우기", kind: "allItems", wide: true },
+          { id: "reset_game", label: "게임 초기화", kind: "reset" }
+        ];
+        const nonEventGuideIds = new Set(["first_leisure_broken"]);
+        const eventItems = Object.entries(window.GameState.eventDefinitions || {})
+          .filter(([id]) => !nonEventGuideIds.has(id))
+          .map(([id, event]) => ({
+            id,
+            label: `${window.GameState.isEndingEvent(id) ? "엔딩" : event.type || "이벤트"}: ${event.cutin || event.speaker || id}`,
+            kind: "event"
+          }));
+        const titleItems = Object.entries(window.GameState.titleDefinitions || {}).map(([id, title]) => ({
+          id,
+          label: `칭호 획득: ${title.name}`,
+          kind: "title"
+        }));
+        [...fixedItems, ...eventItems, ...titleItems].forEach(({ id, label, kind, wide }) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = label;
+          if (kind === "reset") button.classList.add("danger");
+          if (wide) button.classList.add("wide");
+          button.addEventListener("click", () => {
+            if (id === "gold_10000") addAdminGold(10000);
+            else if (id === "all_junk") grantAllAdminJunk();
+            else if (id === "all_items") grantAllAdminItems();
+            else if (id === "reset_game") resetAdminGame(button);
+            else if (kind === "title") showAdminTitleNotice(id);
+            else runAdminEventShortcut(id);
+          });
+          adminPreviewGrid.appendChild(button);
+        });
+      }
+
+      function showPendingEvent() {
+        const eventId = gameState.pendingEvents?.[0];
+        if (eventId === "first_leisure_broken") {
+          gameState.pendingEvents = gameState.pendingEvents.filter((queuedId) => queuedId !== "first_leisure_broken");
+          gameState = window.GameState.save(gameState);
+          setCurrentGoalDialogue();
+          return;
+        }
+        if (window.GameState.isEndingEvent(eventId)) return;
+        if (eventId) showEvent(eventId);
+      }
+
+      function routePendingEnding() {
+        const endingId = gameState.pendingEvents?.[0];
+        if (!window.GameState.isEndingEvent(endingId)) return false;
+        return showEndingPopup(endingId, false);
+      }
+
+      function setTivoliAfterEventDialogue() {
+        const event = window.GameState.eventDefinitions.tivoli_confiscated;
+        setDialogue(event.afterLines, "sad", "youngwoo");
+      }
+
+      function setHomeEntryEndingDialogue() {
+        gameState = window.GameState.load();
+        if (gameState.flags.true_ending_seen) {
+          setDialogue([
+            "기념관까지 차렸는데, 이상하게 아직 손이 낚싯대를 찾는다.",
+            "아들아, 약속은 지켰고 전시는 시작됐다.",
+            "이제 남은 건 내가 어디까지 더 낚을 수 있나 보는 거지."
+          ], "moved", "youngwoo");
+          return true;
+        }
+        if (gameState.flags.normal_ending_seen) {
+          setDialogue([
+            "아들이 물고기 이름을 물어봤을 때, 드디어 대답할 수 있었다.",
+            "아빠는 다 잡아봐서 알지.",
+            "약속은 지켰지만, 물가에는 아직 할 말이 남아 있다."
+          ], "moved", "youngwoo");
+          return true;
+        }
+        return false;
+      }
+
+      function setCurrentGoalDialogue() {
+        const goal = window.GameState.currentGoal(gameState);
+        setDialogue(goal.lines, "thinking", "youngwoo");
+      }
+
+      function startFreshFishing() {
+        gameState = window.GameState.load();
+        if (!gameState.loadout.freshwater || gameState.loadout.freshwater === "noneFreshwater") {
+          setDialogue(["민물 장비가 장착되어 있지 않다.", "영우의 창고에서 민물 낚시세트를 먼저 장착하자.", "낚싯대 없이 물가에 서면 산책이다."]);
+          return;
+        }
+        gameState.activeField = gameState.loadout.boat === "valleyBoat" && window.GameState.hasItem(gameState, "boat", "valleyBoat") ? "valley" : "fresh";
+        window.GameState.save(gameState);
+        location.href = "fishing_screen.html?v=desktop-action-layout-20260605";
+      }
+
+      function startSeaFishing() {
+        gameState = window.GameState.load();
+
+        if (!gameState.loadout.vehicle || gameState.loadout.vehicle === "noneVehicle") {
+          setDialogue(["바다에 갈 차량이 없다.", "낚싯대보다 차 키가 먼저 입질했다.", "상점에서 차량을 준비하거나 장착 상태를 확인하자."]);
+          return;
+        }
+
+        if (!gameState.loadout.sea || gameState.loadout.sea === "noneSea") {
+          const hasSeaGear = ["firstLeisure", "temuRod", "legendRod"].some((itemId) => window.GameState.hasItem(gameState, "sea", itemId));
+          const seaGearHint = gameState.flags.first_leisure_broken
+            ? ["바다 장비가 없다.", "제1레져는 이미 전설이 아니라 증거품이 됐다.", "카니발을 준비해 상점주인에게 같은 제품 교환을 받아내자."]
+            : ["바다 장비가 없다.", "상점에서 제1레져 낚시세트를 준비하자.", "맨손으로 바다를 설득할 수는 없다."];
+          setDialogue(hasSeaGear
+            ? ["바다 장비가 장착되어 있지 않다.", "창고에서 바다 낚시세트를 먼저 장착하자.", "보유한 장비도 꺼내 들어야 쓸 수 있다."]
+            : seaGearHint);
+          return;
+        }
+
+        const tivoliEvent = window.GameState.triggerTivoliConfiscation(gameState);
+        if (tivoliEvent.triggered) {
+          gameState = tivoliEvent.state;
+          updateGarageView();
+          setDialogue([
+            "와이프가 티볼리를 압수했다.",
+            "바다 장비까지 챙겼더니 집안 레이더에 걸렸다.",
+            "민물에서 돈을 모아 G70을 준비하자."
+          ]);
+          showEvent(tivoliEvent.triggered);
+          return;
+        }
+
+        gameState.activeField = gameState.loadout.boat === "seaBoat" && window.GameState.hasItem(gameState, "boat", "seaBoat") ? "ocean" : "sea";
+        if (
+          gameState.activeField === "sea"
+          && gameState.flags.carnival_owned
+          && gameState.flags.g70_stolen
+          && !gameState.flags.g70_key_drop_seen
+        ) {
+          gameState.flags.g70_key_drop_pending = true;
+        }
+        window.GameState.save(gameState);
+        location.href = "fishing_screen.html?v=desktop-action-layout-20260605";
+      }
+
+      function fallbackLoadout(type) {
+        if (type === "freshwater") return "noneFreshwater";
+        if (type === "sea") return "noneSea";
+        if (type === "vehicle") return "noneVehicle";
+        if (type === "outfit") return "beginnerOutfit";
+        return "noneBoat";
+      }
+
+      function toggleStorageItem(type, itemId) {
+        gameState = window.GameState.load();
+        const item = itemById(type, itemId);
+        if (
+          itemId === "firstLeisure"
+          && gameState.flags.first_leisure_broken
+          && !gameState.flags.first_leisure_exchanged
+          && !gameState.flags.jaemo_flipper_found
+          && !gameState.flags.valley_boat_owned
+        ) {
+          setDialogue(["상점 포스터가 방금 바뀐 것 같은데...", "상점 주인이 환불을 안 해준다.", "민물에 뭐가 둥둥 떠다니니 그쪽부터 확인하자."]);
+          return;
+        }
+        if (!item || !window.GameState.hasItem(gameState, type, itemId)) {
+          setDialogue(["아직 보유하지 않은 장비다.", "상점이나 이벤트로 먼저 얻어야 한다.", "빈 칸을 눌러도 마음의 장비만 장착된다."]);
+          return;
+        }
+
+        if ((type === "freshwater" || type === "sea") && !window.GameState.canEquipWithOutfit(gameState, type, itemId)) {
+          const outfitLevel = window.GameState.outfitLevels[gameState.loadout.outfit] || 1;
+          const gearLevel = window.GameState.gearLevels[itemId] || 0;
+          const outfitName = storageItemName("outfit", gameState.loadout.outfit);
+          setDialogue([
+            `${outfitName}에는 ${storageItemName(type, itemId)}를 장착할 수 없다.`,
+            "큰 힘에는 큰 뽀대가 따른다.",
+            `의상 Lv.${outfitLevel}에는 Lv.${gearLevel} 장비의 뽀대를 감당할 수 없다.`
+          ]);
+          return;
+        }
+
+        const isEquipped = gameState.loadout[type] === itemId;
+        if (type === "outfit" && isEquipped) {
+          setDialogue(["영우가 옷을 벗으려다 창고 CCTV와 눈이 마주쳤다.", "낚시왕도 최소한의 품위는 지켜야 한다.", `${storageItemName(type, itemId)}은 벗지 말고 다른 옷으로 갈아입자.`]);
+          return;
+        }
+        const nextItemId = isEquipped ? fallbackLoadout(type) : itemId;
+        gameState = window.GameState.setLoadout(gameState, type, nextItemId);
+        updateGarageView();
+
+        if (isEquipped) {
+          const target = type === "freshwater" || type === "sea" ? "낚시세트를" : type === "vehicle" ? "차량을" : "보트를";
+          setDialogue([`${target} 미장착 상태로 바꿨다.`, "해당 장비가 필요한 필드는 진입할 수 없다.", "다시 누르면 장착된다."]);
+          return;
+        }
+
+        setDialogue([
+          `${storageItemName(type, itemId)} 장착 완료.`,
+          type === "vehicle" ? "이제 바다 핑계 중 하나가 사라졌다." : type === "boat" ? "보트는 필요한 필드에서만 자동으로 나선다. 영우보다 판단이 빠르다." : type === "outfit" ? "영우의 외형과 희귀어 출현 보정이 바뀐다." : "낚시세트는 한 종류만 장착된다. 손은 두 개인데 욕심은 여섯 개다.",
+          "장착된 아이템은 노란 테두리로 표시된다."
+        ]);
+      }
+
+      eventClose.addEventListener("click", () => {
+        eventOverlay.hidden = true;
+        if (eventOverlay.dataset.preview === "true") {
+          delete eventOverlay.dataset.preview;
+          activeEventId = null;
+          return;
+        }
+        if (activeEventId) {
+          const event = window.GameState.eventDefinitions[activeEventId];
+          gameState = window.GameState.consumeEvent(gameState, activeEventId).state;
+          updateGarageView();
+          if (routePendingEnding()) return;
+          const showedTitleNotice = showTitleNoticeIfAny();
+          if (showedTitleNotice) {
+            activeEventId = null;
+            return;
+          }
+          if (event?.afterLines) setDialogue(event.afterLines, eventEmotionMap[activeEventId] || "neutral", activeEventId === "tivoli_confiscated" || activeEventId === "tivoli_returned" ? activeEventId : "youngwoo");
+          activeEventId = null;
+        } else if (gameState.flags.tivoli_confiscated && !gameState.flags.g70_purchased) {
+          setTivoliAfterEventDialogue();
+        }
+      });
+
+      endingPopupClose.addEventListener("click", closeEndingPopup);
+      endingOverlay.addEventListener("click", (event) => {
+        if (event.target === endingOverlay) closeEndingPopup();
+      });
+
+      if (devMode) {
+        adminOpenButton.addEventListener("click", openAdminMenu);
+        adminCloseButton.addEventListener("click", closeAdminMenu);
+      }
+      dialogueProgressButton.addEventListener("click", advanceDialogueEvent);
+      adminOverlay.addEventListener("click", (event) => {
+        if (devMode && event.target === adminOverlay) closeAdminMenu();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !endingOverlay.hidden) closeEndingPopup();
+        else if (devMode && event.key === "Escape" && !adminOverlay.hidden) closeAdminMenu();
+      });
+
+      [
+        ["freshwater", "toyRod"],
+        ["freshwater", "aliRod"],
+        ["freshwater", "japanRod"],
+        ["sea", "firstLeisure"],
+        ["sea", "temuRod"],
+        ["sea", "legendRod"],
+        ["vehicle", "tivoli"],
+        ["vehicle", "g70"],
+        ["vehicle", "carnival"],
+        ["boat", "valleyBoat"],
+        ["boat", "seaBoat"],
+        ["outfit", "beginnerOutfit"],
+        ["outfit", "midOutfit"],
+        ["outfit", "premiumOutfit"]
+      ].forEach(([type, itemId]) => {
+        storageSlots[itemId]?.addEventListener("click", () => toggleStorageItem(type, itemId));
+      });
+
+      freshFishingButton.addEventListener("click", startFreshFishing);
+      seaFishingButton.addEventListener("click", startSeaFishing);
+      document.querySelectorAll(".action-panel button").forEach((button) => {
+        button.addEventListener("pointerup", () => button.blur());
+        button.addEventListener("mouseleave", () => button.blur());
+      });
+
+      updateGarageView();
+      window.GameAudio?.installGlobalUiSounds();
+      window.GameAudio?.setScene("home");
+      buildAdminPreviewMenu();
+      const debugEventId = devMode ? new URLSearchParams(location.search).get("debugEvent") : "";
+      if (debugEventId && window.GameState.eventDefinitions[debugEventId]) {
+        showAdminEventShortcut(debugEventId);
+      } else {
+      const showedTitleNotice = showTitleNoticeIfAny();
+      if (showedTitleNotice) {
+        // Title notices use the event-style dialogue frame.
+      } else if (routePendingEnding()) {
+        // Ending scenes are handled on their own screen, like the intro.
+      } else if (setHomeEntryEndingDialogue()) {
+        // Post-ending home dialogue takes priority over the generic goal hint.
+      } else {
+        setCurrentGoalDialogue();
+      }
+      if (!showedTitleNotice) showPendingEvent();
+      }
+    </script>
+  </main>
+  <script src="./mobile_orientation.js"></script>
+</body>
+</html>
+
+

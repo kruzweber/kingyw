@@ -1,0 +1,670 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>낚시왕 남영우</title>
+  <meta name="description" content="아들과의 약속을 지키기 위해 모든 물고기를 잡아가는 코미디 낚시 RPG">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://kingyw.netlify.app/">
+  <meta property="og:title" content="낚시왕 남영우">
+  <meta property="og:description" content="아들과의 약속을 지키기 위해 모든 물고기를 잡아가는 코미디 낚시 RPG">
+  <meta property="og:image" content="https://kingyw.netlify.app/assets/og_main_screen_1_1200x630.png?v=20260605-share1">
+  <meta property="og:image:url" content="https://kingyw.netlify.app/assets/og_main_screen_1_1200x630.png?v=20260605-share1">
+  <meta property="og:image:secure_url" content="https://kingyw.netlify.app/assets/og_main_screen_1_1200x630.png?v=20260605-share1">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="낚시왕 남영우 메인화면 1번 이미지">
+  <link rel="image_src" href="https://kingyw.netlify.app/assets/og_main_screen_1_1200x630.png?v=20260605-share1">
+  <meta itemprop="image" content="https://kingyw.netlify.app/assets/og_main_screen_1_1200x630.png?v=20260605-share1">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="낚시왕 남영우">
+  <meta name="twitter:description" content="아들과의 약속을 지키기 위해 모든 물고기를 잡아가는 코미디 낚시 RPG">
+  <meta name="twitter:image" content="https://kingyw.netlify.app/assets/og_main_screen_1_1200x630.png?v=20260605-share1">
+  <style>
+    :root {
+      --ink: #111522;
+      --line: #070a14;
+      --cream: #ffe9a6;
+      --gold: #ffd34d;
+      --red: #e94c3d;
+      --blue: #45a9cf;
+      --deep: #16233a;
+      --panel: #f2d18b;
+      --green: #68b95f;
+      --game-scale: 1;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #101522;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+      color: var(--ink);
+      image-rendering: pixelated;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    .game-frame {
+      position: relative;
+      width: calc(1180px * var(--game-scale));
+      height: calc(664px * var(--game-scale));
+    }
+
+    .screen {
+      --main-bg: url("./assets/main_stage_start_apartment.png");
+      position: relative;
+      width: 1180px;
+      height: 664px;
+      overflow: hidden;
+      border: 8px solid var(--line);
+      background:
+        linear-gradient(90deg, rgba(9, 14, 28, .08), rgba(9, 14, 28, .16)),
+        var(--main-bg) center / cover no-repeat;
+      box-shadow: 0 0 0 6px #2f3751;
+      transform: scale(var(--game-scale));
+      transform-origin: top left;
+    }
+
+    .screen::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 77% 34%, rgba(255,255,255,.34), transparent 2.4%),
+        radial-gradient(circle at 85% 61%, rgba(255,255,255,.28), transparent 1.9%),
+        radial-gradient(circle at 62% 72%, rgba(255,255,255,.3), transparent 1.8%),
+        linear-gradient(105deg, transparent 0 45%, rgba(255,255,255,.12) 50%, transparent 55% 100%);
+      background-size: 1180px 664px, 1180px 664px, 1180px 664px, 220% 100%;
+      background-position: 0 0, 0 0, 0 0, 160% 0;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      opacity: .8;
+      z-index: 4;
+      animation: sea-glint 4.8s ease-in-out infinite;
+    }
+
+    .screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.08) 50%, transparent 50%) 0 0 / 8px 8px,
+        linear-gradient(rgba(255,255,255,.05) 50%, transparent 50%) 0 0 / 8px 8px;
+      pointer-events: none;
+      mix-blend-mode: soft-light;
+      z-index: 20;
+    }
+
+    .sun {
+      position: absolute;
+      left: 650px;
+      top: 122px;
+      width: 84px;
+      height: 84px;
+      border: 5px solid rgba(255,255,255,.45);
+      border-radius: 50%;
+      background: #fff6bd;
+      box-shadow: 0 0 0 10px rgba(255,232,130,.22);
+    }
+
+    .sun,
+    .hill,
+    .trees,
+    .water,
+    .dock,
+    .player,
+    .rod,
+    .hook-line,
+    .hook,
+    .fish {
+      display: none;
+    }
+
+    .hill {
+      position: absolute;
+      bottom: 318px;
+      width: 420px;
+      height: 135px;
+      background: #769756;
+      border: 5px solid rgba(35,64,42,.45);
+      border-radius: 55% 55% 0 0;
+    }
+
+    .hill.one { left: 310px; }
+    .hill.two { right: 58px; width: 470px; height: 158px; background: #68894f; }
+
+    .trees {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 232px;
+      height: 118px;
+      background:
+        repeating-linear-gradient(90deg, transparent 0 30px, #244b36 30px 48px, transparent 48px 76px);
+      opacity: .76;
+    }
+
+    .water {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 49%;
+      background:
+        linear-gradient(rgba(255,255,255,.18), transparent 34%),
+        #48accf;
+      overflow: hidden;
+    }
+
+    .water::before,
+    .water::after {
+      content: "";
+      position: absolute;
+      left: -20px;
+      width: 125%;
+      height: 22px;
+      background: repeating-linear-gradient(90deg, rgba(255,255,255,.72) 0 18px, transparent 18px 44px);
+      opacity: .4;
+    }
+
+    .water::before { top: 52px; }
+    .water::after { top: 174px; opacity: .22; }
+
+    .dock {
+      position: absolute;
+      left: 0;
+      top: 376px;
+      width: 342px;
+      height: 54px;
+      border: 5px solid var(--line);
+      background: repeating-linear-gradient(90deg, #a96938 0 30px, #7a4528 30px 37px);
+      box-shadow: 0 14px 0 #5b3322;
+      z-index: 5;
+    }
+
+    .dock::before,
+    .dock::after {
+      content: "";
+      position: absolute;
+      bottom: -78px;
+      width: 22px;
+      height: 78px;
+      border: 5px solid var(--line);
+      background: #6e3c25;
+    }
+
+    .dock::before { left: 58px; }
+    .dock::after { right: 44px; }
+
+    .player {
+      position: absolute;
+      left: 142px;
+      top: 250px;
+      width: 112px;
+      image-rendering: pixelated;
+      filter: drop-shadow(7px 5px 0 rgba(0,0,0,.34));
+      z-index: 6;
+    }
+
+    .rod {
+      position: absolute;
+      left: 227px;
+      top: 316px;
+      width: 290px;
+      height: 7px;
+      border: 2px solid #080808;
+      background: #2a1914;
+      transform: rotate(15deg);
+      transform-origin: left center;
+      z-index: 5;
+    }
+
+    .hook-line {
+      position: absolute;
+      left: 506px;
+      top: 390px;
+      width: 2px;
+      height: 96px;
+      background: repeating-linear-gradient(#fff 0 8px, transparent 8px 14px);
+      z-index: 5;
+    }
+
+    .hook {
+      position: absolute;
+      left: 496px;
+      top: 482px;
+      width: 20px;
+      height: 20px;
+      border-right: 5px solid var(--line);
+      border-bottom: 5px solid var(--line);
+      border-radius: 0 0 20px 0;
+      transform: rotate(35deg);
+      z-index: 5;
+    }
+
+    .title-wrap {
+      position: absolute;
+      right: 46px;
+      top: 38px;
+      z-index: 8;
+      text-align: right;
+      filter: drop-shadow(0 8px 0 rgba(0,0,0,.18));
+    }
+
+    .title {
+      display: inline-block;
+      margin: 0;
+      padding: 8px 4px 2px;
+      color: #fff06a;
+      font-size: 88px;
+      font-weight: 1000;
+      line-height: .86;
+      letter-spacing: 0;
+      text-shadow:
+        6px 0 0 var(--line),
+        -6px 0 0 var(--line),
+        0 6px 0 var(--line),
+        0 -6px 0 var(--line),
+        5px 5px 0 #1f3e66,
+        10px 10px 0 rgba(0,0,0,.34);
+      animation: title-breath 2.8s ease-in-out infinite;
+    }
+
+    .subtitle {
+      margin: 16px 0 0 auto;
+      width: max-content;
+      padding: 8px 16px 9px;
+      border: 4px solid var(--line);
+      background: linear-gradient(180deg, #2f65a3, #17345f);
+      color: #fff7cf;
+      font-size: 20px;
+      font-weight: 1000;
+      text-shadow: 2px 2px 0 rgba(0,0,0,.38);
+      box-shadow: 6px 6px 0 rgba(0,0,0,.28);
+      animation: subtitle-pop 3.6s ease-in-out infinite;
+    }
+
+    .menu {
+      position: absolute;
+      right: 48px;
+      top: 286px;
+      width: 332px;
+      z-index: 8;
+      display: grid;
+      gap: 12px;
+    }
+
+    .menu button {
+      height: 70px;
+      border: 5px solid var(--line);
+      background: linear-gradient(180deg, #f8dfa0, #d99c46);
+      color: #111522;
+      font: inherit;
+      font-size: 28px;
+      font-weight: 1000;
+      text-align: left;
+      padding: 0 18px;
+      box-shadow: 6px 6px 0 rgba(0,0,0,.28);
+      cursor: pointer;
+    }
+
+    .menu button:disabled {
+      cursor: wait;
+      color: rgba(17, 21, 34, .58);
+      background: linear-gradient(180deg, #d6c7a2, #a98653);
+      transform: none;
+      animation: none;
+    }
+
+    .menu button.primary {
+      background: linear-gradient(180deg, #ffe983, #f0b735);
+      transform: translateX(-12px);
+      animation: start-pulse 1.9s ease-in-out infinite;
+    }
+
+    .menu button:hover,
+    .menu button:focus-visible {
+      outline: none;
+      transform: translateX(-12px);
+      background: #fff1b8;
+    }
+
+    .menu button.primary:hover,
+    .menu button.primary:focus-visible {
+      transform: translateX(-18px);
+    }
+
+    .status {
+      position: absolute;
+      right: 48px;
+      bottom: 34px;
+      width: 332px;
+      border: 5px solid var(--line);
+      background: rgba(16, 29, 52, .92);
+      color: #fff3d3;
+      padding: 12px 14px;
+      z-index: 8;
+      box-shadow: 6px 6px 0 rgba(0,0,0,.28);
+    }
+
+    .status strong {
+      display: block;
+      color: var(--gold);
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+
+    .status span {
+      display: block;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .preload {
+      position: absolute;
+      left: 44px;
+      bottom: 34px;
+      width: 430px;
+      border: 5px solid var(--line);
+      background: rgba(255, 241, 184, .94);
+      padding: 12px 14px 13px;
+      z-index: 8;
+      box-shadow: 6px 6px 0 rgba(0,0,0,.28);
+    }
+
+    .preload strong {
+      display: block;
+      font-size: 18px;
+      font-weight: 1000;
+      color: #17345f;
+      margin-bottom: 8px;
+    }
+
+    .preload-track {
+      height: 18px;
+      border: 4px solid var(--line);
+      background: #233047;
+      overflow: hidden;
+    }
+
+    .preload-bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #68b95f, #ffd34d);
+      transition: width .16s linear;
+    }
+
+    .preload span {
+      display: block;
+      margin-top: 7px;
+      color: #111522;
+      font-size: 13px;
+      font-weight: 1000;
+      line-height: 1.25;
+    }
+
+    @keyframes sea-glint {
+      0%, 35% { background-position: 0 0, 0 0, 0 0, 160% 0; opacity: .52; }
+      58% { background-position: 0 0, 0 0, 0 0, -80% 0; opacity: .9; }
+      100% { background-position: 0 0, 0 0, 0 0, -80% 0; opacity: .52; }
+    }
+
+    @keyframes title-breath {
+      0%, 100% {
+        transform: translateY(0) scale(1);
+        filter: brightness(1);
+      }
+      50% {
+        transform: translateY(-3px) scale(1.015);
+        filter: brightness(1.16);
+      }
+    }
+
+    @keyframes subtitle-pop {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2px); }
+    }
+
+    @keyframes start-pulse {
+      0%, 100% {
+        transform: translateX(-12px);
+        box-shadow: 6px 6px 0 rgba(0,0,0,.28);
+      }
+      50% {
+        transform: translateX(-18px);
+        box-shadow: 9px 9px 0 rgba(0,0,0,.22);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .screen::before,
+      .title,
+      .subtitle,
+      .menu button.primary {
+        animation: none;
+      }
+    }
+
+    .fish {
+      position: absolute;
+      left: 600px;
+      bottom: 118px;
+      width: 82px;
+      height: 36px;
+      border: 4px solid #10243a;
+      border-radius: 60% 45% 45% 60%;
+      background: #24415c;
+      opacity: .42;
+      z-index: 2;
+    }
+
+    .fish::after {
+      content: "";
+      position: absolute;
+      right: -27px;
+      top: 5px;
+      border-left: 28px solid #10243a;
+      border-top: 13px solid transparent;
+      border-bottom: 13px solid transparent;
+    }
+
+    .fish.two {
+      left: 760px;
+      bottom: 58px;
+      transform: scaleX(-1) scale(.78);
+      opacity: .34;
+    }
+  </style>
+  <link rel="stylesheet" href="./assets/ui_buttons.css">
+  <script src="./mobile_orientation_boot.js"></script>
+</head>
+<body>
+  <div class="game-frame">
+  <main class="screen" aria-label="낚시왕 남영우 메인화면">
+    <div class="sun"></div>
+    <div class="hill one"></div>
+    <div class="hill two"></div>
+    <div class="trees"></div>
+    <div class="water"></div>
+    <div class="fish"></div>
+    <div class="fish two"></div>
+
+    <div class="dock"></div>
+    <img class="player" src="./assets/youngwoo_sprites/level_matched_alpha/youngwoo_beginner_toy_rod_idle.png" alt="영우">
+    <div class="rod"></div>
+    <div class="hook-line"></div>
+    <div class="hook"></div>
+
+    <section class="title-wrap">
+      <h1 class="title">낚시왕 남영우</h1>
+      <p class="subtitle">낚시왕이 되기 위한 험난한 여정</p>
+    </section>
+
+    <nav class="menu" aria-label="메인 메뉴">
+      <button class="primary" type="button" id="newGameButton" disabled>낚시 준비 중</button>
+      <button type="button" id="continueButton" disabled>이어하기</button>
+    </nav>
+
+    <aside class="preload" aria-live="polite">
+      <strong>게임 준비 중</strong>
+      <div class="preload-track" aria-hidden="true">
+        <div class="preload-bar" id="preloadBar"></div>
+      </div>
+      <span id="preloadText">이미지와 화면 파일을 미리 받는 중...</span>
+    </aside>
+
+    <aside class="status">
+      <strong>최근 기록</strong>
+      <span id="saveSummary">도감 0 / 40종 · 보유 0G · 명성 0</span>
+    </aside>
+  </main>
+  </div>
+
+  <script src="./asset_preload_manifest.js"></script>
+  <script src="./game_state.js"></script>
+  <script>
+    function resizeGame() {
+      const baseW = 1180;
+      const baseH = 664;
+      const padding = 0.96;
+      const viewport = window.visualViewport;
+      const usableWidth = viewport?.width || window.innerWidth;
+      const usableHeight = viewport?.height || window.innerHeight;
+      const scale = Math.min(usableWidth / baseW, usableHeight / baseH) * padding;
+      const desktopLike = window.matchMedia("(pointer: fine) and (min-width: 900px)").matches;
+      const maxScale = desktopLike ? 1.25 : 1;
+      document.documentElement.style.setProperty("--game-scale", String(Math.min(scale, maxScale)));
+    }
+
+    window.addEventListener("resize", resizeGame);
+        window.addEventListener("orientationchange", resizeGame);
+        window.visualViewport?.addEventListener("resize", resizeGame);
+    resizeGame();
+
+    const saved = window.GameState.load();
+    const mainScreen = document.querySelector(".screen");
+    const mainBackground = saved.flags?.sea_boat_owned
+      ? "./assets/main_hero_youngwoo_yellowtail_v5.png"
+      : saved.flags?.valley_boat_owned
+        ? "./assets/main_stage_valley_boat.png"
+        : "./assets/main_stage_start_apartment.png";
+    mainScreen.style.setProperty("--main-bg", `url("${mainBackground}")`);
+    document.getElementById("saveSummary").textContent = `도감 ${saved.caughtFish.length} / 60종 · 보유 ${saved.gold.toLocaleString()}G · 명성 ${saved.fame.toLocaleString()}`;
+
+    const newGameButton = document.getElementById("newGameButton");
+    const continueButton = document.getElementById("continueButton");
+    const preloadBar = document.getElementById("preloadBar");
+    const preloadTitle = document.querySelector(".preload strong");
+    const preloadText = document.getElementById("preloadText");
+    const preloadManifest = window.AssetPreloadManifest || { media: [], files: [] };
+    const preloadTargets = [
+      ...preloadManifest.media,
+      ...preloadManifest.files
+    ];
+    let assetsReady = false;
+    let pendingStart = null;
+
+    function setMenuReady() {
+      assetsReady = true;
+      newGameButton.disabled = false;
+      continueButton.disabled = false;
+      newGameButton.textContent = "새 게임 시작";
+      continueButton.textContent = "이어하기";
+      if (pendingStart) pendingStart();
+    }
+
+    function updatePreloadProgress(done, total, failed) {
+      const percent = total ? Math.round((done / total) * 100) : 100;
+      preloadBar.style.width = `${percent}%`;
+      if (done < total) {
+        preloadText.textContent = `이미지 미리 받는 중... ${percent}% (${done}/${total})`;
+        return;
+      }
+      preloadTitle.textContent = "완료";
+      preloadText.textContent = failed
+        ? `${failed}개 파일은 플레이 중 다시 시도합니다.`
+        : "";
+    }
+
+    function preloadImage(src) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.decoding = "async";
+        image.onload = () => resolve(src);
+        image.onerror = () => reject(new Error(src));
+        image.src = src;
+      });
+    }
+
+    function preloadFile(src) {
+      return fetch(src, { cache: "force-cache" }).then((response) => {
+        if (!response.ok) throw new Error(src);
+        return response.blob();
+      });
+    }
+
+    async function preloadAllAssets() {
+      const total = preloadTargets.length;
+      let done = 0;
+      let failed = 0;
+      let cursor = 0;
+      const workers = Math.min(10, Math.max(1, total));
+      updatePreloadProgress(0, total, 0);
+
+      async function worker() {
+        while (cursor < total) {
+          const target = preloadTargets[cursor++];
+          const cleanTarget = target.split("?")[0].toLowerCase();
+          try {
+            if (/\.(png|jpg|jpeg|gif|webp|svg)$/.test(cleanTarget)) {
+              await preloadImage(target);
+            } else {
+              await preloadFile(target);
+            }
+          } catch (_) {
+            failed += 1;
+          } finally {
+            done += 1;
+            updatePreloadProgress(done, total, failed);
+          }
+        }
+      }
+
+      await Promise.all(Array.from({ length: workers }, worker));
+      setMenuReady();
+    }
+
+    function runWhenReady(action) {
+      if (assetsReady) {
+        action();
+        return;
+      }
+      pendingStart = action;
+      newGameButton.textContent = "낚시 준비 중";
+      continueButton.textContent = "준비되면 이동";
+      preloadText.textContent = "조금만 기다리면 화면 전환이 훨씬 부드러워집니다.";
+    }
+
+    newGameButton.addEventListener("click", () => runWhenReady(() => {
+      window.GameState.reset();
+      location.href = "intro_scene.html";
+    }));
+
+    continueButton.addEventListener("click", () => runWhenReady(() => {
+      location.href = "game_home.html";
+    }));
+
+    preloadAllAssets();
+  </script>
+  <script src="./mobile_orientation.js"></script>
+</body>
+</html>
+

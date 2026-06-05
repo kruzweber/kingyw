@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>낚시왕 남영우 - 이벤트</title>
+  <style>
+    :root {
+      --ink: #111522;
+      --line: #070a14;
+      --gold: #ffd34d;
+      --panel: #f5d987;
+      --deep: #172035;
+      --red: #e94c3d;
+      --green: #68b95f;
+      --game-scale: 1;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #101522;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+      color: var(--ink);
+      image-rendering: pixelated;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    .game-frame {
+      position: relative;
+      width: calc(1180px * var(--game-scale));
+      height: calc(664px * var(--game-scale));
+    }
+
+    .screen {
+      position: relative;
+      width: 1180px;
+      height: 664px;
+      overflow: hidden;
+      border: 8px solid var(--line);
+      background:
+        linear-gradient(#27344d 0 22%, #6b4f3d 22% 100%);
+      box-shadow: 0 0 0 6px #2f3751;
+      transform: scale(var(--game-scale));
+      transform-origin: top left;
+    }
+
+    .screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.08) 50%, transparent 50%) 0 0 / 8px 8px,
+        linear-gradient(rgba(255,255,255,.05) 50%, transparent 50%) 0 0 / 8px 8px;
+      pointer-events: none;
+      mix-blend-mode: soft-light;
+      z-index: 20;
+    }
+
+    .card,
+    .panel,
+    .tab,
+    .button {
+      border: 5px solid var(--line);
+      background: var(--panel);
+      box-shadow: 6px 6px 0 rgba(0,0,0,.28);
+    }
+
+    .topbar {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 16px;
+      height: 72px;
+      display: grid;
+      grid-template-columns: 1fr 190px 160px;
+      gap: 10px;
+      z-index: 8;
+    }
+
+    .card { padding: 8px 12px; }
+
+    .title {
+      color: var(--gold);
+      font-size: 32px;
+      font-weight: 1000;
+      text-shadow:
+        3px 0 0 var(--line),
+        -3px 0 0 var(--line),
+        0 3px 0 var(--line),
+        0 -3px 0 var(--line),
+        5px 5px 0 rgba(0,0,0,.28);
+    }
+
+    .label {
+      display: block;
+      color: #665128;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .value {
+      display: block;
+      margin-top: 6px;
+      font-size: 22px;
+      font-weight: 1000;
+      line-height: 1;
+    }
+
+    .tabs {
+      position: absolute;
+      left: 36px;
+      top: 112px;
+      width: 300px;
+      display: grid;
+      gap: 8px;
+      z-index: 8;
+    }
+
+    .tab {
+      min-height: 44px;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 1000;
+      text-align: left;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: var(--gold);
+      transform: translateX(8px);
+    }
+
+    .stage {
+      position: absolute;
+      left: 366px;
+      right: 36px;
+      top: 112px;
+      bottom: 150px;
+      overflow: hidden;
+      z-index: 5;
+    }
+
+    .scene-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(#7fd6f0 0 24%, #bde980 24% 35%, #6ec166 35% 48%, #8b6747 48% 100%);
+    }
+
+    .scene-bg.sea {
+      background:
+        linear-gradient(#7fd6f0 0 28%, #3aa7c8 28% 100%);
+    }
+
+    .scene-bg.shop {
+      background:
+        linear-gradient(#2f3d53 0 18%, #604637 18% 100%);
+    }
+
+    .actor {
+      position: absolute;
+      bottom: 58px;
+      width: 116px;
+      height: 150px;
+      border: 6px solid var(--line);
+      background: #33505d;
+      box-shadow: inset 0 -28px 0 #24333e, 8px 8px 0 rgba(0,0,0,.24);
+      z-index: 4;
+    }
+
+    .actor::before {
+      content: "";
+      position: absolute;
+      left: 27px;
+      top: -50px;
+      width: 58px;
+      height: 58px;
+      border: 6px solid var(--line);
+      background: #f1b27d;
+    }
+
+    .actor.youngwoo {
+      left: 96px;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      overflow: visible;
+    }
+
+    .actor.youngwoo::before {
+      display: none;
+    }
+
+    .actor.youngwoo img {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: 162px;
+      max-height: 168px;
+      transform: translateX(-50%);
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(5px 5px 0 rgba(0,0,0,.35));
+    }
+
+    .actor.youngwoo canvas {
+      position: absolute;
+      left: 50%;
+      bottom: -4px;
+      width: 164px;
+      height: 204px;
+      transform: translateX(-50%);
+      image-rendering: pixelated;
+      filter: drop-shadow(5px 5px 0 rgba(0,0,0,.35));
+    }
+
+    .actor.other { right: 96px; background: #7b4f73; }
+
+    .prop-car {
+      position: absolute;
+      right: 190px;
+      bottom: 66px;
+      width: 150px;
+      height: 52px;
+      border: 5px solid var(--line);
+      background: #d64237;
+      box-shadow: inset -20px -13px 0 #9b222a;
+      z-index: 3;
+    }
+
+    .prop-car::before,
+    .prop-car::after {
+      content: "";
+      position: absolute;
+      bottom: -17px;
+      width: 30px;
+      height: 30px;
+      border: 5px solid var(--line);
+      background: #1d1e2b;
+    }
+
+    .prop-car::before { left: 18px; }
+    .prop-car::after { right: 18px; }
+
+    .phone {
+      position: absolute;
+      right: 76px;
+      top: 54px;
+      width: 170px;
+      height: 252px;
+      border: 8px solid var(--line);
+      background: #222b3f;
+      padding: 18px 12px;
+      z-index: 6;
+      box-shadow: 8px 8px 0 rgba(0,0,0,.28);
+    }
+
+    .phone-screen {
+      height: 100%;
+      border: 4px solid var(--line);
+      background: #dcefff;
+      padding: 10px;
+      font-size: 14px;
+      font-weight: 1000;
+      line-height: 1.35;
+    }
+
+    .cutin {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) rotate(-4deg);
+      border: 8px solid var(--line);
+      background: var(--red);
+      color: #fff3d3;
+      min-width: 260px;
+      padding: 18px 26px;
+      text-align: center;
+      font-size: 56px;
+      font-weight: 1000;
+      text-shadow: 4px 4px 0 #000;
+      z-index: 7;
+      box-shadow: 10px 10px 0 rgba(0,0,0,.32);
+    }
+
+    .dialogue {
+      position: absolute;
+      left: 36px;
+      right: 36px;
+      bottom: 24px;
+      height: 106px;
+      display: grid;
+      grid-template-columns: 118px 1fr 150px;
+      gap: 12px;
+      padding: 12px;
+      background: var(--deep);
+      z-index: 9;
+    }
+
+    .portrait {
+      border: 4px solid var(--line);
+      background: #28324a;
+      display: grid;
+      place-items: center;
+      color: var(--gold);
+      font-size: 28px;
+      font-weight: 1000;
+    }
+
+    .copy {
+      color: #fff3d3;
+      font-weight: 900;
+      line-height: 1.35;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    .speaker {
+      display: block;
+      color: var(--gold);
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+
+    .line {
+      display: block;
+      font-size: 16px;
+      white-space: nowrap;
+    }
+
+    .button {
+      font: inherit;
+      font-size: 22px;
+      font-weight: 1000;
+      background: #fff0ad;
+      cursor: pointer;
+    }
+  </style>
+  <link rel="stylesheet" href="./assets/ui_buttons.css">
+  <script src="./mobile_orientation_boot.js"></script>
+</head>
+<body>
+  <div class="game-frame">
+  <main class="screen" aria-label="이벤트 연출 템플릿">
+    <section class="topbar">
+      <div class="card title">이벤트 연출 템플릿</div>
+      <div class="card">
+        <span class="label">현재 타입</span>
+        <span class="value" id="typeLabel">컷씬</span>
+      </div>
+      <div class="card">
+        <span class="label">진행</span>
+        <span class="value">예시</span>
+      </div>
+    </section>
+
+    <nav class="tabs" aria-label="이벤트 선택">
+      <button class="tab active" type="button" data-scene="tivoli">와이프 티볼리 압수</button>
+      <button class="tab" type="button" data-scene="break">제1레져 파괴</button>
+      <button class="tab" type="button" data-scene="junwoo">준우 문자</button>
+      <button class="tab" type="button" data-scene="son">아들 전화</button>
+      <button class="tab" type="button" data-scene="jaemo">재모 오리발</button>
+      <button class="tab" type="button" data-scene="boss">Lv.10 등장</button>
+    </nav>
+
+    <section class="stage panel">
+      <div class="scene-bg" id="sceneBg"></div>
+      <div class="actor youngwoo" id="youngwoo"><canvas id="youngwooEmotion" width="164" height="204" aria-label="영우 전신 감정"></canvas></div>
+      <div class="actor other" id="otherActor"></div>
+      <div class="prop-car" id="sceneCar"></div>
+      <div class="phone" id="phone" hidden>
+        <div class="phone-screen" id="phoneText">형, 차 잘 나가더라 ㅋㅋ<br>나중에 밥 살게.</div>
+      </div>
+      <div class="cutin" id="cutin" hidden>뚝.</div>
+    </section>
+
+    <aside class="dialogue panel">
+      <div class="portrait" id="portrait">영</div>
+      <div class="copy">
+        <strong class="speaker" id="speaker">와이프</strong>
+        <span class="line" id="line1">마트 가야 하니까 차 키 줘.</span>
+        <span class="line" id="line2">영우는 바다보다 먼저 현실에 걸렸다.</span>
+      </div>
+      <button class="button" type="button" onclick="location.href='game_home.html'">나가기</button>
+    </aside>
+  </main>
+  </div>
+
+  <script>
+    function resizeGame() {
+      const baseW = 1180;
+      const baseH = 664;
+      const padding = 0.96;
+      const viewport = window.visualViewport;
+      const usableWidth = viewport?.width || window.innerWidth;
+      const usableHeight = viewport?.height || window.innerHeight;
+      const scale = Math.min(usableWidth / baseW, usableHeight / baseH) * padding;
+      const desktopLike = window.matchMedia("(pointer: fine) and (min-width: 900px)").matches;
+      const maxScale = desktopLike ? 1.25 : 1;
+      document.documentElement.style.setProperty("--game-scale", String(Math.min(scale, maxScale)));
+    }
+
+    window.addEventListener("resize", resizeGame);
+        window.addEventListener("orientationchange", resizeGame);
+        window.visualViewport?.addEventListener("resize", resizeGame);
+    resizeGame();
+
+    const scenes = {
+      tivoli: {
+        type: "컷씬",
+        bg: "",
+        phone: false,
+        cutin: "",
+        car: true,
+        other: true,
+        portrait: "와",
+        speaker: "와이프",
+        emotion: "worried",
+        lines: ["마트 가야 하니까 차 키 줘.", "영우는 바다보다 먼저 현실에 걸렸다."]
+      },
+      break: {
+        type: "컷인",
+        bg: "sea",
+        phone: false,
+        cutin: "뚝.",
+        car: false,
+        other: false,
+        portrait: "영",
+        speaker: "낚시왕 남영우",
+        emotion: "speechless",
+        lines: ["제1레져 낚시세트가 너무 조용하게 운명을 다했다.", "새 바다 장비는 상점에서 직접 사야 한다."]
+      },
+      junwoo: {
+        type: "문자",
+        bg: "",
+        phone: true,
+        phoneText: "형, 차 잘 나가더라 ㅋㅋ<br>나중에 밥 살게.",
+        cutin: "",
+        car: false,
+        other: false,
+        portrait: "준",
+        speaker: "준우",
+        emotion: "furious",
+        lines: ["친구라서 더 얄밉다.", "영우는 복수보다 먼저 다시 민물로 돌아간다."]
+      },
+      son: {
+        type: "전화",
+        bg: "",
+        phone: true,
+        phoneText: "아빠, 상어도 물고기야?<br>그럼 그것도 잡아와.",
+        cutin: "",
+        car: false,
+        other: false,
+        portrait: "아",
+        speaker: "아들",
+        emotion: "embarrassed",
+        lines: ["도감 10종 달성 전화.", "아들의 기대는 영우의 장비보다 무겁다."]
+      },
+      jaemo: {
+        type: "컷씬",
+        bg: "",
+        phone: false,
+        cutin: "",
+        car: false,
+        other: true,
+        portrait: "재",
+        speaker: "재모",
+        emotion: "happy",
+        lines: ["내 오리발을 찾아줬구나!", "고맙다. 이 민물보트는 네가 써라."]
+      },
+      boss: {
+        type: "경고",
+        bg: "sea",
+        phone: false,
+        cutin: "Lv.10",
+        car: false,
+        other: false,
+        portrait: "!",
+        speaker: "보스급 어종",
+        emotion: "scared",
+        lines: ["수면 아래에서 말도 안 되는 그림자가 움직인다...", "조작은 멈추지 않고, 경고만 짧게 출력된다."]
+      }
+    };
+
+    const tabs = document.querySelectorAll("[data-scene]");
+    const typeLabel = document.getElementById("typeLabel");
+    const sceneBg = document.getElementById("sceneBg");
+    const otherActor = document.getElementById("otherActor");
+    const sceneCar = document.getElementById("sceneCar");
+    const phone = document.getElementById("phone");
+    const phoneText = document.getElementById("phoneText");
+    const cutin = document.getElementById("cutin");
+    const portrait = document.getElementById("portrait");
+    const speaker = document.getElementById("speaker");
+    const line1 = document.getElementById("line1");
+    const line2 = document.getElementById("line2");
+    const youngwooEmotion = document.getElementById("youngwooEmotion");
+    const youngwooEmotionCtx = youngwooEmotion.getContext("2d");
+    const emotionScratch = document.createElement("canvas");
+    const emotionScratchCtx = emotionScratch.getContext("2d", { willReadFrequently: true });
+    const emotionSheet = new Image();
+    emotionSheet.src = "./assets/youngwoo_sprites/emotion_sheets/youngwoo_beginner_emotions_sheet_alpha.png?v=portrait-clean-alpha-20260530";
+    const emotionColumns = {
+      neutral: 0,
+      happy: 1,
+      proud: 10,
+      surprised: 4,
+      panic: 5,
+      angry: 7,
+      sad: 8,
+      crying: 9,
+      determined: 16,
+      revenge: 11,
+      victory: 22,
+      moved: 18
+    };
+    const legacyEmotionMap = {
+      worried: "panic",
+      speechless: "surprised",
+      furious: "angry",
+      embarrassed: "surprised",
+      scared: "panic",
+      relieved: "happy",
+      smug: "revenge",
+      celebrating: "victory"
+    };
+
+    function drawYoungwooEmotion(emotion = "neutral") {
+      if (!emotionSheet.complete || emotionSheet.naturalWidth <= 0) return;
+      const column = emotionColumns[legacyEmotionMap[emotion] || emotion] ?? emotionColumns.neutral;
+      const columns = 6;
+      const cellW = emotionSheet.naturalWidth / columns;
+      const cellH = emotionSheet.naturalHeight / 4;
+      const row = Math.floor(column / columns);
+      youngwooEmotionCtx.clearRect(0, 0, youngwooEmotion.width, youngwooEmotion.height);
+      youngwooEmotionCtx.imageSmoothingEnabled = false;
+      emotionScratch.width = cellW;
+      emotionScratch.height = cellH;
+      emotionScratchCtx.clearRect(0, 0, cellW, cellH);
+      emotionScratchCtx.drawImage(emotionSheet, (column % columns) * cellW, row * cellH, cellW, cellH, 0, 0, cellW, cellH);
+      const pixels = emotionScratchCtx.getImageData(0, 0, cellW, cellH).data;
+      let minX = cellW, minY = cellH, maxX = -1, maxY = -1;
+      for (let y = 0; y < cellH; y += 1) {
+        for (let x = 0; x < cellW; x += 1) {
+          if (pixels[(y * cellW + x) * 4 + 3] > 8) {
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+      if (maxX < 0) return;
+      const pad = 2;
+      const cropX = Math.max(0, minX - pad);
+      const cropY = Math.max(0, minY - pad);
+      const sx = (column % columns) * cellW + cropX;
+      const sy = row * cellH + cropY;
+      const sw = Math.min(cellW - cropX, maxX - minX + 1 + pad * 2);
+      const sh = Math.min(cellH - cropY, maxY - minY + 1 + pad * 2);
+      const scale = Math.min(youngwooEmotion.width / sw, youngwooEmotion.height / sh);
+      const drawW = sw * scale;
+      const drawH = sh * scale;
+      youngwooEmotionCtx.drawImage(
+        emotionSheet,
+        sx,
+        sy,
+        sw,
+        sh,
+        (youngwooEmotion.width - drawW) / 2,
+        youngwooEmotion.height - drawH,
+        drawW,
+        drawH
+      );
+    }
+
+    emotionSheet.addEventListener("load", () => drawYoungwooEmotion(scenes[document.querySelector("[data-scene].active")?.dataset.scene || "tivoli"]?.emotion));
+
+    function renderScene(id) {
+      const scene = scenes[id];
+      tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.scene === id));
+      typeLabel.textContent = scene.type;
+      sceneBg.className = `scene-bg ${scene.bg}`;
+      otherActor.hidden = !scene.other;
+      sceneCar.hidden = !scene.car;
+      phone.hidden = !scene.phone;
+      phoneText.innerHTML = scene.phoneText || "";
+      cutin.hidden = !scene.cutin;
+      cutin.textContent = scene.cutin;
+      portrait.textContent = scene.portrait;
+      speaker.textContent = scene.speaker;
+      line1.textContent = scene.lines[0];
+      line2.textContent = scene.lines[1];
+      drawYoungwooEmotion(scene.emotion || "neutral");
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => renderScene(tab.dataset.scene));
+    });
+  </script>
+  <script src="./mobile_orientation.js"></script>
+</body>
+</html>

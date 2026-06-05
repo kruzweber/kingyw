@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>낚시왕 남영우 - 프롤로그</title>
+  <style>
+    :root {
+      --line: #070a14;
+      --gold: #ffd34d;
+      --panel: #f2d18b;
+      --ink: #14131a;
+      --paper: #fff3d3;
+      --game-scale: 1;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: #080d18;
+      color: var(--paper);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+      image-rendering: pixelated;
+      user-select: none;
+    }
+
+    .game-frame {
+      position: relative;
+      width: calc(1180px * var(--game-scale));
+      height: calc(664px * var(--game-scale));
+    }
+
+    .screen {
+      position: relative;
+      width: 1180px;
+      height: 664px;
+      overflow: hidden;
+      border: 8px solid var(--line);
+      background: #111827 url("./assets/intro_living_room_toy_rod_v2.png") center / cover no-repeat;
+      box-shadow: 0 0 0 6px #2f3751;
+      transform: scale(var(--game-scale));
+      transform-origin: top left;
+      animation: wake 3.2s ease-out forwards;
+    }
+
+    .screen::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: #000;
+      opacity: .82;
+      pointer-events: none;
+      animation: fade-in-room 3.8s ease-out forwards;
+      z-index: 2;
+    }
+
+    .screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.07) 50%, transparent 50%) 0 0 / 8px 8px,
+        linear-gradient(rgba(255,255,255,.045) 50%, transparent 50%) 0 0 / 8px 8px;
+      pointer-events: none;
+      mix-blend-mode: soft-light;
+      z-index: 8;
+    }
+
+    .narration {
+      position: absolute;
+      left: 54px;
+      right: 54px;
+      bottom: 42px;
+      padding: 18px 22px;
+      border: 5px solid var(--line);
+      background: rgba(12, 18, 32, .88);
+      box-shadow: 7px 7px 0 rgba(0,0,0,.34);
+      z-index: 5;
+    }
+
+    .line {
+      display: block;
+      min-height: 31px;
+      color: var(--paper);
+      font-size: 22px;
+      font-weight: 1000;
+      line-height: 1.42;
+      text-shadow: 3px 3px 0 #000;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: line-in .8s ease-out forwards;
+    }
+
+    .line strong {
+      color: var(--gold);
+    }
+
+    .line:nth-child(1) { animation-delay: 1.4s; }
+    .line:nth-child(2) { animation-delay: 2.8s; }
+    .line:nth-child(3) { animation-delay: 4.2s; }
+
+    .skip-button {
+      position: absolute !important;
+      right: 26px;
+      top: 22px;
+      height: 52px;
+      border: 5px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      font: inherit;
+      font-size: 21px;
+      font-weight: 1000;
+      text-align: left;
+      padding: 0 18px;
+      box-shadow: 6px 6px 0 rgba(0,0,0,.28);
+      cursor: pointer;
+      z-index: 5;
+      opacity: 0;
+      animation: line-in .6s ease-out 5.6s forwards;
+    }
+
+    .skip-button:hover,
+    .skip-button:focus-visible {
+      background: var(--gold);
+      transform: translateX(-10px);
+      outline: none;
+    }
+
+    @keyframes fade-in-room {
+      0% { opacity: .92; }
+      100% { opacity: .08; }
+    }
+
+    @keyframes wake {
+      0% { filter: brightness(.55) saturate(.75); }
+      100% { filter: brightness(1) saturate(1); }
+    }
+
+    @keyframes line-in {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .screen,
+      .screen::before,
+      .line,
+      .skip-button {
+        animation: none;
+      }
+      .screen::before { opacity: .08; }
+      .line,
+      .skip-button {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="./assets/ui_buttons.css">
+  <script src="./mobile_orientation_boot.js"></script>
+</head>
+<body>
+  <div class="game-frame">
+    <main class="screen" id="screen" aria-label="프롤로그">
+      <button class="skip-button" type="button" id="skipButton">창고로 이동</button>
+      <section class="narration" aria-label="스토리 나레이션">
+        <span class="line">아침 햇살이 거실을 천천히 밝히던 날.</span>
+        <span class="line">영우의 손에는 <strong>아들이 건넨 장난감 낚시대</strong>가 들려 있었다.</span>
+        <span class="line">"아빠 물고기 다 잡아와"</span>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function resizeGame() {
+      const baseW = 1180;
+      const baseH = 664;
+      const padding = 0.96;
+      const viewport = window.visualViewport;
+      const usableWidth = viewport?.width || window.innerWidth;
+      const usableHeight = viewport?.height || window.innerHeight;
+      const scale = Math.min(usableWidth / baseW, usableHeight / baseH) * padding;
+      const desktopLike = window.matchMedia("(pointer: fine) and (min-width: 900px)").matches;
+      const maxScale = desktopLike ? 1.25 : 1;
+      document.documentElement.style.setProperty("--game-scale", String(Math.min(scale, maxScale)));
+    }
+
+    function continueGame() {
+      location.href = "game_home.html";
+    }
+
+    window.addEventListener("resize", resizeGame);
+    window.addEventListener("orientationchange", resizeGame);
+    window.visualViewport?.addEventListener("resize", resizeGame);
+    document.getElementById("skipButton").addEventListener("click", continueGame);
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") continueGame();
+    });
+    resizeGame();
+  </script>
+  <script src="./mobile_orientation.js"></script>
+</body>
+</html>
