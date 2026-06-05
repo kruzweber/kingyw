@@ -569,6 +569,8 @@
       ...preloadManifest.media,
       ...preloadManifest.files
     ];
+    const preloadCacheKey = "fishingKingAssetPreloadSignature";
+    const preloadSignature = `${preloadTargets.length}:${preloadTargets.join("|").length}`;
     let assetsReady = false;
     let pendingStart = null;
 
@@ -613,6 +615,12 @@
 
     async function preloadAllAssets() {
       const total = preloadTargets.length;
+      if (total && localStorage.getItem(preloadCacheKey) === preloadSignature) {
+        updatePreloadProgress(total, total, 0);
+        setMenuReady();
+        return;
+      }
+
       let done = 0;
       let failed = 0;
       let cursor = 0;
@@ -639,6 +647,7 @@
       }
 
       await Promise.all(Array.from({ length: workers }, worker));
+      if (!failed) localStorage.setItem(preloadCacheKey, preloadSignature);
       setMenuReady();
     }
 
