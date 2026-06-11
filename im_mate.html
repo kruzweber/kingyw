@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>iM Mate 플랫폼 데모</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc; 
+            color: #1e293b; 
+            overflow-x: hidden; 
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
+        .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .transition-layout { transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* 채팅방 스크롤 스타일 최적화 */
+        #chat-messages::-webkit-scrollbar { width: 4px; }
+        #chat-messages::-webkit-scrollbar-thumb { background-color: #e2e8f0; border-radius: 4px; }
+        
+        /* 구글 맵 이프레임 반응형 프레임 */
+        .map-wrapper {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 sm:p-6 md:p-8">
+
+    <div id="app-container" class="relative w-full max-w-md h-[90vh] bg-white rounded-[2.5rem] shadow-2xl border border-gray-200 overflow-hidden flex transition-layout">
+        
+        <!-- 좌측: 모바일 채팅 에이전트 스크린 -->
+        <div id="chat-screen" class="w-full h-full flex flex-col relative z-10 bg-white transition-layout">
+            <!-- 헤더 영역 -->
+            <div class="px-6 py-5 border-b border-gray-100 bg-white/95 backdrop-blur z-20 flex items-center justify-between">
+                <!-- 로고 누르면 메인화면으로 복귀 (초기화) -->
+                <button onclick="resetToHome()" class="font-extrabold text-2xl tracking-tighter text-[#00D09B] hover:opacity-80 transition-opacity">
+                    iM <span class="text-[#1e293b]">Mate</span>
+                </button>
+                <div class="flex items-center space-x-2">
+                    <!-- 실시간 뷰 전환 스위치 (대시보드 노출 시 동적 활성화) -->
+                    <button id="toggle-chat-width-btn" onclick="toggleChatWidth()" class="hidden bg-gray-100 hover:bg-[#00D09B]/10 hover:text-[#00A87E] text-gray-600 text-xs px-2.5 py-1.5 rounded-xl font-bold transition flex items-center gap-1">
+                        <i class="fas fa-columns"></i>
+                        <span id="toggle-chat-width-text">넓게 보기</span>
+                    </button>
+                    <div class="flex space-x-1.5 text-gray-400 text-sm ml-1">
+                        <i class="fas fa-signal"></i>
+                        <i class="fas fa-battery-full"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-4 pb-32">
+                <!-- 초기 로비 메인 안내 뷰 -->
+                <div id="welcome-view" class="text-center mt-6 animate-fade-in">
+                    <div class="w-20 h-20 bg-gradient-to-tr from-[#00D09B] to-[#00A87E] rounded-full flex justify-center items-center mx-auto mb-6 shadow-lg shadow-[#00D09B]/30">
+                        <i class="fas fa-network-wired text-3xl text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-black mb-2 text-[#1e293b] tracking-tight">이동 · 공간 · 유통을 하나로</h2>
+                    <p class="text-gray-500 text-sm mb-5 leading-relaxed">원하시는 라이프 시나리오를 자유롭게 제안해 보세요.<br>최적의 이동 수단, 맞춤형 공간, 당일 주문을 하나로 완성합니다.</p>
+                    
+                    <!-- 플랫폼 핵심 기능 뱃지 그룹화 -->
+                    <div class="flex justify-center gap-1.5 mb-8">
+                        <span class="bg-blue-50 text-[#0B4A99] border border-blue-100 px-3 py-1.5 rounded-2xl text-[11px] font-bold flex items-center gap-1 shadow-sm">
+                            <i class="fas fa-car-side"></i> 실시간 이동
+                        </span>
+                        <span class="bg-emerald-50 text-[#00A87E] border border-emerald-100 px-3 py-1.5 rounded-2xl text-[11px] font-bold flex items-center gap-1 shadow-sm">
+                            <i class="fas fa-hotel"></i> 공간 예약
+                        </span>
+                        <span class="bg-[#00D09B]/5 text-[#00A87E] border border-[#00D09B]/20 px-3 py-1.5 rounded-2xl text-[11px] font-bold flex items-center gap-1 shadow-sm">
+                            <i class="fas fa-shopping-bag"></i> 맞춤 배송
+                        </span>
+                    </div>
+                    
+                    <!-- 시나리오 원클릭 가동 버튼 -->
+                    <div class="space-y-3 flex flex-col px-1">
+                        <button onclick="fillInput('내일 모레 동성로에서 소개팅 있어', 'dongseongro')" class="bg-gray-50 hover:bg-[#00D09B]/5 border border-gray-100 hover:border-[#00D09B] text-left px-5 py-4 rounded-2xl transition duration-200">
+                            <span class="block font-bold text-[#1e293b] mb-1">👩‍❤️‍👨 대구 동성로 소개팅</span>
+                            <span class="text-xs text-gray-500">스타일링 의류 당일 배송 + 동성로 다이닝 예약 + 맞춤 수송 매칭</span>
+                        </button>
+                        <button onclick="fillInput('이번 주말 부산으로 1박 2일 데이트 갈래', 'haeundae')" class="bg-gray-50 hover:bg-[#00D09B]/5 border border-gray-100 hover:border-[#00D09B] text-left px-5 py-4 rounded-2xl transition duration-200">
+                            <span class="block font-bold text-[#1e293b] mb-1">🌊 부산 1박 2일 여행</span>
+                            <span class="text-xs text-gray-500">기차 예매 or 카셰어링 + 오션뷰 전용 숙소 + 대기열 면제 로컬 식당</span>
+                        </button>
+                        <button onclick="fillInput('대구에 피부 관리할 피부과 추천 좀 해줘', 'dermatology')" class="bg-gray-50 hover:bg-[#00D09B]/5 border border-gray-100 hover:border-[#00D09B] text-left px-5 py-4 rounded-2xl transition duration-200">
+                            <span class="block font-bold text-[#1e293b] mb-1">💆‍♀️ 대구 메디컬 안심 뷰티</span>
+                            <span class="text-xs text-gray-500">피부과 정밀 예약 + 시술 사후 제품 당일 퀵 배송 + 안심 귀가 이동</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="input-area" class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-white via-white to-transparent pt-10 pb-6 px-4">
+                <div id="quick-replies" class="flex gap-2 overflow-x-auto mb-3 pb-2 hidden">
+                    <!-- 동적 의도 분석용 가이드 퀵버튼 렌더링 영역 -->
+                </div>
+                <div class="relative flex items-center bg-gray-50 rounded-full border border-gray-200 p-1 shadow-sm">
+                    <input type="text" id="chat-input" class="flex-1 bg-transparent border-none focus:outline-none text-[#1e293b] px-5 py-3 text-sm placeholder-gray-400" placeholder="일정을 말씀해 주시면 초연결 분석을 수행합니다..." onkeypress="if(event.key === 'Enter') sendReply()">
+                    <button onclick="sendReply()" class="w-10 h-10 bg-[#00D09B] hover:bg-[#00b386] rounded-full flex justify-center items-center transition transform active:scale-90 mr-1 shadow-md shadow-[#00D09B]/30">
+                        <i class="fas fa-paper-plane text-white text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 우측: 결과 포트폴리오 및 맵 네비게이션용 확장 스크린 -->
+        <div id="right-panel" class="hidden w-2/3 h-full bg-gray-50 relative z-0 border-l border-gray-200 transition-layout">
+            <div id="result-screen" class="h-full overflow-y-auto hidden p-6 md:p-8">
+                <div id="result-content" class="h-full"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentScenario = '';
+        let chatStep = 0;
+        let isChatExpanded = false; // 현재 화면에서 채팅창 확장 여부 상태 플래그
+        
+        // 시나리오 세부 속성 실시간 트래킹용 변수
+        let userTime = '';
+        let userTransport = 'public'; // 기본값: public(대중교통/KTX), taxi/socar(택시/쏘카)
+        let userMenu = '';
+        let userSkinConcern = '';
+        let userHotel = '';
+        let userPostCare = '';
+        let userOutfitStyle = 'men_minimal'; // 기본값: 남성 미니멀 셋업
+
+        let currentBundle = [];
+        let currentTitle = "";
+        
+        // Gemini API 연동 설정 
+        const apiKey = ""; 
+        const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
+        let chatHistoryData = [];
+
+        // iM원패스 교통카드는 제공해주신 다운로드.png 고유 파일 연결
+        const imOnepassCardImg = "다운로드.png";
+
+        // 의류 카달로그 남성 전용 데이터베이스
+        const fashionDatabase = {
+            men_minimal: {
+                title: "[맞춤 주문] 에센셜 미니멀 셋업",
+                desc: "세련된 어반 캐주얼 슬림 실루엣 and 구김 방지 링클프리 원단으로 단정하고 시크한 남성 첫인상 신뢰감 선호도 1위 셋업",
+                price: 138000,
+                img: "https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=400&q=80"
+            },
+            men_casual: {
+                title: "[맞춤 주문] 어반 캐주얼 남친룩 세트",
+                desc: "포근하고 차분한 소프트 파인 텍스처 니트와 고탄성 슬림 테이퍼드 치노 팬츠를 결합하여 편안하고 트렌디한 무드 연출",
+                price: 115000,
+                img: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80"
+            }
+        };
+
+        // 실시간 구글 지도 및 이동 경로 모듈 데이터 연계 (대구-부산 줌 배율 완벽 조정 z=9)
+        const routeData = {
+            dongseongro: {
+                title: "동성로 최적 이동 경로",
+                public: {
+                    duration: "22분",
+                    cost: "1,500원",
+                    interval: "평균 6분 (1호선)",
+                    recommendation: "대구도시철도 1호선 지하 통로를 통한 접근으로 쾌적하며 약속 시간 보장성이 가장 높습니다.",
+                    steps: [
+                        { icon: "fa-walking", desc: "출발지에서 대구 1호선 지하철역 입구까지 도보", time: "3분" },
+                        { icon: "fa-subway", desc: "대구 지하철 1호선 안심 방향 탑승 후 중앙로역 하차", time: "15분" },
+                        { icon: "fa-walking", desc: "중앙로역 2번 출구 연결로를 통한 식당 진입", time: "4분" }
+                    ],
+                    mapUrl: "https://maps.google.com/maps?saddr=대구 범어역&daddr=대구 중구 동성로&ie=UTF8&t=&z=14&iwloc=B&output=embed"
+                },
+                taxi: {
+                    duration: "14분",
+                    cost: "5,800원",
+                    interval: "평균 3분 내 매칭",
+                    recommendation: "카카오T 블루 원스톱 배차가 추천됩니다. 현재 혼잡도가 낮은 신천대로로 안전하게 우회합니다.",
+                    steps: [
+                        { icon: "fa-taxi", desc: "자택 문 앞으로 맞춤 안심 에스코트 차량 탑승", time: "2분" },
+                        { icon: "fa-road", desc: "신천대로 전용 램프 진출입 및 우회 도로 이동", time: "11분" },
+                        { icon: "fa-walking", desc: "동성로 진입 광장 안심 구역 직착 하차 및 도보", time: "1분" }
+                    ],
+                    mapUrl: "https://maps.google.com/maps?saddr=대구 범어역&daddr=대구 중구 동성로&ie=UTF8&t=&z=14&iwloc=B&output=embed"
+                }
+            },
+            haeundae: {
+                title: "부산 여행 최적 이동 경로",
+                public: { 
+                    duration: "1시간 10분",
+                    cost: "24,000원",
+                    interval: "평균 15분 운행 간격",
+                    recommendation: "KTX 초고속 이송 솔루션을 연동합니다. 정체를 완전히 회피하여 시간을 가장 절약합니다.",
+                    steps: [
+                        { icon: "fa-train", desc: "동대구역 플랫폼에서 부산행 KTX 직행 열차 탑승", time: "42분" },
+                        { icon: "fa-subway", desc: "부산역 하차 후 지하철 1호선 환승 및 해운대 이동", time: "18분" },
+                        { icon: "fa-walking", desc: "지하철역 출구에서 해운대 숙박시설까지 이동", time: "10분" }
+                    ],
+                    mapUrl: "https://maps.google.com/maps?saddr=동대구역&daddr=해운대해수욕장&ie=UTF8&t=&z=9&iwloc=B&output=embed"
+                },
+                taxi: { 
+                    duration: "1시간 40분",
+                    cost: "76,000원",
+                    interval: "즉시 쏘카앱 스마트 예약",
+                    recommendation: "쏘카 전용 카셰어링을 가동합니다. 대구부산고속도로를 경유하여 기동성 높은 개별 자유 이동권을 확보합니다.",
+                    steps: [
+                        { icon: "fa-key", desc: "가장 한적한 주변 쏘카존 스마트 키를 통한 픽업", time: "5분" },
+                        { icon: "fa-road", desc: "대구부산고속도로 직선 진입 주행 (총 124km)", time: "1시간 25분" },
+                        { icon: "fa-car", desc: "숙소 전용 주차구역 하이패스 무정차 직착 진입 완료", time: "10분" }
+                    ],
+                    mapUrl: "https://maps.google.com/maps?saddr=대구 수성구&daddr=부산 해운대&ie=UTF8&t=&z=9&iwloc=B&output=embed"
+                }
+            },
+            dermatology: {
+                title: "대구 수성구 스킨케어 안심 이동 경로",
+                public: {
+                    duration: "18분",
+                    cost: "1,500원",
+                    interval: "평균 5분 (2호선)",
+                    recommendation: "대구 지하철 2호선 통로 무자극 동선입니다. 자외선과 도심 대기 물질에 전혀 노출되지 않습니다.",
+                    steps: [
+                        { icon: "fa-walking", desc: "출발지 도보 출발 후 대구 2호선 승강장 진입", time: "4분" },
+                        { icon: "fa-subway", desc: "수성구 중심 범어역 탑승 ➡️ 반월당역 메디컬 출구 하차", time: "10분" },
+                        { icon: "fa-building", desc: "지하 연동 게이트를 통한 클리닉 실내 보도 층간 이동", time: "4.5분" }
+                    ],
+                    mapUrl: "https://maps.google.com/maps?saddr=대구 반월당역&daddr=봄빛피부과의원 대구&ie=UTF8&t=&z=14&iwloc=B&output=embed"
+                },
+                taxi: {
+                    duration: "11분",
+                    cost: "8,500원",
+                    interval: "평균 4분 내 배차",
+                    recommendation: "안심 에스코트 차량(택시) 서비스를 제공합니다. 완벽한 일사광선 차단 윈도우 스킨 필름 처리 차량이 배차됩니다.",
+                    steps: [
+                        { icon: "fa-hospital-alt", desc: "피부과의원 진료 완료 후 병원 1층 VIP 승차 존 대기", time: "2분" },
+                        { icon: "fa-shield-alt", desc: "자외선 차단 필름이 장착된 특별 호출 차량 경유 복귀", time: "8분" },
+                        { icon: "fa-home", desc: "햇볕 노출 없이 완벽하게 자택 앞 직배송 및 귀가 완료", time: "1분" }
+                    ],
+                    mapUrl: "https://maps.google.com/maps?saddr=끌리메 대구점&daddr=대구 수성못&ie=UTF8&t=&z=14&iwloc=B&output=embed"
+                }
+            }
+        };
+
+        // 가변형 레이아웃 엔진 스위처 (채팅 강조 vs 대시보드 강조)
+        function toggleChatWidth(forceState) {
+            const chatScreen = document.getElementById('chat-screen');
+            const rightPanel = document.getElementById('right-panel');
+            const toggleText = document.getElementById('toggle-chat-width-text');
+            const inputArea = document.getElementById('input-area');
+
+            isChatExpanded = (forceState !== undefined) ? forceState : !isChatExpanded;
+
+            if (isChatExpanded) {
+                // [채팅 집중 모드] - 모바일에서는 채팅만 가득 채우고, 데스크톱에선 5:5 비율 분할
+                chatScreen.className = "w-full md:w-[50%] h-full flex flex-col relative z-10 bg-white transition-layout border-r border-gray-200 animate-fade-in";
+                rightPanel.className = "hidden md:flex md:w-[50%] h-full bg-gray-50 relative z-0 transition-layout";
+                if(toggleText) toggleText.innerText = "분석 복귀";
+                inputArea.classList.remove('hidden');
+            } else {
+                // [대시보드 집중 모드] - 모바일에서는 대시보드만 가득 채우고, 데스크톱에선 미니멀 사이드바(30%) 배치
+                chatScreen.className = "hidden md:flex md:w-[32%] h-full flex-col relative z-10 bg-white transition-layout border-r border-gray-200";
+                rightPanel.className = "w-full md:w-[68%] h-full bg-gray-50 relative z-0 transition-layout";
+                if(toggleText) toggleText.innerText = "채팅 확장";
+                inputArea.classList.add('hidden');
+            }
+            
+            // 레이아웃 변경 후 부드러운 스크롤 복원
+            scrollToBottom();
+        }
+
+        function resetToHome() {
+            currentScenario = '';
+            chatStep = 0;
+            isChatExpanded = false;
+            userTime = '';
+            userTransport = 'public';
+            userMenu = '';
+            userSkinConcern = '';
+            userHotel = '';
+            userPostCare = '';
+            userOutfitStyle = 'men_minimal';
+            chatHistoryData = [];
+            currentBundle = [];
+
+            const chatMessages = document.getElementById('chat-messages');
+            const welcomeView = document.getElementById('welcome-view');
+            
+            welcomeView.classList.remove('hidden');
+            chatMessages.innerHTML = ''; 
+            chatMessages.appendChild(welcomeView);
+            
+            document.getElementById('input-area').classList.remove('hidden');
+            document.getElementById('chat-input').value = '';
+            document.getElementById('quick-replies').classList.add('hidden');
+            document.getElementById('quick-replies').innerHTML = '';
+            document.getElementById('toggle-chat-width-btn').classList.add('hidden');
+
+            const appContainer = document.getElementById('app-container');
+            const chatScreen = document.getElementById('chat-screen');
+            const rightPanel = document.getElementById('right-panel');
+            const resultScreen = document.getElementById('result-screen');
+
+            appContainer.className = "relative w-full max-w-md h-[90vh] bg-white rounded-[2.5rem] shadow-2xl border border-gray-200 overflow-hidden flex transition-layout";
+            chatScreen.className = "w-full h-full flex flex-col relative z-10 bg-white transition-layout";
+            rightPanel.className = "hidden w-2/3 h-full bg-gray-50 relative z-0 border-l border-gray-200";
+            
+            resultScreen.classList.add('hidden');
+            document.getElementById('result-content').innerHTML = '';
+        }
+
+        function fillInput(text, scenario) {
+            document.getElementById('welcome-view').classList.add('hidden');
+            currentScenario = scenario;
+            chatStep = 0;
+            chatHistoryData = []; 
+            
+            document.getElementById('chat-input').value = text;
+            sendReply();
+        }
+
+        function appendMessage(sender, text) {
+            const container = document.getElementById('chat-messages');
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up mb-4`;
+            
+            let bubbleHtml = '';
+            if (sender === 'user') {
+                bubbleHtml = `<div class="bg-[#00D09B] text-white px-5 py-3 rounded-2xl rounded-tr-sm text-sm max-w-[85%] shadow-sm font-semibold">${text}</div>`;
+            } else {
+                bubbleHtml = `
+                    <div class="flex items-start max-w-[95%]">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#00D09B] to-[#00A87E] flex items-center justify-center mr-3 mt-1 flex-shrink-0 shadow-md shadow-[#00D09B]/30">
+                            <i class="fas fa-robot text-white text-xs"></i>
+                        </div>
+                        <div class="bg-gray-100 text-[#1e293b] px-5 py-3 rounded-2xl rounded-tl-sm text-sm border border-gray-200/80 shadow-sm leading-relaxed">${text}</div>
+                    </div>
+                `;
+            }
+            wrapper.innerHTML = bubbleHtml;
+            container.appendChild(wrapper);
+            
+            scrollToBottom();
+            
+            // 이미지 카드 로딩 완료 후 높이가 밀려 내려가는 현상까지 완벽 방지
+            const images = wrapper.getElementsByTagName('img');
+            for (let img of images) {
+                img.addEventListener('load', scrollToBottom);
+            }
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('chat-messages');
+            if (container) {
+                setTimeout(() => {
+                    container.scrollTo({
+                        top: container.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                }, 50);
+            }
+        }
+
+        function showTypingIndicator() {
+            const container = document.getElementById('chat-messages');
+            const wrapper = document.createElement('div');
+            wrapper.id = 'typing-indicator';
+            wrapper.className = `flex justify-start animate-slide-up mb-4`;
+            wrapper.innerHTML = `
+                <div class="flex items-start">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#00D09B] to-[#00A87E] flex items-center justify-center mr-3 flex-shrink-0 shadow-md shadow-[#00D09B]/30">
+                        <i class="fas fa-robot text-white text-xs"></i>
+                    </div>
+                    <div class="bg-gray-100 px-4 py-3 rounded-2xl rounded-tl-sm border border-gray-200/80 shadow-sm flex items-center space-x-1">
+                        <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                        <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.25s"></div>
+                        <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(wrapper);
+            scrollToBottom();
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
+        }
+
+        function sendReply() {
+            const inputEl = document.getElementById('chat-input');
+            const text = inputEl.value;
+            if(!text.trim()) return;
+
+            appendMessage('user', text);
+            
+            if (chatHistoryData.length > 0 && chatHistoryData[chatHistoryData.length - 1].role === 'user') {
+                chatHistoryData[chatHistoryData.length - 1].parts[0].text += " | " + text;
+            } else {
+                chatHistoryData.push({ role: "user", parts: [{ text: text }] });
+            }
+            
+            inputEl.value = '';
+            
+            const quickReplyContainer = document.getElementById('quick-replies');
+            if(quickReplyContainer) {
+                quickReplyContainer.classList.add('hidden');
+                quickReplyContainer.innerHTML = '';
+            }
+
+            showTypingIndicator();
+            chatStep++;
+
+            extractDataFromContext();
+
+            if (text.match(/(결제|진행|오케이|고고|완료|승인|구성|패키지)/)) {
+                 setTimeout(() => { 
+                    removeTypingIndicator();
+                    appendMessage('ai', "초연결 통합 플랫폼 매칭 검증 완료! 분석된 이동 동선 및 공간 권한, 제품 주문 가계약을 정렬하여 하나의 포트폴리오로 오케스트레이션 합니다. 🚀");
+                    setTimeout(() => { startLoadingEngines(); }, 1200); 
+                }, 1000);
+                 return;
+            }
+
+            callGeminiAPI();
+        }
+
+        function extractDataFromContext() {
+            const allUserText = chatHistoryData.filter(msg => msg.role === 'user').map(msg => msg.parts[0].text).join(" ");
+            
+            if (allUserText.match(/오전|오후|[0-9]+시|[0-9]+분/)) {
+                let matched = allUserText.match(/(오전|오후|아침|저녁)?\s?[0-9]+시(\s?[0-9]+분)?/);
+                if(matched) userTime = matched[0];
+            }
+            
+            if (allUserText.includes('쏘카') || allUserText.includes('카쉐어링') || allUserText.includes('렌트') || allUserText.includes('차량')) {
+                userTransport = 'taxi'; 
+            } else if (allUserText.includes('KTX') || allUserText.includes('기차') || allUserText.includes('열차') || allUserText.includes('철도')) {
+                userTransport = 'public'; 
+            } else if (allUserText.includes('지하철') || allUserText.includes('대중교통')) {
+                userTransport = 'public';
+            } else if (allUserText.includes('택시') || allUserText.includes('카카오')) {
+                userTransport = 'taxi';
+            }
+
+            let foodMatch = allUserText.match(/(삼겹살|소고기|국밥|파스타|피자|초밥|스테이크|한정식|횟집|회|조개구이|인투|오스테리아밀즈|다이닝|맛집|루프탑|정원)/);
+            if (foodMatch) {
+                userMenu = foodMatch[1];
+            }
+            
+            let skinMatch = allUserText.match(/(여드름|압출|트러블|피지|리프팅|슈링크|미백|필러|보톡스|스킨부스터|탄력|케어)/);
+            if (skinMatch) {
+                userSkinConcern = skinMatch[1];
+            }
+
+            if (allUserText.includes('호텔') || allUserText.includes('오션뷰')) userHotel = '호텔';
+            else if (allUserText.includes('에어비앤비') || allUserText.includes('한옥') || allUserText.includes('독채')) userHotel = '에어비앤비';
+
+            if (allUserText.includes('시카') || allUserText.includes('크림') || allUserText.includes('재생') || allUserText.includes('화장품') || allUserText.includes('배송')) {
+                userPostCare = '재생크림';
+            }
+
+            if (allUserText.includes('캐주얼') || allUserText.includes('남친룩') || allUserText.includes('니트')) {
+                userOutfitStyle = 'men_casual';
+            } else if (allUserText.includes('미니멀') || allUserText.includes('셋업') || allUserText.includes('수트')) {
+                userOutfitStyle = 'men_minimal';
+            }
+        }
+
+        async function callGeminiAPI() {
+            if (!apiKey || apiKey.trim() === "") {
+                console.log("No API Key, running localized mock agent.");
+                fallbackDemoResponse();
+                return;
+            }
+
+            const systemPrompt = `너는 DGB금융그룹의 초연결 맞춤 라이프케어 플랫폼인 'iM Mate'의 커스터마이징 AI 에이전트야. 사용자의 구두 의도를 완벽히 실시간 조율하여 '실시간 이동', '공간 제휴 예약', '당일 맞춤 주문 배송'을 하나로 오케스트레이션 해야 해.
+            
+[현재 선택 시나리오]
+- ${currentScenario === 'dongseongro' ? '대구 동성로 소개팅 (남성 필승 전용 아웃핏 스타일 제안 + 파스타 다이닝 2선 매칭 + 교통 수단 통합 배정)' : (currentScenario === 'haeundae' ? '부산 1박 2일 여행 (KTX 왕복 탑승권 or 쏘카 카셰어링 24시간 선택 + 숙소 2선 선택 매칭 + 대표 로컬 맛집 연계)' : '대구 메디컬 안심 뷰티 (여드름 집중/슈링크 리프팅 전문 병의원 선택 + 안심 수송 차량 호출 + 약국 수딩 제품 직배송)')}
+
+[절대 규칙]
+1. 어려운 영문 용어는 원천 차단하고 '실시간 이동', '제휴 공간 예약', '당일 맞춤 주문 배송' 등의 일상 언어만 쓴다.
+2. 친근하며 전담 비서 톤앤매너로 답변한다.
+3. 조율이 최종 합의되면 문장 마지막에 "[엔진가동]" 토큰을 붙여 즉시 영수증을 렌더링한다.`;
+
+            const payload = {
+                contents: chatHistoryData,
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: { temperature: 0.7, maxOutputTokens: 600 }
+            };
+
+            try {
+                const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error('API Session Broken');
+                
+                const data = await response.json();
+                let aiText = "가장 완벽한 인프라 결합 노선을 정밀하게 대조하는 중입니다."; 
+                if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
+                    aiText = data.candidates[0].content.parts[0].text;
+                }
+                
+                removeTypingIndicator();
+                
+                let triggerEngine = false;
+                if (aiText.includes("[엔진가동]")) {
+                    triggerEngine = true;
+                    aiText = aiText.replace("[엔진가동]", "").trim();
+                }
+
+                appendMessage('ai', aiText);
+                chatHistoryData.push({ role: "model", parts: [{ text: aiText }] });
+                extractDataFromContext();
+
+                if (triggerEngine) {
+                    setTimeout(() => { startLoadingEngines(); }, 1500);
+                }
+
+            } catch (error) {
+                console.error("Gemini Live Integration Error, deploying fallback:", error);
+                fallbackDemoResponse(); 
+            }
+        }
+
+        function fallbackDemoResponse() {
+            setTimeout(() => {
+                removeTypingIndicator();
+                let aiText = "가장 적합한 조건의 초연결 솔루션을 가동 중입니다.";
+                const quickRepliesEl = document.getElementById('quick-replies');
+                
+                if (currentScenario === 'dongseongro') {
+                    if (chatStep === 1) {
+                        aiText = `동성로 소개팅 라이프 에디션 구성이군요! 👨‍❤️‍👨 가장 완벽한 하루가 되도록 맞춤 이동, 분위기 좋은 매장, 완벽한 첫인상을 위한 제품을 조립해 드립니다. 혹시 약속 시간이 언제이신가요?`;
+                        quickRepliesEl.innerHTML = `
+                            <button onclick="document.getElementById('chat-input').value='오후 6시'; sendReply();" class="bg-white border border-[#00D09B] hover:bg-[#00D09B]/10 px-4 py-2 rounded-full text-sm font-semibold text-[#00D09B] transition">오후 6시 🕕</button>
+                            <button onclick="document.getElementById('chat-input').value='오후 1시'; sendReply();" class="bg-white border border-[#00D09B] hover:bg-[#00D09B]/10 px-4 py-2 rounded-full text-sm font-semibold text-[#00D09B] transition">오후 1시 🕐</button>
+                        `;
+                        quickRepliesEl.classList.remove('hidden');
+                    } else if (chatStep === 2) {
+                        aiText = `시간대를 확인했습니다! 소개팅에서 가장 중요한 첫인상을 빛내줄 **남성 전용 필승 아웃핏(옷) 룩북**입니다. 당일 약속시간 전 자택으로 긴급 에스코트 특송 배송이 보장됩니다. 어떤 무드가 마음에 드시나요?
+                        <div class="mt-4 grid grid-cols-2 gap-3">
+                            <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:border-[#00D09B] transition flex flex-col">
+                                <img src="${fashionDatabase.men_minimal.img}" class="w-full h-32 object-cover" onerror="this.onerror=null; this.src='https://placehold.co/200x300/f1f5f9/00D09B?text=Minimal+Setup';">
+                                <div class="p-3 flex-1 flex flex-col justify-between">
+                                    <div>
+                                        <span class="text-[10px] bg-blue-50 text-[#0B4A99] font-bold px-1.5 py-0.5 rounded">CLASSIC</span>
+                                        <h4 class="font-extrabold text-xs text-[#1e293b] mt-1">에센셜 미니멀 셋업</h4>
+                                        <p class="text-[10px] text-gray-400 mt-0.5 leading-tight">슬림핏 링클프리 정돈된 무드</p>
+                                    </div>
+                                    <button onclick="document.getElementById('chat-input').value='에센셜 미니멀 셋업 스타일 결정'; sendReply();" class="w-full mt-2.5 bg-[#00D09B] hover:bg-[#00b386] text-white text-[10px] font-black py-1.5 rounded-lg transition">셋업 선택 👔</button>
+                                </div>
+                            </div>
+                            <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:border-[#00D09B] transition flex flex-col">
+                                <img src="${fashionDatabase.men_casual.img}" class="w-full h-32 object-cover" onerror="this.onerror=null; this.src='https://placehold.co/200x300/f1f5f9/00D09B?text=Casual+Knit';">
+                                <div class="p-3 flex-1 flex flex-col justify-between">
+                                    <div>
+                                        <span class="text-[10px] bg-emerald-50 text-[#00A87E] font-bold px-1.5 py-0.5 rounded">CASUAL</span>
+                                        <h4 class="font-extrabold text-xs text-[#1e293b] mt-1">어반 캐주얼 남친룩</h4>
+                                        <p class="text-[10px] text-gray-400 mt-0.5 leading-tight">부드러운 니트 and 고탄성 팬츠</p>
+                                    </div>
+                                    <button onclick="document.getElementById('chat-input').value='어반 캐주얼 남친룩 스타일 결정'; sendReply();" class="w-full mt-2.5 bg-[#00D09B] hover:bg-[#00b386] text-white text-[10px] font-black py-1.5 rounded-lg transition">캐주얼 선택 🧶</button>
+                                </div>
+                            </div>
+                        </div>`;
+                        quickRepliesEl.classList.add('hidden');
+                    } else if (chatStep === 3) {
+                        aiText = `탁월한 안목이십니다! 자택 보장 퀵배송 준비를 완료했습니다. 이동 편의를 조율합니다. 혼잡한 도심 정체를 우회해 약속 시간을 무조건 맞추는 '대중교통 노선 연계'와 프라이빗하고 편안한 'VIP 에스코트 택시 호출' 중 무엇을 배치할까요?`;
+                        quickRepliesEl.innerHTML = `
+                            <button onclick="document.getElementById('chat-input').value='지하철 대중교통으로 안내해줘'; sendReply();" class="bg-white border border-[#00D09B] hover:bg-[#00D09B]/10 px-4 py-2 rounded-full text-sm font-semibold text-[#00D09B] transition">대중교통 최적 🚇</button>
+                            <button onclick="document.getElementById('chat-input').value='에스코트 택시 호출해줘'; sendReply();" class="bg-white border border-[#00D09B] hover:bg-[#00D09B]/10 px-4 py-2 rounded-full text-sm font-semibold text-[#00D09B] transition">택시 다이렉트 🚖</button>
+                        `;
+                        quickRepliesEl.classList.remove('hidden');
+                    } else if (chatStep === 4) {
+                        aiText = `네, 이동 동선을 맵에 바인딩해 두었습니다. 소개팅 첫인상을 완성할 식사 자리를 가계약합니다. 어떤 요리 혹은 분위기 위주로 선점할까요?`;
+                        quickRepliesEl.innerHTML = `
+                            <button onclick="document.getElementById('chat-input').value='파스타 다이닝으로 보여줘'; sendReply();" class="bg-white border border-[#00D09B] hover:bg-[#00D09B]/10 px-4 py-2 rounded-full text-sm text-[#00D09B] font-semibold">파스타 다이닝 🍝</button>
+                            <button onclick="document.getElementById('chat-input').value='조용하고 예쁜 카페 원해'; sendReply();" class="bg-white border border-[#00D09B] hover:bg-[#00D09B]/10 px-4 py-2 rounded-full text-sm text-[#00D09B] font-semibold">감성 카페 ☕</button>
+                        `;
+                        quickRepliesEl.classList.remove('hidden');
+                    } else if (chatStep === 5) {
+                        const lastUserMsg = chatHistoryData.filter(msg => msg.role === 'user').pop()?.parts[0].text || "";
+                        if (lastUserMsg.includes('파스타') || lastUserMsg.includes('다이닝')) {
+                            aiText = `동성로에서 가장 정갈하고 조용한 최적의 제휴 양식 공간 두 곳을 제안합니다. 원하시는 공간을 탭해 주세요.
+                            <div class="mt-4 grid grid-cols-2 gap-3">
+                                <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:border-[#00D09B] transition flex flex-col">
+                                    <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=400&q=80" class="w-full h-32 object-cover">
+                                    <div class="p-3 flex-1 flex flex-col justify-between">
+                                        <div>
+                                            <span class="text-[10px] bg-blue-50 text-[#0B4A99] font-bold px-1.5 py-0.5 rounded">MEDITERRANEAN</span>
+                                            <h4 class="font-extrabold text-xs text-[#1e293b] mt-1">인투 (INTO) 동성로점</h4>
+                                            <p class="text-[10px] text-gray-400 mt-0.5 leading-tight">지중해 프로방스풍 차분한 대화 2인 테이블 보장</p>
+                                        </div>
+                                        <button onclick="document.getElementById('chat-input').value='인투(INTO) 레스토랑 선택'; sendReply();" class="w-full mt-2.5 bg-[#00D09B] hover:bg-[#00b386] text-white text-[10px] font-black py-1.5 rounded-lg transition">인투 선택 🍷</button>
+                                    </div>
+                                </div>
+                                <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:border-[#00D09B] transition flex flex-col">
+                                    <img src="https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=400&q=80" class="w-full h-32 object-cover">
+                                    <div class="p-3 flex-1 flex flex-col justify-between">
+                                        <div>
+                                            <span class="text-[10px] bg-emerald-50 text-[#00A87E] font-bold px-1.5 py-0.5 rounded">ITALIAN PASTA</span>
+                                            <h4 class="font-extrabold text-xs text-[#1e293b] mt-1">오스테리아밀즈 대구점</h4>
+                                            <p class="text-[10px] text-gray-400 mt-0.5 leading-tight">수제 생면 파스타 전문 다이닝 2인 예약 우선권</p>
+                                        </div>
+                                        <button onclick="document.getElementById('chat-input').value='오스테리아밀즈 선택'; sendReply();" class="w-full mt-2.5 bg-[#00D09B] hover:bg-[#00b386] text-white text-[10px] font-black py-1.5 rounded-lg transition">밀즈 선택 🍝</button>
+                                    </div>
+                                </div>
+                            </div>`;
+                        } else {
+                            aiText = `동성로에서 가장 편안하고 대화 나누기 좋은 프라이빗 제휴 카페 공간입니다. 예약 승인 버튼을 탭해 주세요.
+                            <div class="mt-4 grid grid-cols-2 gap-3">
+                                <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:border-[#00D09B] transition flex flex-col">
+                                    <img src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=400&q=80" class="w-full h-32 object-cover">
+                                    <div class="p-3 flex-1 flex flex-col justify-between">
+                                        <div>
+                                            <span class="text-[10px] bg-amber-50 text-amber-700 font-bold px-1.5 py-0.5 rounded">ANTIQUE COZY</span>
+                                            <h4 class="font-extrabold text-xs text-[#1e293b] mt-1">동성로 클래식 카페 룸</h4>
+                                            <p class="text-[10px] text-gray-400 mt-0.5 leading-tight">엔티크한 조명과 잔잔한 음악이 흐르는 아늑한 공간</p>
+                                        </div>
+                                        <button onclick="document.getElementById('chat-input').value='동성로 감성 카페 선택'; sendReply();" class="w-full mt-2.5 bg-[#00D09B] hover:bg-[#00b386] text-white text-[10px] font-black py-1.5 rounded-lg transition">클래식 선택 ☕</button>
+                                    </div>
+                                </div>
+                                <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:border-[#00D09B] transition flex flex-col">
+                                    <img src="https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=400&q=80" class="w-full h-32 object-cover">
+                                    <div class="p-3 flex-1 flex flex-col justify-between">
+                                        <div>
+                                            <span class="text-[10px] bg-emerald-50 text-[#00A87E] font-bold px-1.5 py-0.5 rounded">GARDEN ROOFTOP</span>
+                                            <h4 class="font-extrabold text-xs text-[#1e293b] mt-1">루프탑 가든 어반</h4>
+                                            <p class="text-[10px] text-gray-400 mt-0.5 leading-tight">탁 트인 스카이뷰 도심 속 숲속 감성 조용한 테라스</p>
+                                        </div>
+                                        <button onclick="document.getElementById('chat-input').value='루프탑 감성 정원 선택'; sendReply();" class="w-full mt-2.5 bg-[#00D09B] hover:bg-[#00b386] text-white text-[10px] font-black py-1.5 rounded-lg transition">루프탑 선택 🌿</button>
+                                    </div>
+                                </div>
+                            </div>`;
+                        }
+                        quickRepliesEl.classList.add('hidden');
+                    } else if (chatStep === 6) {
+                        aiText = `모든 세팅이 성공적으로 맞물렸습니다! 맞춤 남성 아웃핏 기습 퀵배송, 예약 제휴 공간, 최적 경로 가배치를 종합 포트폴리오 패키지로 발간해 드릴까요?`;
+                        quickRepliesEl.innerHTML = `<button onclick="document.getElementById('chat-input').value='좋아, 패키지 구성!'; sendReply();" class="bg-white border border-[#00D09B] hover:bg-[#00D09B]/10 px-4 py-2 rounded-full text-sm font-semibold text-[#00D09B] transition">좋아, 패키지 구성! 🚀</button>`;
+                        quickRepliesEl.classList.remove('hidden');
+                    } else if (chatStep >= 7) {
+                        aiText = `남성 맞춤 필승 포트폴리오 통합 매칭 완료! 대시보드를 즉시 표출합니다. [엔진가동]`;
+                        setTimeout(() => { startLoadingEngines(); }, 1500);
+                    }
+                } 
+                
+                else if (currentScenario === 'haeundae') {
+                    if (chatStep === 1) {
+                        aiText = `부산 1박 2일 데이트 여행 패키지 조립을 가동합니다! 🌊 대구에서 부산까지 어떻게 이동하고 싶으신가요? **KTX 고속철도**와 자율성을 갖춘 **쏘카 카셰어링** 중 선택 가능합니다.`;
+                        quickRepliesEl.innerHTML = `
+                            <button onclick="document.getElementById('chat-input').value='KTX 고속철도 연결해줘'; sendReply();" class="bg-white border border-[#00D09B] hover:bg-[#00D09B]/10 px-4 py-2 rounded-full text-sm font-semibold text-[#00D09B] transition">KTX 고속철도 🚄</button>
+                            <button onclick="document.getElementById('chat-input').value='쏘카 차량 연동할래'; sendReply();" class="bg-white border border-[#00D09B] hover:bg-[#00D09B]/10 px-4 py-2 rounded-full text-sm font-semibold text-[#00D09B] transition">쏘카 카셰어링 🚗</button>
+                        `;
+                        quickRepliesEl.classList.remove('hidden');
+                    } else if (chatStep === 2) {
+                        aiText = `선호 이동 수단 배정을 완료했습니다! 해운대 현지에서의 머무를 오션뷰 및 전통 감성 숙소 제휴 라인입니다. 한 곳을 승인해 주시면 실시간 객실 확정 토큰을 선점합니다.
+                        <div class="mt-4 grid grid-cols-2 gap-3">
+                            <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:border-[#00D09B] transition flex flex-col">
+                                <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80" class="w-full h-32 object-cover">
+                                <div class="p-3 flex-1 flex flex-col justify-between">
+                                    <div>
+                                        <span class="text-[10px] bg-blue-50 text-[#0B4A99] font-bold px-1.5 py-0.5 rounded">HOTEL</span>
+                                        <h4 class="font-extrabold text-xs text-[#1e293b] mt-1">4성급 오션뷰 호텔</h4>
+                                        <p class="text-[10px] text-gray-400 mt-0.5 leading-tight">해운대 전면 백사장 조망 최고층</p>
+                                    </div>
+                                    <button onclick="document.getElementById('chat-input').value='오션뷰 호화 호텔 예약'; sendReply();" class="w-full mt-2.5 bg-[#00D09B] hover:bg-[#00b386] text-white text-[10px] font-black py-1.5 rounded-lg transition">호텔 선택 🏨</button>
+                                </div>
+                            </div>
+                            <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:border-[#00D09B] transition flex flex-col">
+                                <img src="https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=400&q=80" class="w-full h-32 object-cover">
+                                <div class="p-3 flex-1 flex flex-col justify-between">
+                                    <div>
+                                        <span class="text-[10px] bg-amber-50 text-amber-700 font-bold px-1.5 py-0.5 rounded">HANOK</span>
+                                        <h4 class="font-extrabold text-xs text-[#1e293b] mt-1">광안 전통한옥 독채</h4>
+                                        <p class="text-[10px] text-gray-400 mt-0.5 leading-tight">조용하고 예스러운 프라이빗 마당</p>
+                                    </div>
+                                    <button onclick="document.getElementById('chat-input').value='전통 독채 에어비앤비 한옥'; sendReply();" class="w-full mt-2.5 bg-[#00D09B] hover:bg-[#00b386] text-white text-[10px] font-black py-1.5 rounded-lg transition">한옥 선택 🏡</button>
+                                </div>
+                            </div>
+                        </div>`;
+                        quickRepliesEl.classList.add('hidden');
+                    } else if (chatStep === 3) {
+                        aiText = `숙소 예약 승인을 가확정하였습니다. 이제 부산에서의 스페셜 미식 경험을 완성합니다. 줄 서서 허비하는 시간 없이 바로 패스하는 최우수 파트너 라인입니다. 한 곳을 선택해 주세요!
+                        <div class="mt-4 grid grid-cols-2 gap-3">
+                            <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:border-[#00D09B] transition flex flex-col">
+                                <img src="https://images.unsplash.com/photo-1534482421-64566f976cfa?auto=format&fit=crop&w=400&q=80" class="w-full h-32 object-cover">
+                                <div class="p-3 flex-1 flex flex-col justify-between">
+                                    <div>
+                                        <span class="text-[10px] bg-indigo-50 text-indigo-700 font-bold px-1.5 py-0.5 rounded">SEAFOOD</span>
+                                        <h4 class="font-extrabold text-xs text-[#1e293b] mt-1">광안 수변다이닝 횟집</h4>
+                                        <p class="text-[10px] text-gray-400 mt-0.5 leading-tight">대교 점등 오션뷰 2인 VIP 창가석</p>
+                                    </div>
+                                    <button onclick="document.getElementById('chat-input').value='광안리 회 먹으러 갈래'; sendReply();" class="w-full mt-2.5 bg-[#00D09B] hover:bg-[#00b386] text-white text-[10px] font-black py-1.5 rounded-lg transition">수변횟집 선택 🐟</button>
+                                </div>
+                            </div>
+                            <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:border-[#00D09B] transition flex flex-col">
+                                <img src="https://images.unsplash.com/photo-1541832676-9b763b0239ab?auto=format&fit=crop&w=400&q=80" class="w-full h-32 object-cover">
+                                <div class="p-3 flex-1 flex flex-col justify-between">
+                                    <div>
+                                        <span class="text-[10px] bg-red-50 text-red-600 font-bold px-1.5 py-0.5 rounded">TRADITIONAL</span>
+                                        <h4 class="font-extrabold text-xs text-[#1e293b] mt-1">본가 극진국밥 본점</h4>
+                                        <p class="text-[10px] text-gray-400 mt-0.5 leading-tight">웨이팅 제로 최우선 프리패스 확보</p>
+                                    </div>
+                                    <button onclick="document.getElementById('chat-input').value='로컬 국밥 먹으러 갈래'; sendReply();" class="w-full mt-2.5 bg-[#00D09B] hover:bg-[#00b386] text-white text-[10px] font-black py-1.5 rounded-lg transition">국밥패스 선택 🥣</button>
+                                </div>
+                            </div>
+                        </div>`;
+                        quickRepliesEl.classList.add('hidden');
+                    } else if (chatStep === 4) {
+                        aiText = `훌륭한 결정이십니다. 선택하신 고속 철도/카셰어링 통합편 및 프리미엄 거주지, 웨이팅 제로 미식 프리패스를 한데 연합한 결과 대시보드를 생성해 드릴까요?`;
+                        quickRepliesEl.innerHTML = `<button onclick="document.getElementById('chat-input').value='좋아, 패키지 구성!'; sendReply();" class="bg-white border border-[#00D09B] hover:bg-[#00D09B]/10 px-4 py-2 rounded-full text-sm font-semibold text-[#00D09B] transition">좋아, 패키지 구성! 🚀</button>`;
+                        quickRepliesEl.classList.remove('hidden');
+                    } else if (chatStep >= 5) {
+                        aiText = `부산 1박 2일 데이트 여행 종합 에디션 연합 매칭 완료! 대시보드를 즉시 표출합니다. [엔진가동]`;
+                        setTimeout(() => { startLoadingEngines(); }, 1500);
+                    }
+                } 
+                
+                else if (currentScenario === 'dermatology') {
+                    if (chatStep === 1) {
+                        aiText = `대구 수성구 고격조 안심 메디컬 뷰티 케어 엔진입니다! 💆‍♂️ 햇볕 차광 자외선 보호 이동, 정밀 병의원 선점, 시술 후 리커버리 제품 배송을 연계합니다. 오늘 어떤 시술이나 피부 개선 목적이 있으신가요?`;
+                        quickRepliesEl.innerHTML = `
+                            <button onclick="document.getElementById('chat-input').value='여드름 압출 및 트러블 관리'; sendReply();" class="bg-white border border-[#00D09B] hover:bg-[#00D09B]/10 px-4 py-2 rounded-full text-sm font-semibold text-[#00D09B] transition">여드름/트러블 집중 💆‍♂️</button>
+                            <button onclick="document.getElementById('chat-input').value='탄력 충전 슈링크 리프팅 시술'; sendReply();" class="bg-white border border-[#00D09B] hover:bg-[#00D09B]/10 px-4 py-2 rounded-full text-sm font-semibold text-[#00D09B] transition">리프팅/슈링크 ✨</button>
+                        `;
+                        quickRepliesEl.classList.remove('hidden');
+                    } else if (chatStep === 2) {
+                        aiText = `진료 우선 순위를 인지했습니다. 수성구 메디컬 제휴망 중 해당 영역에 최적화된 최우수 메디컬 클리닉 라인입니다. 한 곳을 터치하여 예약 대기열을 선점해 주세요.
+                        <div class="mt-4 grid grid-cols-2 gap-3">
+                            <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:border-[#00D09B] transition flex flex-col">
+                                <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=400&q=80" class="w-full h-32 object-cover">
+                                <div class="p-3 flex-1 flex flex-col justify-between">
+                                    <div>
+                                        <span class="text-[10px] bg-rose-50 text-rose-700 font-bold px-1.5 py-0.5 rounded">TROUBLE</span>
+                                        <h4 class="font-extrabold text-xs text-[#1e293b] mt-1">봄빛 피부과의원</h4>
+                                        <p class="text-[10px] text-gray-400 mt-0.5 leading-tight">압출 및 트러블 전용 스킨케어 룸</p>
+                                    </div>
+                                    <button onclick="document.getElementById('chat-input').value='봄빛피부과 예약 승인'; sendReply();" class="w-full mt-2.5 bg-[#00D09B] hover:bg-[#00b386] text-white text-[10px] font-black py-1.5 rounded-lg transition">봄빛의원 선택 🏥</button>
+                                </div>
+                            </div>
+                            <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:border-[#00D09B] transition flex flex-col">
+                                <img src="https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?auto=format&fit=crop&w=400&q=80" class="w-full h-32 object-cover">
+                                <div class="p-3 flex-1 flex flex-col justify-between">
+                                    <div>
+                                        <span class="text-[10px] bg-purple-50 text-purple-700 font-bold px-1.5 py-0.5 rounded">LIFTING</span>
+                                        <h4 class="font-extrabold text-xs text-[#1e293b] mt-1">끌리메 에스테틱</h4>
+                                        <p class="text-[10px] text-gray-400 mt-0.5 leading-tight">고주파 및 슈링크 탄력 전담 원장제</p>
+                                    </div>
+                                    <button onclick="document.getElementById('chat-input').value='끌리메의원 리프팅 예약 승인'; sendReply();" class="w-full mt-2.5 bg-[#00D09B] hover:bg-[#00b386] text-white text-[10px] font-black py-1.5 rounded-lg transition">끌리메 선택 💆‍♂️</button>
+                                </div>
+                            </div>
+                        </div>`;
+                        quickRepliesEl.classList.add('hidden');
+                    } else if (chatStep === 3) {
+                        aiText = `진료 타임 가확정 완료! 시술 직후 급격한 외부 노출로부터 피부 자극 장벽을 차단하기 위해, 올리브영 제휴 배송망을 연계하여 전용 '센텔라 시카 진정 수딩 밤 크림'을 즉시 자택으로 당일 보장 총알 배송해 드릴까요?`;
+                        quickRepliesEl.innerHTML = `
+                            <button onclick="document.getElementById('chat-input').value='시카 진정크림 배송 동시 주문할게'; sendReply();" class="bg-white border border-[#00D09B] hover:bg-[#00D09B]/10 px-4 py-2 rounded-full text-sm font-semibold text-[#00D09B] transition">재생 화장품 신속 배송 🧴</button>
+                            <button onclick="document.getElementById('chat-input').value='아니요, 예약과 이동만 준비해줘'; sendReply();" class="bg-white border border-[#00D09B] hover:bg-[#00D09B]/10 px-4 py-2 rounded-full text-sm font-semibold text-[#00D09B] transition">이동 및 진료만 조립</button>
+                        `;
+                        quickRepliesEl.classList.remove('hidden');
+                    } else if (chatStep === 4) {
+                        aiText = `진료 일정, 선스크린 차광 복귀 수송 택시 배차, 처방 홈케어 수딩 상품 유통망 연동이 모두 연결되었습니다. 원스톱 결합 대시보드를 생성할까요?`;
+                        quickRepliesEl.innerHTML = `<button onclick="document.getElementById('chat-input').value='좋아, 패키지 구성!'; sendReply();" class="bg-white border border-[#00D09B] hover:bg-[#00D09B]/10 px-4 py-2 rounded-full text-sm font-semibold text-[#00D09B] transition">좋아, 패키지 구성! 🚀</button>`;
+                        quickRepliesEl.classList.remove('hidden');
+                    } else if (chatStep >= 5) {
+                        aiText = `메디컬 안심 뷰티 라이프 에디션 통합 연계 완료! 대시보드를 표출합니다. [엔진가동]`;
+                        setTimeout(() => { startLoadingEngines(); }, 1500);
+                    }
+                }
+                
+                appendMessage('ai', aiText);
+                chatHistoryData.push({ role: "model", parts: [{ text: aiText }] });
+            }, 1000);
+        }
+
+        function startLoadingEngines() {
+            const appContainer = document.getElementById('app-container');
+            const chatScreen = document.getElementById('chat-screen');
+            const resultScreen = document.getElementById('result-screen');
+            const rightPanel = document.getElementById('right-panel');
+
+            // 화면 레이아웃 대폭 확장 (최적 맵 가독성)
+            appContainer.classList.remove('max-w-md');
+            appContainer.classList.add('max-w-[1000px]', 'w-full'); 
+            
+            chatScreen.classList.remove('w-full', 'flex');
+            // 기본은 대시보드 강화를 위해 좁은 사이드바 모드로 전환하되, 유저가 언제든 확장 버튼 활성화 가능하게 설계
+            chatScreen.className = "hidden md:flex md:w-[32%] h-full flex-col relative z-10 bg-white transition-layout border-r border-gray-200";
+            
+            document.getElementById('input-area').classList.add('hidden');
+            
+            // 상단 뷰 분할 전환 버튼 활성화
+            document.getElementById('toggle-chat-width-btn').classList.remove('hidden');
+            
+            rightPanel.className = "w-full md:w-[68%] h-full bg-gray-50 relative z-0 transition-layout";
+            resultScreen.classList.remove('hidden');
+            resultScreen.classList.add('w-full');
+            
+            const resultContent = document.getElementById('result-content');
+            resultContent.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full space-y-6 animate-fade-in py-16">
+                    <div class="relative w-32 h-32 flex items-center justify-center">
+                        <div class="absolute inset-0 border-[6px] border-t-[#00D09B] border-r-transparent border-b-[#00A87E] border-l-transparent rounded-full animate-spin"></div>
+                        <i class="fas fa-brain text-5xl text-[#00D09B] animate-pulse"></i>
+                    </div>
+                    <div id="loading-text" class="text-2xl font-black text-center tracking-tight text-[#1e293b]">
+                        라이프 포트폴리오 최적화 연합 매칭 중...
+                    </div>
+                    <p class="text-gray-500 text-sm mt-2">이동 경로 · 공간 예약 · 상품 배송 데이터 통합 연산</p>
+                </div>
+            `;
+
+            let step1Text = "최적 대중교통 및 이동 경로 실시간 교통망 시뮬레이션 가동..."; 
+            let step2Text = "지정 다이닝/병원 예약 슬롯 및 잔여석 데이터 검증 중..."; 
+            let step3Text = "맞춤 패키지 제품 유통 배차 및 당일 퀵 배송 라인 대기 배치...";
+            
+            if (currentScenario === 'haeundae') { 
+                step1Text = userTransport === 'taxi' ? "차량 자율 이동: 쏘카 미들 사이즈 가용 배정 탐색..." : "철도 이동: KTX 잔여 실시간 왕복 탑승권 자동 매핑 중..."; 
+                step2Text = "공간 협력: 지정 숙박권 및 로컬 멤버십 제휴 인프라 검증 중..."; 
+                step3Text = "현장 관리: 대기 없는 프리패스 인증 스마트 키 연합 발행..."; 
+            } else if (currentScenario === 'dermatology') { 
+                step1Text = "안심 이동: 완벽한 차광 에스코트 차량 최단 노선 분석 중..."; 
+                step2Text = "진료 협력: 지정 피부과의원 가용 진료 타임 슬롯 스마트 가계약..."; 
+                step3Text = "제품 조립: 재생 밤 올리브영 제휴 배송망 퀵 기사 강제 매칭..."; 
+            }
+
+            setTimeout(() => { document.getElementById('loading-text').innerText = step1Text; }, 1200);
+            setTimeout(() => { document.getElementById('loading-text').innerText = step2Text; }, 2400);
+            setTimeout(() => { document.getElementById('loading-text').innerText = step3Text; }, 3600);
+            
+            setTimeout(() => {
+                generateResultScreen();
+            }, 4800);
+        }
+
+        function generateResultScreen() {
+            currentBundle = [];
+
+            if (currentScenario === 'dongseongro') {
+                let transportTitle = userTransport === 'public' ? '[실시간 이동] HCE 모바일 교통카드 충전' : '[실시간 이동] 귀가 안심 에스코트 차량';
+                let transportDesc = userTransport === 'public' ? 'HCE 기반 스마트 원터치 교통카드 잔액 자동 충전 및 실시간 최적 노선 연동' : `데이트 장소 정문 앞 안심 승하차 세팅 완료 (오후 약속 전용)`;
+                let transportPrice = userTransport === 'public' ? 1500 : 5800;
+                let transportIcon = userTransport === 'public' ? 'fa-subway' : 'fa-taxi';
+                let transportColor = 'accent2';
+                let transportImg = userTransport === 'public' 
+                    ? imOnepassCardImg 
+                    : 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=150&q=80';
+                
+                let menuTitle = '[공간 예약] 동성로 다이닝 파스타';
+                let menuDesc = '소개팅 성공률 1위, 창가 전용 2인 조용석 확보';
+                let menuPrice = 45000;
+                let menuIcon = 'fa-wine-glass-alt';
+                let menuColor = 'accent1';
+                let menuImg = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=150&q=80';
+                
+                if(userMenu) {
+                    if (userMenu.includes('인투')) { 
+                        menuTitle = '[공간 예약] 인투 (INTO) 동성로점'; 
+                        menuDesc = '지중해풍 감성 다이닝 창가 전용 2인석 선제적 자리 홀딩 + 메뉴 상품권'; 
+                        menuPrice = 46000; 
+                        menuIcon = 'fa-wine-glass'; 
+                        menuImg = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=150&q=80';
+                    } else if (userMenu.includes('오스테리아밀즈')) { 
+                        menuTitle = '[공간 예약] 오스테리아밀즈 대구점'; 
+                        menuDesc = '수제 면 파스타 전문 다이닝 2인 예약 및 시그니처 세트 선결제'; 
+                        menuPrice = 52000; 
+                        menuIcon = 'fa-utensils'; 
+                        menuImg = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=150&q=80';
+                    } else if (userMenu.includes('카페') || userMenu.includes('커피') || userMenu.includes('루프탑') || userMenu.includes('정원')) { 
+                        menuTitle = userMenu.includes('루프탑') ? '[공간 예약] 루프탑 가든 어반 동성로점' : '[공간 예약] 동성로 로컬 감성 카페'; 
+                        menuDesc = userMenu.includes('루프탑') ? '도심 속 조용한 루프탑 가든 테라스 2인 제휴 테이블 우선권' : '주말 대기 없이 즉각 하이패스 착석 가능한 프라이빗 전용 공간권'; 
+                        menuPrice = userMenu.includes('루프탑') ? 22000 : 18000; 
+                        menuIcon = 'fa-coffee'; 
+                        menuImg = userMenu.includes('루프탑') ? 'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=150&—q=80' : 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=150&q=80';
+                    }
+                }
+
+                const activeOutfit = fashionDatabase[userOutfitStyle] || fashionDatabase.men_minimal;
+                
+                currentBundle = [
+                    { 
+                        category: '맞춤 주문/배송', 
+                        icon: 'fa-tshirt', 
+                        color: 'purple', 
+                        badge: '당일 수령', 
+                        title: activeOutfit.title, 
+                        desc: activeOutfit.desc, 
+                        price: activeOutfit.price, 
+                        checked: true, 
+                        img: activeOutfit.img 
+                    },
+                    { category: '실시간 이동/모빌리티', icon: transportIcon, color: transportColor, badge: '최적 정체 우회', title: transportTitle, desc: transportDesc, price: transportPrice, checked: true, img: transportImg },
+                    { category: '공간 예약/솔루션', icon: menuIcon, color: menuColor, badge: '대기 면제', title: menuTitle, desc: menuDesc, price: menuPrice, checked: true, img: menuImg }
+                ];
+                renderResultScreen("동성로 소개팅 라이프 에디션");
+            } 
+            
+            else if (currentScenario === 'haeundae') {
+                let transportTitle = '[실시간 이동] 코레일 KTX 왕복 탑승권';
+                let transportDesc = '경부 혼잡을 회피하여 안전하고 쾌적하게 동대구-부산을 이동하는 고속철도 스마트 발권';
+                let transportPrice = 48000;
+                let transportIcon = 'fa-train';
+                let transportImg = 'https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=150&q=80';
+
+                if (userTransport === 'taxi') { 
+                    transportTitle = '[실시간 이동] 쏘카 24시간 카셰어링';
+                    transportDesc = '완전 면책 안심 보험 패키지 일체 결합 + 기동성 높은 준중형 스마트 차량 배차';
+                    transportPrice = 76000;
+                    transportIcon = 'fa-car';
+                    transportImg = 'https://images.unsplash.com/photo-1549399542-7e3b8b79c341?auto=format&fit=crop&w=150&q=80';
+                }
+                
+                let lodgingTitle = '[공간 예약] 해운대 전면 오션뷰 4성급 호텔';
+                let lodgingDesc = '해운대 백사장 정면 오션뷰 슈페리어 전용 객실 1박 선예약';
+                let lodgingPrice = 140000;
+                let lodgingIcon = 'fa-hotel';
+                let lodgingImg = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80';
+                
+                if (userHotel === '에어비앤비') {
+                    lodgingTitle = '[공간 예약] 광안리 한옥 단독 독채';
+                    lodgingDesc = '조용하고 예스러운 마당이 있는 스페셜 한옥 독채 대여권 및 사전 웰컴티 제공';
+                    lodgingPrice = 180000;
+                    lodgingIcon = 'fa-home';
+                    lodgingImg = 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=400&q=80';
+                }
+
+                let activityTitle = '[공간 예약] 부산 로컬 푸드 대기열 프리패스';
+                let activityDesc = '가장 후기가 높은 로컬 제휴 매장의 조기 웨이팅 면제권';
+                let activityPrice = 30000;
+                let activityIcon = 'fa-map-marked-alt';
+                let activityImg = 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=150&q=80';
+
+                if (userMenu) {
+                    if (userMenu.includes('회') || userMenu.includes('횟집')) {
+                        activityTitle = '[공간 예약] 광안리 수변 다이닝 오션뷰 횟집';
+                        activityDesc = '광안대교 점등 명소 VIP 창가 2인석 예약 + 실시간 모듬 횟집 코스 선결제권';
+                        activityPrice = 80000;
+                        activityIcon = 'fa-fish';
+                        activityImg = 'https://images.unsplash.com/photo-1534482421-64566f976cfa?auto=format&fit=crop&w=150&q=80';
+                    } else if (userMenu.includes('국밥')) {
+                        activityTitle = '[공간 예약] 해운대 원조 극진국밥 본점';
+                        activityDesc = '주말 2시간 웨이팅 대기열 전면 면제 및 지정 테이블 단숨 직결 통로권';
+                        activityPrice = 28000;
+                        activityIcon = 'fa-soap';
+                        activityImg = 'https://images.unsplash.com/photo-1541832676-9b763b0239ab?auto=format&fit=crop&w=150&q=80';
+                    }
+                }
+
+                currentBundle = [
+                    { category: '공간 예약/솔루션', icon: lodgingIcon, color: 'purple', badge: '프리미엄 공간', title: lodgingTitle, desc: lodgingDesc, price: lodgingPrice, checked: true, img: lodgingImg },
+                    { category: '실시간 이동/모빌리티', icon: transportIcon, color: 'accent2', badge: '실시간 동기화', title: transportTitle, desc: transportDesc, price: transportPrice, checked: true, img: transportImg },
+                    { category: '공간 예약/솔루션', icon: activityIcon, color: 'accent1', badge: '하이패스 입장', title: activityTitle, desc: activityDesc, price: activityPrice, checked: true, img: activityImg }
+                ];
+                renderResultScreen("부산 1박 2일 데이트 여행 에디션");
+            } 
+            
+            else if (currentScenario === 'dermatology') {
+                let clinicTitle = '[공간 예약] 대구 메디컬 클리닉 센터';
+                let clinicDesc = '피부 전문의 가용 에스테틱 베드 우선 지정금 및 상담 우선 배정';
+                let clinicPrice = 50000;
+                let clinicIcon = 'fa-hospital-user';
+                let clinicImg = 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=150&q=80';
+
+                if (userSkinConcern) {
+                    if (userSkinConcern.includes('여드름') || userSkinConcern.includes('봄빛')) {
+                        clinicTitle = '[공간 예약] 봄빛 피부과 의원 동성로점';
+                        clinicDesc = '여드름 집중 스킨 에스테틱 전용 예약 타임 및 프라이빗 클린 베드 홀딩';
+                        clinicPrice = 50000;
+                        clinicIcon = 'fa-user-md';
+                        clinicImg = 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=150&q=80';
+                    } else if (userSkinConcern.includes('리프팅') || userSkinConcern.includes('끌리메')) {
+                        clinicTitle = '[공간 예약] 끌리메 의원 대구점';
+                        clinicDesc = '최신 슈링크 유니버스 장치 300샷 정품 원장 직접 진료 보증 프로그램 예약';
+                        clinicPrice = 120000;
+                        clinicIcon = 'fa-magic';
+                        clinicImg = 'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?auto=format&fit=crop&w=150&q=80';
+                    }
+                }
+
+                let transportTitle = '[실시간 이동] 차광 전용 에스코트 복귀 차량';
+                let transportDesc = '진료 종결 후 자택 현관문 앞까지 안심 안전 다이렉트 수송 배차';
+                let transportPrice = 8500;
+                let transportIcon = 'fa-taxi';
+                let transportImg = 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=150&q=80';
+
+                if (userTransport === 'public') {
+                    transportTitle = '[실시간 이동] HCE 모바일 교통카드 충전';
+                    transportDesc = '자극 없는 지하 연결 통로 이용을 위한 HCE 교통카드 잔액 충전';
+                    transportPrice = 1500;
+                    transportIcon = 'fa-subway';
+                    transportImg = imOnepassCardImg;
+                }
+
+                let isProductOrdered = (userPostCare === '재생크림');
+
+                currentBundle = [
+                    { category: '공간 예약/솔루션', icon: clinicIcon, color: 'purple', badge: '진료 대행 선약', title: clinicTitle, desc: clinicDesc, price: clinicPrice, checked: true, img: clinicImg },
+                    { category: '실시간 이동/모빌리티', icon: transportIcon, color: 'accent2', badge: '직사광선 차단', title: transportTitle, desc: transportDesc, price: transportPrice, checked: true, img: transportImg },
+                    { category: '맞춤 주문/배송', icon: 'fa-pump-medical', color: 'accent1', badge: '신속 배송', title: '[맞춤 주문] 피부과 전용 센텔라 시카 진정 밤', desc: '자극받은 피부 복구를 유도할 메디컬 진정 화장품 자택 당일 보장 특송 주문', price: 28000, checked: isProductOrdered, img: 'https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?auto=format&fit=crop&w=150&q=80' }
+                ];
+                renderResultScreen("대구 메디컬 안심 뷰티 케어");
+            }
+        }
+
+        function toggleRouteType(type) {
+            userTransport = type;
+            const currentRouteData = routeData[currentScenario][type === 'public' ? 'public' : 'taxi'];
+            
+            const mapFrame = document.getElementById('live-google-map');
+            if (mapFrame) {
+                mapFrame.src = currentRouteData.mapUrl;
+            }
+            
+            document.getElementById('route-duration-text').innerText = currentRouteData.duration;
+            document.getElementById('route-cost-text').innerText = currentRouteData.cost;
+            
+            const routeIntervalEl = document.getElementById('route-interval-text');
+            if (routeIntervalEl) {
+                routeIntervalEl.innerText = currentRouteData.interval || '즉시 예약';
+            }
+            
+            document.getElementById('route-recommend-alert').innerText = currentRouteData.recommendation;
+            
+            const timelineContainer = document.getElementById('route-timeline');
+            timelineContainer.innerHTML = '';
+            currentRouteData.steps.forEach(step => {
+                const li = document.createElement('div');
+                li.className = 'flex items-start space-x-3 text-xs text-gray-600';
+                li.innerHTML = `
+                    <div class="w-6 h-6 rounded-full bg-[#00D09B]/10 flex items-center justify-center text-[#00A87E] flex-shrink-0 mt-0.5">
+                        <i class="fas ${step.icon}"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold text-gray-800">${step.desc}</p>
+                        <p class="text-[10px] text-gray-400 mt-0.5">소요 예상: ${step.time}</p>
+                    </div>
+                `;
+                timelineContainer.appendChild(li);
+            });
+
+            const btnPublic = document.getElementById('tab-btn-public');
+            const btnTaxi = document.getElementById('tab-btn-taxi');
+            if (type === 'public') {
+                btnPublic.className = 'flex-1 py-2 text-xs font-bold rounded-2xl bg-gradient-to-r from-[#00D09B] to-[#00A87E] text-white shadow-sm';
+                btnTaxi.className = 'flex-1 py-2 text-xs font-bold rounded-2xl bg-gray-50 hover:bg-gray-100 text-gray-500';
+            } else {
+                btnTaxi.className = 'flex-1 py-2 text-xs font-bold rounded-2xl bg-gradient-to-r from-[#00D09B] to-[#00A87E] text-white shadow-sm';
+                btnPublic.className = 'flex-1 py-2 text-xs font-bold rounded-2xl bg-gray-50 hover:bg-gray-100 text-gray-500';
+            }
+        }
+
+        function renderResultScreen(title) {
+            currentTitle = title;
+            const container = document.getElementById('result-content');
+            let totalAmount = currentBundle.filter(i => i.checked).reduce((sum, item) => sum + item.price, 0);
+
+            const defaultType = userTransport === 'public' ? 'public' : 'taxi';
+            const rData = routeData[currentScenario][defaultType];
+
+            let tab1Label = "";
+            let tab2Label = "";
+
+            if (currentScenario === 'dongseongro') {
+                tab1Label = `<i class="fas fa-subway mr-1"></i> 대중교통 (HCE)`;
+                tab2Label = `<i class="fas fa-taxi mr-1"></i> 에스코트 택시`;
+            } else if (currentScenario === 'haeundae') {
+                tab1Label = `<i class="fas fa-train mr-1"></i> KTX 고속철도`;
+                tab2Label = `<i class="fas fa-car mr-1"></i> 쏘카 카셰어링`;
+            } else if (currentScenario === 'dermatology') {
+                tab1Label = `<i class="fas fa-subway mr-1"></i> 대중교통 (HCE)`;
+                tab2Label = `<i class="fas fa-shield-alt mr-1"></i> 안심 귀가 택시`;
+            }
+
+            let html = `
+                <div class="animate-fade-in pb-32">
+                    
+                    <!-- [상단 헤더 스위치 바] 결제 대기 상태에서 한눈에 채팅창으로 복귀 유도 -->
+                    <div class="flex items-center justify-between mb-5 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#00D09B] animate-pulse"></span>
+                            <span class="text-xs font-bold text-[#1e293b]">실시간 일괄 매칭 완료</span>
+                        </div>
+                        <button onclick="toggleChatWidth(true)" class="bg-[#00D09B]/10 hover:bg-[#00D09B]/20 text-[#00A87E] text-xs font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fas fa-comments"></i>
+                            <span>💬 AI 채팅방 열기</span>
+                        </button>
+                    </div>
+
+                    <div class="text-center mb-6">
+                        <div class="inline-block bg-[#00D09B]/10 text-[#00A87E] px-4 py-1.5 rounded-full text-xs font-extrabold tracking-wider mb-2.5 border border-[#00D09B]/30">
+                            iM Mate 라이프 맞춤 결합 에디션
+                        </div>
+                        <h2 class="text-2xl font-black text-[#1e293b] leading-tight">${title}</h2>
+                    </div>
+
+                    <!-- 구글 지도 완벽 연동 실시간 경로 추천 대시보드 모듈 -->
+                    <div class="bg-white rounded-3xl p-5 border border-gray-200/80 shadow-sm mb-4">
+                        <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+                            <span class="text-sm font-black text-gray-800"><i class="fas fa-map-marked-alt text-[#00D09B] mr-1.5"></i> 구글 맵 실시간 연동 내비게이션</span>
+                            <span class="text-[10px] bg-emerald-50 text-[#00A87E] border border-emerald-100 px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 bg-[#00D09B] rounded-full animate-ping"></span> Live Tracking
+                            </span>
+                        </div>
+
+                        <!-- 추천 모드 탭 스위치 -->
+                        <div class="flex space-x-2 bg-gray-100/50 p-1.5 rounded-[1.25rem] mb-4">
+                            <button id="tab-btn-public" onclick="toggleRouteType('public')" class="flex-1 py-2 text-xs font-bold rounded-2xl transition-all duration-200">
+                                ${tab1Label}
+                            </button>
+                            <button id="tab-btn-taxi" onclick="toggleRouteType('taxi')" class="flex-1 py-2 text-xs font-bold rounded-2xl transition-all duration-200">
+                                ${tab2Label}
+                            </button>
+                        </div>
+
+                        <!-- 실시간 구글 맵 이프레임 영역 -->
+                        <div class="map-wrapper mb-4">
+                            <iframe 
+                                id="live-google-map"
+                                src="${rData.mapUrl}" 
+                                width="100%" 
+                                height="100%" 
+                                style="border:0;" 
+                                allowfullscreen="" 
+                                loading="lazy" 
+                                referrerpolicy="no-referrer-when-downgrade">
+                            </iframe>
+                        </div>
+
+                        <!-- 배차시간 및 이용요금 정보판 3컬럼 확장 -->
+                        <div class="grid grid-cols-3 gap-2 mb-4 text-center">
+                            <div class="bg-gray-50/50 p-2.5 rounded-2xl border border-gray-100">
+                                <span class="block text-[9px] font-bold text-gray-400">예상 소요시간</span>
+                                <span id="route-duration-text" class="text-sm md:text-base font-black text-[#1e293b]">${rData.duration}</span>
+                            </div>
+                            <div class="bg-gray-50/50 p-2.5 rounded-2xl border border-gray-100">
+                                <span class="block text-[9px] font-bold text-gray-400">일반 이용 요금</span>
+                                <span id="route-cost-text" class="text-xs md:text-sm font-black text-[#1e293b]">${rData.cost}</span>
+                            </div>
+                            <div class="bg-gray-50/50 p-2.5 rounded-2xl border border-gray-100">
+                                <span class="block text-[9px] font-bold text-gray-400">배차/대기 간격</span>
+                                <span id="route-interval-text" class="text-xs md:text-sm font-black text-[#1e293b]">${rData.interval || '즉시 예약'}</span>
+                            </div>
+                        </div>
+
+                        <!-- 분석 가이드 요약 얼럿 -->
+                        <div class="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-3.5 mb-4 text-xs leading-relaxed text-emerald-800 font-semibold">
+                            💡 <span id="route-recommend-alert">${rData.recommendation}</span>
+                        </div>
+
+                        <!-- 실시간 진행 타임라인 단계 구조 -->
+                        <div class="space-y-3.5 border-t border-gray-100 pt-4" id="route-timeline">
+                            <!-- 단계별 steps 동적 주입 -->
+                        </div>
+                    </div>
+
+                    <!-- 결합 상품 목록 영역 -->
+                    <div class="space-y-4 max-w-2xl mx-auto">
+            `;
+
+            currentBundle.forEach((item, index) => {
+                const isCustomCard = item.img && item.img.includes('다운로드.png');
+                html += `
+                    <div onclick="cardClicked(event, ${index})" class="rounded-3xl p-5 border transition-all duration-300 cursor-pointer relative overflow-hidden ${item.checked ? 'bg-white border-gray-200/80 shadow-sm' : 'border-2 border-dashed border-gray-200 bg-gray-50/50 hover:bg-gray-50 hover:border-gray-300' }">
+                        ${item.checked && item.color === 'purple' ? '<div class="absolute top-0 left-0 w-1.5 h-full bg-[#00D09B]"></div>' : ''}
+                        ${item.checked && item.color === 'accent1' ? '<div class="absolute top-0 left-0 w-1.5 h-full bg-[#0B4A99]"></div>' : ''}
+                        ${item.checked && item.color === 'accent2' ? '<div class="absolute top-0 left-0 w-1.5 h-full bg-[#00A87E]"></div>' : ''}
+                        
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="text-xs font-bold tracking-wider ${item.checked ? (item.color === 'purple' ? 'text-[#00D09B]' : (item.color === 'accent1' ? 'text-[#0B4A99]' : 'text-[#00A87E]')) : 'text-gray-400'}">
+                                <i class="fas ${item.icon} mr-1.5"></i> ${item.category}
+                            </span>
+                            <div class="flex items-center space-x-3" onclick="event.stopPropagation();">
+                                <span class="${item.checked ? 'bg-gray-50 text-gray-400 border-gray-100' : 'bg-amber-50 text-amber-700 border-amber-100' } text-[10px] px-2 py-0.5 rounded border font-bold tracking-wide">
+                                    ${item.checked ? item.badge : '+ 선택 추가 가능'}
+                                </span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                  <input type="checkbox" value="" class="sr-only peer" ${item.checked ? 'checked' : ''} onchange="toggleItem(${index})">
+                                  <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#00D09B] shadow-inner"></div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- 고화질 라이브 이미지 연계 파트 -->
+                        <div class="flex items-center">
+                            ${isCustomCard ? `
+                                <div class="w-16 h-16 rounded-2xl bg-white border border-gray-200 flex items-center justify-center mr-4 flex-shrink-0 shadow-sm relative ${item.checked ? 'opacity-100' : 'opacity-70'} transition-opacity">
+                                    <span class="text-[11px] font-black tracking-tighter text-center">
+                                        <span class="text-[#00D09B]">iM</span><span class="text-slate-800">원패스</span>
+                                    </span>
+                                </div>
+                            ` : `
+                                <img src="${item.img || 'https://placehold.co/150x150/f1f5f9/00D09B?text=Asset'}" class="w-16 h-16 rounded-2xl object-cover mr-4 flex-shrink-0 transition-opacity ${item.checked ? 'opacity-100' : 'opacity-70'}" onerror="this.onerror=null; this.src='https://placehold.co/150x150/f1f5f9/00D09B?text=Asset';">
+                            `}
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-extrabold ${item.checked ? 'text-[#1e293b]' : 'text-gray-400'} text-sm md:text-base truncate">${item.title}</h3>
+                                <p class="text-xs ${item.checked ? 'text-gray-500' : 'text-gray-400'} mt-1 leading-relaxed truncate md:whitespace-normal">${item.desc}</p>
+                            </div>
+                            <div class="text-right ml-2 flex-shrink-0">
+                                <div class="font-black ${item.checked ? 'text-[#1e293b]' : 'text-gray-400'} text-base md:text-lg">₩${item.price.toLocaleString()}</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 다른 조건 변경 기능: 이벤트 버블링 방지 및 레이아웃 자동 열기 바인딩 -->
+                        <div class="mt-4 pt-3 border-t border-gray-100/80 flex justify-end" onclick="event.stopPropagation();">
+                            <button onclick="requestSwap(${index})" class="text-[11px] font-bold text-[#00A87E] hover:text-[#00b386] transition flex items-center bg-[#00D09B]/5 hover:bg-[#00D09B]/15 px-3 py-1.5 rounded-xl border border-[#00D09B]/20 shadow-sm">
+                                <i class="fas fa-sync-alt mr-1.5"></i> 이 조건 다른것으로 변경 (AI 피드백)
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+                
+                <!-- 결제 인터랙션 제어부 -->
+                <div class="absolute bottom-0 right-0 w-full bg-white/95 backdrop-blur border-t border-gray-100 px-6 py-6 flex justify-between items-center z-10">
+                    <div class="ml-2">
+                        <div class="text-xs font-semibold text-gray-400 mb-0.5">통합 제휴 일괄 결제액</div>
+                        <div class="text-3xl font-black text-[#1e293b] tracking-tighter">₩${totalAmount.toLocaleString()}</div>
+                    </div>
+                    <button onclick="triggerPayment()" class="mr-2 bg-gradient-to-r from-[#00D09B] to-[#00A87E] hover:opacity-90 text-white font-black py-4 px-8 rounded-2xl shadow-lg shadow-[#00D09B]/20 transform transition active:scale-95 flex items-center text-base">
+                        <i class="fas fa-fingerprint text-xl mr-2"></i> 일괄 결제 승인
+                    </button>
+                </div>
+            `;
+            container.innerHTML = html;
+            
+            toggleRouteType(defaultType);
+        }
+
+        window.cardClicked = function(event, index) {
+            currentBundle[index].checked = !currentBundle[index].checked;
+            renderResultScreen(currentTitle);
+        }
+
+        window.toggleItem = function(index) {
+            currentBundle[index].checked = !currentBundle[index].checked;
+            renderResultScreen(currentTitle);
+        }
+
+        // [이 조건 다른 것으로 변경] 작동 엔진 고도화
+        window.requestSwap = function(index) {
+            const item = currentBundle[index];
+            const chatInput = document.getElementById('chat-input');
+            const inputArea = document.getElementById('input-area');
+            
+            // 1. 강제 채팅 화면 집중 확장 (모바일 완전 노출, 데스크톱 5:5 노출 보장)
+            toggleChatWidth(true);
+            
+            // 2. 입력란 가시화 활성
+            inputArea.classList.remove('hidden');
+            
+            // 3. AI 에이전트 구동 질문 빌딩 및 실시간 발송 유도
+            chatInput.value = `${item.title} 말고 다른 스페셜 대안을 비교 추천해줘.`;
+            sendReply();
+            
+            // 4. 기존 항목 체크를 잠시 해제하여 교체 상태임을 부드럽게 고지
+            currentBundle[index].checked = false;
+            renderResultScreen(currentTitle);
+        }
+
+        function triggerPayment() {
+            let totalAmount = currentBundle.filter(i => i.checked).reduce((sum, item) => sum + item.price, 0);
+
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-gray-900/40 backdrop-blur-md flex justify-center items-center z-50 animate-fade-in p-4';
+            modal.innerHTML = `
+                <div class="bg-white rounded-[2.5rem] p-8 max-w-sm w-full border border-gray-100 shadow-2xl text-center transform transition-all">
+                    <div class="w-20 h-20 bg-gray-50 rounded-full flex justify-center items-center mx-auto mb-6 border border-gray-100">
+                        <i class="fas fa-fingerprint text-4xl text-[#00D09B] animate-pulse"></i>
+                    </div>
+                    <h3 class="text-xl font-black text-[#1e293b] mb-1">iM Mate 생체 서명</h3>
+                    <p class="text-gray-400 mb-6 text-xs">보안 토큰을 활용한 원스톱 통합 승인</p>
+                    <div class="text-3xl font-black text-[#1e293b] mb-8 tracking-tighter">₩${totalAmount.toLocaleString()}</div>
+                    
+                    <div class="relative w-full h-1 bg-gray-100 rounded-full overflow-hidden mb-3">
+                        <div class="absolute top-0 left-0 h-full bg-[#00D09B] rounded-full" style="width: 0%; transition: width 1.4s ease-in-out;" id="progress-bar"></div>
+                    </div>
+                    <div class="text-xs font-semibold text-gray-400" id="payment-status">보안 모듈 통신 승인 중...</div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            setTimeout(() => { document.getElementById('progress-bar').style.width = '100%'; }, 100);
+            
+            setTimeout(() => {
+                document.getElementById('payment-status').innerText = '생체 서명 승인 및 일관 예약 완료';
+                document.getElementById('payment-status').classList.remove('text-gray-400');
+                document.getElementById('payment-status').classList.add('text-[#00D09B]');
+                document.querySelector('.fa-fingerprint').className = 'fas fa-check text-4xl text-[#00D09B]';
+                
+                setTimeout(() => {
+                    modal.remove();
+                    renderReceiptScreen();
+                }, 1200);
+            }, 1500);
+        }
+
+        function renderReceiptScreen() {
+            const container = document.getElementById('result-content');
+            let totalAmount = currentBundle.filter(i => i.checked).reduce((sum, item) => sum + item.price, 0);
+            const date = new Date().toLocaleString('ko-KR');
+
+            document.getElementById('chat-screen').classList.remove('md:flex', 'flex');
+            document.getElementById('chat-screen').classList.add('hidden');
+            
+            const rightPanel = document.getElementById('right-panel');
+            rightPanel.className = "w-full h-full bg-white transition-layout";
+
+            let html = `
+                <div class="animate-fade-in pb-12 min-h-full flex flex-col justify-center items-center p-2">
+                    <div class="bg-white rounded-[2.5rem] p-6 md:p-10 border border-gray-100 shadow-xl w-full max-w-lg relative mt-10">
+                        <div class="absolute -top-10 left-1/2 transform -translate-x-1/2">
+                            <div class="w-20 h-20 bg-gradient-to-tr from-[#00D09B] to-[#00A87E] rounded-full flex justify-center items-center shadow-lg shadow-[#00D09B]/20 border-4 border-white">
+                                <i class="fas fa-check text-3xl text-white"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-10 mb-8">
+                            <h2 class="text-2xl font-black text-[#1e293b] mb-1.5">통합 거래 및 승인이 완료되었습니다</h2>
+                            <p class="text-gray-400 text-xs">${date}</p>
+                        </div>
+                        
+                        <div class="border-t border-dashed border-gray-200 py-6 space-y-4">
+            `;
+
+            currentBundle.filter(i => i.checked).forEach(item => {
+                html += `
+                    <div class="flex justify-between items-center text-sm">
+                        <div class="flex items-center text-gray-500 font-semibold truncate mr-2">
+                            <div class="w-7 h-7 rounded-full bg-gray-50 flex items-center justify-center mr-3 border border-gray-100 flex-shrink-0">
+                                <i class="fas ${item.icon} text-[#00D09B] text-[10px]"></i>
+                            </div>
+                            <span class="truncate">${item.title}</span>
+                        </div>
+                        <div class="font-extrabold text-[#1e293b] flex-shrink-0">₩${item.price.toLocaleString()}</div>
+                    </div>
+                `;
+            });
+
+            html += `
+                        </div>
+                        
+                        <div class="border-t border-gray-100 pt-5 mt-2 flex justify-between items-center">
+                            <span class="text-base font-bold text-gray-400">최종 청구 총액</span>
+                            <span class="text-3xl font-black text-[#00D09B]">₩${totalAmount.toLocaleString()}</span>
+                        </div>
+                        
+                        <!-- 사후 상담 복귀 버튼이 추가된 결제 하단 영역 -->
+                        <div class="mt-8 flex flex-col gap-3">
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <button onclick="resetToHome()" class="w-full sm:w-1/2 bg-gray-50 hover:bg-gray-100 text-gray-500 font-bold py-4 px-4 rounded-2xl transition border border-gray-100 text-sm">
+                                    <i class="fas fa-home mr-1.5"></i> 처음 홈으로 복귀
+                                </button>
+                                <button onclick="showReservationTicket()" class="w-full sm:w-1/2 bg-[#00D09B] hover:bg-[#00b386] text-white font-bold py-4 px-4 rounded-2xl shadow-md shadow-[#00D09B]/20 transition text-sm">
+                                    <i class="fas fa-ticket-alt mr-1.5"></i> 통합 모바일 패스 발급
+                                </button>
+                            </div>
+                            <!-- 결제 종료 후에도 AI 비서와 소통하도록 유도하는 리액션 제공 -->
+                            <button onclick="returnToChatFromReceipt()" class="w-full bg-[#00D09B]/10 hover:bg-[#00D09B]/20 text-[#00A87E] font-bold py-4 px-4 rounded-2xl transition text-sm flex items-center justify-center gap-2">
+                                <i class="fas fa-comments"></i> AI 비서와 대화 계속하기
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        // 영수증에서 대화 계속하기를 원할 때 채팅을 가시화하는 유틸 함수
+        window.returnToChatFromReceipt = function() {
+            const chatScreen = document.getElementById('chat-screen');
+            chatScreen.classList.remove('hidden');
+            
+            // 입력창 가시화 확보
+            document.getElementById('input-area').classList.remove('hidden');
+            
+            toggleChatWidth(true); // 강제 화면 분할/확장 적용
+            
+            // 안심 및 친근한 가이드 전구
+            appendMessage('ai', "결제 내역을 소지한 상태로 초연결 플랫폼 상담을 이어나갑니다. 추가로 조율하고 싶으신 동선이나 세부 혜택이 있으신가요? 제게 편하게 말씀해 주세요. 😊");
+        }
+
+        function showReservationTicket() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-gray-900/40 backdrop-blur-md flex justify-center items-center z-[70] animate-fade-in p-4';
+            modal.innerHTML = `
+                <div class="bg-white rounded-[2.5rem] p-7 max-w-sm w-full border border-gray-100 shadow-2xl text-center relative">
+                    <button onclick="this.parentElement.parentElement.remove()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-gray-50 hover:bg-gray-100 rounded-full text-gray-400 transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="w-14 h-14 bg-[#00D09B]/10 rounded-2xl flex justify-center items-center mx-auto mb-4 border border-[#00D09B]/20">
+                        <i class="fas fa-qrcode text-2xl text-[#00D09B]"></i>
+                    </div>
+                    <h3 class="text-lg font-black text-[#1e293b] mb-1">iM Mate 통합 모바일 인증 패스</h3>
+                    <p class="text-gray-400 mb-6 text-xs">iM 안심택시 태블릿 단말기, 제휴 숙소 및 매장 기기 센서에<br>아래 QR코드를 인증해 주세요.</p>
+                    
+                    <div class="bg-white p-4 rounded-2xl border border-gray-100 mb-6 flex justify-center items-center shadow-inner">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=iMMateIntegratedReservation_Done&color=1e293b" alt="QR Code" class="w-32 h-32 rounded-lg">
+                    </div>
+                    
+                    <button onclick="this.parentElement.parentElement.remove()" class="w-full bg-gray-100 hover:bg-gray-200 text-[#1e293b] font-bold py-3.5 px-4 rounded-xl transition text-sm">
+                        인증 완료
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+    </script>
+</body>
+</html>
