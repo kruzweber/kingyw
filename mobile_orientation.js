@@ -50,11 +50,11 @@
       }
     } catch (_) {}
 
-    try {
-      if (screen.orientation?.lock) {
-        await screen.orientation.lock("landscape");
-      }
-    } catch (_) {}
+    //try {
+      //if (screen.orientation?.lock) {
+        //await screen.orientation.lock("landscape");
+      //}
+    //} catch (_) {}
 
     window.setTimeout(applyMobileOrientation, 120);
   }
